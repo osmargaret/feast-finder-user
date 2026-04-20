@@ -3,10 +3,12 @@ import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/r
 import appCss from "../styles.css?url";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { AppProviders } from "@/store/AppProviders";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
-    <>
+    <AppProviders>
       <Header />
       <main className="flex min-h-screen items-center justify-center px-4 pt-32">
         <div className="max-w-md text-center">
@@ -22,7 +24,7 @@ function NotFoundComponent() {
         </div>
       </main>
       <Footer />
-    </>
+    </AppProviders>
   );
 }
 
@@ -62,12 +64,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   return (
-    <>
+    <AppProviders>
       <Header />
       <main className="min-h-screen">
         <Outlet />
       </main>
       <Footer />
-    </>
+      <Toaster position="top-right" richColors />
+    </AppProviders>
   );
 }
