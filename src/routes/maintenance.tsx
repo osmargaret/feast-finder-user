@@ -1,5 +1,5 @@
-import { createFileRoute, useEffect } from "@tanstack/react-router";
-import { useEffect as useReactEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/maintenance")({
@@ -15,7 +15,7 @@ export const Route = createFileRoute("/maintenance")({
 
 function MaintenancePage() {
   const [t, setT] = useState({ h: 1, m: 30, s: 0 });
-  useReactEffect(() => {
+  useEffect(() => {
     const id = setInterval(() => {
       setT((p) => {
         let s = p.s - 1, m = p.m, h = p.h;
@@ -52,5 +52,3 @@ function MaintenancePage() {
   );
 }
 
-// satisfy eslint about unused import
-void useEffect;
