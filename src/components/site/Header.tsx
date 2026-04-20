@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, ShoppingBag, Heart, Bell, UtensilsCrossed, X } from "lucide-react";
+import { Menu, ShoppingBag, Heart, Bell, UtensilsCrossed, X, LogOut, User as UserIcon } from "lucide-react";
+import { useAuth, useCart, useNotifications, useWishlist } from "@/store/AppProviders";
 
 const nav = [
   { to: "/" as const, label: "Home" },
@@ -14,6 +15,10 @@ const nav = [
 export function Header() {
   const [stuck, setStuck] = useState(false);
   const [open, setOpen] = useState(false);
+  const cart = useCart();
+  const wish = useWishlist();
+  const notif = useNotifications();
+  const auth = useAuth();
 
   useEffect(() => {
     const onScroll = () => setStuck(window.scrollY > 24);
@@ -59,19 +64,47 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <button className="icon-btn hidden sm:inline-flex" aria-label="Wishlist"><Heart className="h-4.5 w-4.5" /></button>
-            <button className="icon-btn hidden sm:inline-flex" aria-label="Notifications">
-              <Bell className="h-4.5 w-4.5" />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-white" />
-            </button>
-            <button className="icon-btn relative" aria-label="Cart">
-              <ShoppingBag className="h-4.5 w-4.5" />
-              <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary ring-2 ring-white" />
-            </button>
-            <Link to="/" className="hidden text-sm font-bold text-foreground/80 hover:text-foreground sm:inline-flex">
-              Sign in
+            <Link to="/wishlist" className="icon-btn hidden sm:inline-flex" aria-label="Wishlist">
+              <Heart className="h-4 w-4" />
+              {wish.ids.length > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
+                  {wish.ids.length}
+                </span>
+              )}
             </Link>
-            <Link to="/" className="btn-primary hidden sm:inline-flex">Get started</Link>
+            <Link to="/notifications" className="icon-btn hidden sm:inline-flex" aria-label="Notifications">
+              <Bell className="h-4 w-4" />
+              {notif.unread > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
+                  {notif.unread}
+                </span>
+              )}
+            </Link>
+            <Link to="/cart" className="icon-btn relative" aria-label="Cart">
+              <ShoppingBag className="h-4 w-4" />
+              {cart.count > 0 && (
+                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
+                  {cart.count}
+                </span>
+              )}
+            </Link>
+            {auth.user ? (
+              <>
+                <span className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold sm:inline-flex">
+                  <UserIcon className="h-3.5 w-3.5" /> {auth.user.name}
+                </span>
+                <button onClick={auth.signOut} className="icon-btn hidden sm:inline-flex" aria-label="Sign out">
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/signin" className="hidden text-sm font-bold text-foreground/80 hover:text-foreground sm:inline-flex">
+                  Sign in
+                </Link>
+                <Link to="/signup" className="btn-primary hidden sm:inline-flex">Get started</Link>
+              </>
+            )}
             <button className="icon-btn lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
               <Menu className="h-5 w-5" />
             </button>
@@ -82,7 +115,7 @@ export function Header() {
       {open && (
         <div className="fixed inset-0 z-[60] lg:hidden">
           <div className="absolute inset-0 bg-black/55" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-0 h-full w-[82%] max-w-sm bg-background p-6 shadow-2xl">
+          <div className="absolute right-0 top-0 h-full w-[82%] max-w-sm bg-background p-6 shadow-2xl overflow-y-auto">
             <div className="mb-6 flex items-center justify-between">
               <span className="text-lg font-extrabold">Menu</span>
               <button className="icon-btn" onClick={() => setOpen(false)} aria-label="Close"><X className="h-5 w-5" /></button>
@@ -98,12 +131,21 @@ export function Header() {
                   {n.label}
                 </Link>
               ))}
+              <Link to="/cart" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Cart ({cart.count})</Link>
+              <Link to="/wishlist" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Wishlist ({wish.ids.length})</Link>
+              <Link to="/notifications" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Notifications ({notif.unread})</Link>
               <Link to="/faq" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">FAQ</Link>
               <Link to="/press" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Press</Link>
             </nav>
             <div className="mt-6 flex flex-col gap-2">
-              <Link to="/" onClick={() => setOpen(false)} className="btn-ghost w-full">Sign in</Link>
-              <Link to="/" onClick={() => setOpen(false)} className="btn-primary w-full">Get started</Link>
+              {auth.user ? (
+                <button onClick={() => { auth.signOut(); setOpen(false); }} className="btn-ghost w-full">Sign out</button>
+              ) : (
+                <>
+                  <Link to="/signin" onClick={() => setOpen(false)} className="btn-ghost w-full">Sign in</Link>
+                  <Link to="/signup" onClick={() => setOpen(false)} className="btn-primary w-full">Get started</Link>
+                </>
+              )}
             </div>
           </div>
         </div>

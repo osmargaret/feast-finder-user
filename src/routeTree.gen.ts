@@ -9,22 +9,43 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as VendorsRouteImport } from './routes/vendors'
+import { Route as SignupRouteImport } from './routes/signup'
+import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as PressRouteImport } from './routes/press'
+import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MealsRouteImport } from './routes/meals'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CartRouteImport } from './routes/cart'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as VendorsVendorIdRouteImport } from './routes/vendors.$vendorId'
 import { Route as BlogVendorSpotlightMamaTRouteImport } from './routes/blog.vendor-spotlight-mama-t'
 import { Route as Blog5TipsPerfectJollofRouteImport } from './routes/blog.5-tips-perfect-jollof'
 
+const WishlistRoute = WishlistRouteImport.update({
+  id: '/wishlist',
+  path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VendorsRoute = VendorsRouteImport.update({
   id: '/vendors',
   path: '/vendors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SigninRoute = SigninRouteImport.update({
+  id: '/signin',
+  path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SearchRoute = SearchRouteImport.update({
@@ -35,6 +56,11 @@ const SearchRoute = SearchRouteImport.update({
 const PressRoute = PressRouteImport.update({
   id: '/press',
   path: '/press',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MealsRoute = MealsRouteImport.update({
@@ -57,6 +83,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CartRoute = CartRouteImport.update({
+  id: '/cart',
+  path: '/cart',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogRoute = BlogRouteImport.update({
   id: '/blog',
   path: '/blog',
@@ -71,6 +102,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const VendorsVendorIdRoute = VendorsVendorIdRouteImport.update({
+  id: '/$vendorId',
+  path: '/$vendorId',
+  getParentRoute: () => VendorsRoute,
 } as any)
 const BlogVendorSpotlightMamaTRoute =
   BlogVendorSpotlightMamaTRouteImport.update({
@@ -88,44 +124,62 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/blog': typeof BlogRouteWithChildren
+  '/cart': typeof CartRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
+  '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
   '/search': typeof SearchRoute
-  '/vendors': typeof VendorsRoute
+  '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
+  '/vendors': typeof VendorsRouteWithChildren
+  '/wishlist': typeof WishlistRoute
   '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
   '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
+  '/vendors/$vendorId': typeof VendorsVendorIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/blog': typeof BlogRouteWithChildren
+  '/cart': typeof CartRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
+  '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
   '/search': typeof SearchRoute
-  '/vendors': typeof VendorsRoute
+  '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
+  '/vendors': typeof VendorsRouteWithChildren
+  '/wishlist': typeof WishlistRoute
   '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
   '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
+  '/vendors/$vendorId': typeof VendorsVendorIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/blog': typeof BlogRouteWithChildren
+  '/cart': typeof CartRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
+  '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
   '/search': typeof SearchRoute
-  '/vendors': typeof VendorsRoute
+  '/signin': typeof SigninRoute
+  '/signup': typeof SignupRoute
+  '/vendors': typeof VendorsRouteWithChildren
+  '/wishlist': typeof WishlistRoute
   '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
   '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
+  '/vendors/$vendorId': typeof VendorsVendorIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -133,65 +187,109 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/blog'
+    | '/cart'
     | '/contact'
     | '/faq'
     | '/maintenance'
     | '/meals'
+    | '/notifications'
     | '/press'
     | '/search'
+    | '/signin'
+    | '/signup'
     | '/vendors'
+    | '/wishlist'
     | '/blog/5-tips-perfect-jollof'
     | '/blog/vendor-spotlight-mama-t'
+    | '/vendors/$vendorId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
     | '/blog'
+    | '/cart'
     | '/contact'
     | '/faq'
     | '/maintenance'
     | '/meals'
+    | '/notifications'
     | '/press'
     | '/search'
+    | '/signin'
+    | '/signup'
     | '/vendors'
+    | '/wishlist'
     | '/blog/5-tips-perfect-jollof'
     | '/blog/vendor-spotlight-mama-t'
+    | '/vendors/$vendorId'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/blog'
+    | '/cart'
     | '/contact'
     | '/faq'
     | '/maintenance'
     | '/meals'
+    | '/notifications'
     | '/press'
     | '/search'
+    | '/signin'
+    | '/signup'
     | '/vendors'
+    | '/wishlist'
     | '/blog/5-tips-perfect-jollof'
     | '/blog/vendor-spotlight-mama-t'
+    | '/vendors/$vendorId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   BlogRoute: typeof BlogRouteWithChildren
+  CartRoute: typeof CartRoute
   ContactRoute: typeof ContactRoute
   FaqRoute: typeof FaqRoute
   MaintenanceRoute: typeof MaintenanceRoute
   MealsRoute: typeof MealsRoute
+  NotificationsRoute: typeof NotificationsRoute
   PressRoute: typeof PressRoute
   SearchRoute: typeof SearchRoute
-  VendorsRoute: typeof VendorsRoute
+  SigninRoute: typeof SigninRoute
+  SignupRoute: typeof SignupRoute
+  VendorsRoute: typeof VendorsRouteWithChildren
+  WishlistRoute: typeof WishlistRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wishlist': {
+      id: '/wishlist'
+      path: '/wishlist'
+      fullPath: '/wishlist'
+      preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vendors': {
       id: '/vendors'
       path: '/vendors'
       fullPath: '/vendors'
       preLoaderRoute: typeof VendorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/signin': {
+      id: '/signin'
+      path: '/signin'
+      fullPath: '/signin'
+      preLoaderRoute: typeof SigninRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -206,6 +304,13 @@ declare module '@tanstack/react-router' {
       path: '/press'
       fullPath: '/press'
       preLoaderRoute: typeof PressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meals': {
@@ -236,6 +341,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cart': {
+      id: '/cart'
+      path: '/cart'
+      fullPath: '/cart'
+      preLoaderRoute: typeof CartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/blog': {
       id: '/blog'
       path: '/blog'
@@ -256,6 +368,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/vendors/$vendorId': {
+      id: '/vendors/$vendorId'
+      path: '/$vendorId'
+      fullPath: '/vendors/$vendorId'
+      preLoaderRoute: typeof VendorsVendorIdRouteImport
+      parentRoute: typeof VendorsRoute
     }
     '/blog/vendor-spotlight-mama-t': {
       id: '/blog/vendor-spotlight-mama-t'
@@ -286,17 +405,33 @@ const BlogRouteChildren: BlogRouteChildren = {
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
 
+interface VendorsRouteChildren {
+  VendorsVendorIdRoute: typeof VendorsVendorIdRoute
+}
+
+const VendorsRouteChildren: VendorsRouteChildren = {
+  VendorsVendorIdRoute: VendorsVendorIdRoute,
+}
+
+const VendorsRouteWithChildren =
+  VendorsRoute._addFileChildren(VendorsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   BlogRoute: BlogRouteWithChildren,
+  CartRoute: CartRoute,
   ContactRoute: ContactRoute,
   FaqRoute: FaqRoute,
   MaintenanceRoute: MaintenanceRoute,
   MealsRoute: MealsRoute,
+  NotificationsRoute: NotificationsRoute,
   PressRoute: PressRoute,
   SearchRoute: SearchRoute,
-  VendorsRoute: VendorsRoute,
+  SigninRoute: SigninRoute,
+  SignupRoute: SignupRoute,
+  VendorsRoute: VendorsRouteWithChildren,
+  WishlistRoute: WishlistRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
