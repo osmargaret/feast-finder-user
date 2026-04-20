@@ -9,38 +9,247 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VendorsRouteImport } from './routes/vendors'
+import { Route as SearchRouteImport } from './routes/search'
+import { Route as PressRouteImport } from './routes/press'
+import { Route as MealsRouteImport } from './routes/meals'
+import { Route as MaintenanceRouteImport } from './routes/maintenance'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as BlogRouteImport } from './routes/blog'
+import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogVendorSpotlightMamaTRouteImport } from './routes/blog.vendor-spotlight-mama-t'
+import { Route as Blog5TipsPerfectJollofRouteImport } from './routes/blog.5-tips-perfect-jollof'
 
+const VendorsRoute = VendorsRouteImport.update({
+  id: '/vendors',
+  path: '/vendors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PressRoute = PressRouteImport.update({
+  id: '/press',
+  path: '/press',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MealsRoute = MealsRouteImport.update({
+  id: '/meals',
+  path: '/meals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaintenanceRoute = MaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BlogVendorSpotlightMamaTRoute =
+  BlogVendorSpotlightMamaTRouteImport.update({
+    id: '/vendor-spotlight-mama-t',
+    path: '/vendor-spotlight-mama-t',
+    getParentRoute: () => BlogRoute,
+  } as any)
+const Blog5TipsPerfectJollofRoute = Blog5TipsPerfectJollofRouteImport.update({
+  id: '/5-tips-perfect-jollof',
+  path: '/5-tips-perfect-jollof',
+  getParentRoute: () => BlogRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/blog': typeof BlogRouteWithChildren
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
+  '/maintenance': typeof MaintenanceRoute
+  '/meals': typeof MealsRoute
+  '/press': typeof PressRoute
+  '/search': typeof SearchRoute
+  '/vendors': typeof VendorsRoute
+  '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
+  '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/blog': typeof BlogRouteWithChildren
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
+  '/maintenance': typeof MaintenanceRoute
+  '/meals': typeof MealsRoute
+  '/press': typeof PressRoute
+  '/search': typeof SearchRoute
+  '/vendors': typeof VendorsRoute
+  '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
+  '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/blog': typeof BlogRouteWithChildren
+  '/contact': typeof ContactRoute
+  '/faq': typeof FaqRoute
+  '/maintenance': typeof MaintenanceRoute
+  '/meals': typeof MealsRoute
+  '/press': typeof PressRoute
+  '/search': typeof SearchRoute
+  '/vendors': typeof VendorsRoute
+  '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
+  '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/about'
+    | '/blog'
+    | '/contact'
+    | '/faq'
+    | '/maintenance'
+    | '/meals'
+    | '/press'
+    | '/search'
+    | '/vendors'
+    | '/blog/5-tips-perfect-jollof'
+    | '/blog/vendor-spotlight-mama-t'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/about'
+    | '/blog'
+    | '/contact'
+    | '/faq'
+    | '/maintenance'
+    | '/meals'
+    | '/press'
+    | '/search'
+    | '/vendors'
+    | '/blog/5-tips-perfect-jollof'
+    | '/blog/vendor-spotlight-mama-t'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/blog'
+    | '/contact'
+    | '/faq'
+    | '/maintenance'
+    | '/meals'
+    | '/press'
+    | '/search'
+    | '/vendors'
+    | '/blog/5-tips-perfect-jollof'
+    | '/blog/vendor-spotlight-mama-t'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  BlogRoute: typeof BlogRouteWithChildren
+  ContactRoute: typeof ContactRoute
+  FaqRoute: typeof FaqRoute
+  MaintenanceRoute: typeof MaintenanceRoute
+  MealsRoute: typeof MealsRoute
+  PressRoute: typeof PressRoute
+  SearchRoute: typeof SearchRoute
+  VendorsRoute: typeof VendorsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/vendors': {
+      id: '/vendors'
+      path: '/vendors'
+      fullPath: '/vendors'
+      preLoaderRoute: typeof VendorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/press': {
+      id: '/press'
+      path: '/press'
+      fullPath: '/press'
+      preLoaderRoute: typeof PressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meals': {
+      id: '/meals'
+      path: '/meals'
+      fullPath: '/meals'
+      preLoaderRoute: typeof MealsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maintenance': {
+      id: '/maintenance'
+      path: '/maintenance'
+      fullPath: '/maintenance'
+      preLoaderRoute: typeof MaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,12 +257,56 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/blog/vendor-spotlight-mama-t': {
+      id: '/blog/vendor-spotlight-mama-t'
+      path: '/vendor-spotlight-mama-t'
+      fullPath: '/blog/vendor-spotlight-mama-t'
+      preLoaderRoute: typeof BlogVendorSpotlightMamaTRouteImport
+      parentRoute: typeof BlogRoute
+    }
+    '/blog/5-tips-perfect-jollof': {
+      id: '/blog/5-tips-perfect-jollof'
+      path: '/5-tips-perfect-jollof'
+      fullPath: '/blog/5-tips-perfect-jollof'
+      preLoaderRoute: typeof Blog5TipsPerfectJollofRouteImport
+      parentRoute: typeof BlogRoute
+    }
   }
 }
 
+interface BlogRouteChildren {
+  Blog5TipsPerfectJollofRoute: typeof Blog5TipsPerfectJollofRoute
+  BlogVendorSpotlightMamaTRoute: typeof BlogVendorSpotlightMamaTRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  Blog5TipsPerfectJollofRoute: Blog5TipsPerfectJollofRoute,
+  BlogVendorSpotlightMamaTRoute: BlogVendorSpotlightMamaTRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  BlogRoute: BlogRouteWithChildren,
+  ContactRoute: ContactRoute,
+  FaqRoute: FaqRoute,
+  MaintenanceRoute: MaintenanceRoute,
+  MealsRoute: MealsRoute,
+  PressRoute: PressRoute,
+  SearchRoute: SearchRoute,
+  VendorsRoute: VendorsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
