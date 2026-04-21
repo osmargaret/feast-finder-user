@@ -472,4 +472,3 @@ export function useVendorProfile() {
 
 export type { Meal };
 
-export type { Meal };
