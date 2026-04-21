@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { User as UserIcon, Heart, Bell, ShoppingBag, Receipt, LogOut } from "lucide-react";
+import { User as UserIcon, Heart, Bell, ShoppingBag, Receipt, LogOut, MessageSquare } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
-import { useAuth, useNotifications, useOrders, useWishlist, useFollow } from "@/store/AppProviders";
-import { meals as allMeals, vendors, formatPrice } from "@/data/mock";
+import { OrderTimeline } from "@/components/site/OrderTimeline";
+import { useAuth, useNotifications, useOrders, useWishlist, useFollow, useMessages, useVendorMenu } from "@/store/AppProviders";
+import { vendors, formatPrice } from "@/data/mock";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -17,7 +18,7 @@ export const Route = createFileRoute("/profile")({
   component: ProfilePage,
 });
 
-const tabs = ["Overview", "Orders", "Transactions", "Wishlist", "Notifications", "Following"] as const;
+const tabs = ["Overview", "Orders", "Messages", "Transactions", "Wishlist", "Notifications", "Following"] as const;
 type Tab = (typeof tabs)[number];
 
 function ProfilePage() {
@@ -26,6 +27,8 @@ function ProfilePage() {
   const wish = useWishlist();
   const notif = useNotifications();
   const follow = useFollow();
+  const msgs = useMessages();
+  const { meals: allMeals } = useVendorMenu();
   const [tab, setTab] = useState<Tab>("Overview");
 
   if (!auth.user) {
@@ -116,6 +119,9 @@ function ProfilePage() {
                           <li key={i.mealId} className="flex justify-between"><span>{i.qty}× {i.name}</span><span className="font-bold">{formatPrice(i.price * i.qty)}</span></li>
                         ))}
                       </ul>
+                      <div className="mt-4 border-t border-border pt-4">
+                        <OrderTimeline status={o.status} />
+                      </div>
                       <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-sm">
                         <span className="text-muted-foreground">Deliver to {o.address.street}, {o.address.city}</span>
                         <span className="text-base font-black">{formatPrice(o.total)}</span>
@@ -125,6 +131,20 @@ function ProfilePage() {
                 </ul>
               )
             )}
+
+            {tab === "Messages" && (() => {
+              const myMsgs = msgs.items.filter((m) => m.fromEmail === auth.user!.email);
+              const threadVendors = Array.from(new Set(myMsgs.map((m) => m.vendorId)));
+              if (threadVendors.length === 0) {
+                return <Empty icon={<MessageSquare className="h-6 w-6" />} title="No conversations yet" cta={<Link to="/vendors" className="btn-primary mt-4 inline-flex">Discover kitchens</Link>} />;
+              }
+              return (
+                <div className="card-mm p-6 text-center">
+                  <p className="text-sm text-muted-foreground">{threadVendors.length} active conversation(s).</p>
+                  <Link to="/messages" className="btn-primary mt-4 inline-flex">Open inbox</Link>
+                </div>
+              );
+            })()}
 
             {tab === "Transactions" && (
               orders.items.length === 0 ? (
