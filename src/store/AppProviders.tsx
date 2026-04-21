@@ -158,6 +158,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [follows, setFollows] = useLocalState<string[]>("mm:follows", []);
   const [orders, setOrders] = useLocalState<Order[]>("mm:orders", []);
   const [messages, setMessages] = useLocalState<Message[]>("mm:messages", []);
+  const [vendorProfile, setVendorProfile] = useLocalState<VendorProfile | null>("mm:vendor-profile", null);
   const [extraMeals, setExtraMeals] = useLocalState<Meal[]>("mm:extra-meals", []);
   const [mealPatches, setMealPatches] = useLocalState<Record<string, Partial<Meal>>>("mm:meal-patches", {});
   const [removedMealIds, setRemovedMealIds] = useLocalState<string[]>("mm:meal-removed", []);
@@ -301,15 +302,64 @@ export function AppProviders({ children }: { children: ReactNode }) {
       items: messages,
       send: (m) =>
         setMessages((prev) => [
-          { id: Math.random().toString(36).slice(2), ts: Date.now(), read: false, ...m },
+          {
+            id: Math.random().toString(36).slice(2),
+            ts: Date.now(),
+            read: false,
+            from: m.from ?? "user",
+            vendorId: m.vendorId,
+            fromName: m.fromName,
+            fromEmail: m.fromEmail,
+            body: m.body,
+          },
           ...prev,
         ]),
       markRead: (id) => setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m))),
-      reply: (id, text) =>
-        setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, reply: text, read: true } : m))),
+      reply: (vendorId, userEmail, text, vendorName) =>
+        setMessages((prev) => [
+          {
+            id: Math.random().toString(36).slice(2),
+            ts: Date.now(),
+            read: false,
+            from: "vendor",
+            vendorId,
+            fromName: vendorName,
+            fromEmail: userEmail, // thread key
+            body: text,
+          },
+          ...prev.map((m) =>
+            m.vendorId === vendorId && m.fromEmail === userEmail && m.from === "user" ? { ...m, read: true } : m,
+          ),
+        ]),
+      sendAsUser: (vendorId, text, fromName, fromEmail) =>
+        setMessages((prev) => [
+          {
+            id: Math.random().toString(36).slice(2),
+            ts: Date.now(),
+            read: false,
+            from: "user",
+            vendorId,
+            fromName,
+            fromEmail,
+            body: text,
+          },
+          ...prev,
+        ]),
       remove: (id) => setMessages((prev) => prev.filter((m) => m.id !== id)),
     }),
     [messages, setMessages],
+  );
+
+  const vendorProfileValue = useMemo<VendorProfileCtx>(
+    () => ({
+      profile: vendorProfile,
+      save: (p) => {
+        setVendorProfile({ ...p, createdAt: vendorProfile?.createdAt ?? Date.now() });
+        toast.success("Vendor account ready");
+      },
+      clear: () => setVendorProfile(null),
+    }),
+    [vendorProfile, setVendorProfile],
   );
 
   const vendorMenuValue = useMemo<VendorMenuCtx>(
