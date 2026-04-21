@@ -150,7 +150,7 @@ function HomePage() {
                 <p className="mt-3 max-w-lg text-white/90">Join hundreds of vendors growing their food business with MenuMenu — no setup fees.</p>
               </div>
               <div className="flex flex-wrap gap-3 md:justify-end">
-                <Link to="/contact" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-foreground hover:-translate-y-0.5 transition">Become a vendor</Link>
+                <Link to="/vendor-signup" className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-bold text-foreground hover:-translate-y-0.5 transition">Become a vendor</Link>
                 <Link to="/about" className="inline-flex items-center justify-center gap-2 rounded-full border border-white/40 px-5 py-3 text-sm font-bold text-white hover:bg-white/10">Learn more</Link>
               </div>
             </div>

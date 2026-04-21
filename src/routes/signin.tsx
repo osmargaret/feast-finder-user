@@ -68,6 +68,9 @@ function SignInPage() {
         <p className="mt-6 text-center text-sm font-semibold text-muted-foreground">
           Don't have an account? <Link to="/signup" className="font-bold text-primary hover:underline">Create one</Link>
         </p>
+        <p className="mt-2 text-center text-sm font-semibold text-muted-foreground">
+          Run a kitchen? <Link to="/vendor-signup" className="font-bold text-primary hover:underline">Create a vendor account</Link>
+        </p>
       </div>
     </section>
   );

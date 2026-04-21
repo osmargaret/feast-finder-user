@@ -1,8 +1,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { Star, Plus, Check, MapPin, Clock, Share2, Mail, Phone } from "lucide-react";
-import { vendors, vendorById, meals as allMeals } from "@/data/mock";
-import { useFollow, useMessages } from "@/store/AppProviders";
+import { vendors, vendorById } from "@/data/mock";
+import { useAuth, useFollow, useMessages, useVendorMenu } from "@/store/AppProviders";
 import { MealCard } from "@/components/site/MealCard";
 import { toast } from "sonner";
 
@@ -48,12 +48,18 @@ function VendorPage() {
   const { vendor } = Route.useLoaderData();
   const follow = useFollow();
   const messages = useMessages();
+  const auth = useAuth();
+  const { meals: allMeals } = useVendorMenu();
   const following = follow.has(vendor.id);
   const vendorMeals = allMeals.filter((m) => m.vendorId === vendor.id);
   const otherVendors = vendors.filter((v) => v.id !== vendor.id).slice(0, 4);
 
-  // contact form
-  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  // contact form — prefill from auth if available
+  const [form, setForm] = useState({
+    name: auth.user?.name ?? "",
+    email: auth.user?.email ?? "",
+    message: "",
+  });
   const [sent, setSent] = useState(false);
 
   return (
@@ -157,20 +163,20 @@ function VendorPage() {
             {/* Contact form */}
             <div id="contact">
               <h2 className="text-2xl font-extrabold">Contact {vendor.name}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Have a question or a custom order? Send a message.</p>
+              <p className="mt-1 text-sm text-muted-foreground">Have a question or a custom order? Send a message — replies appear in your inbox.</p>
               {sent ? (
                 <div className="card-mm mt-4 p-6">
                   <p className="font-extrabold text-primary">Message sent ✓</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{vendor.name} will get back to you shortly.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{vendor.name} will get back to you shortly. Check <Link to="/messages" className="font-bold text-primary hover:underline">your messages</Link>.</p>
                 </div>
               ) : (
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    messages.send({ vendorId: vendor.id, fromName: form.name, fromEmail: form.email, body: form.message });
+                    messages.send({ vendorId: vendor.id, fromName: form.name, fromEmail: form.email, body: form.message, from: "user" });
                     setSent(true);
                     toast.success(`Message sent to ${vendor.name}`);
-                    setForm({ name: "", email: "", message: "" });
+                    setForm({ name: form.name, email: form.email, message: "" });
                   }}
                   className="mt-4 grid gap-3"
                 >
