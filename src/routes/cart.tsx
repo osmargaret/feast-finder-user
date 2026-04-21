@@ -3,7 +3,7 @@ import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
 import { useCart } from "@/store/AppProviders";
 import { meals as allMeals, vendorById, formatPrice } from "@/data/mock";
-import { toast } from "sonner";
+
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
