@@ -411,7 +411,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
             <FollowContext.Provider value={followValue}>
               <OrdersContext.Provider value={ordersValue}>
                 <MessagesContext.Provider value={messagesValue}>
-                  <VendorMenuContext.Provider value={vendorMenuValue}>{children}</VendorMenuContext.Provider>
+                  <VendorProfileContext.Provider value={vendorProfileValue}>
+                    <VendorMenuContext.Provider value={vendorMenuValue}>{children}</VendorMenuContext.Provider>
+                  </VendorProfileContext.Provider>
                 </MessagesContext.Provider>
               </OrdersContext.Provider>
             </FollowContext.Provider>
@@ -462,5 +464,12 @@ export function useVendorMenu() {
   if (!c) throw new Error("VendorMenuContext missing");
   return c;
 }
+export function useVendorProfile() {
+  const c = useContext(VendorProfileContext);
+  if (!c) throw new Error("VendorProfileContext missing");
+  return c;
+}
+
+export type { Meal };
 
 export type { Meal };
