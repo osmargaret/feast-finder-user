@@ -2,8 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Heart } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
 import { MealCard } from "@/components/site/MealCard";
-import { useWishlist } from "@/store/AppProviders";
-import { meals as allMeals } from "@/data/mock";
+import { useVendorMenu, useWishlist } from "@/store/AppProviders";
 
 export const Route = createFileRoute("/wishlist")({
   head: () => ({
@@ -19,6 +18,7 @@ export const Route = createFileRoute("/wishlist")({
 
 function WishlistPage() {
   const wish = useWishlist();
+  const { meals: allMeals } = useVendorMenu();
   const items = allMeals.filter((m) => wish.ids.includes(m.id));
   return (
     <>

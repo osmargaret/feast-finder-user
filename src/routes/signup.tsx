@@ -59,6 +59,9 @@ function SignUpPage() {
         <p className="mt-6 text-center text-sm font-semibold text-muted-foreground">
           Already have an account? <Link to="/signin" className="font-bold text-primary hover:underline">Sign in</Link>
         </p>
+        <p className="mt-2 text-center text-sm font-semibold text-muted-foreground">
+          Want to sell on MenuMenu? <Link to="/vendor-signup" className="font-bold text-primary hover:underline">Create a vendor account</Link>
+        </p>
       </div>
     </section>
   );

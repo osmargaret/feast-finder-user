@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as VendorsRouteImport } from './routes/vendors'
+import { Route as VendorSignupRouteImport } from './routes/vendor-signup'
 import { Route as VendorDashboardRouteImport } from './routes/vendor-dashboard'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
@@ -18,6 +19,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PressRouteImport } from './routes/press'
 import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MealsRouteImport } from './routes/meals'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as FaqRouteImport } from './routes/faq'
@@ -40,6 +42,11 @@ const WishlistRoute = WishlistRouteImport.update({
 const VendorsRoute = VendorsRouteImport.update({
   id: '/vendors',
   path: '/vendors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendorSignupRoute = VendorSignupRouteImport.update({
+  id: '/vendor-signup',
+  path: '/vendor-signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VendorDashboardRoute = VendorDashboardRouteImport.update({
@@ -75,6 +82,11 @@ const PressRoute = PressRouteImport.update({
 const NotificationsRoute = NotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagesRoute = MessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MealsRoute = MealsRouteImport.update({
@@ -127,11 +139,12 @@ const VendorsVendorIdRoute = VendorsVendorIdRouteImport.update({
   path: '/$vendorId',
   getParentRoute: () => VendorsRoute,
 } as any)
-const OrderConfirmationOrderIdRoute = OrderConfirmationOrderIdRouteImport.update({
-  id: '/order-confirmation/$orderId',
-  path: '/order-confirmation/$orderId',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const OrderConfirmationOrderIdRoute =
+  OrderConfirmationOrderIdRouteImport.update({
+    id: '/order-confirmation/$orderId',
+    path: '/order-confirmation/$orderId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const BlogVendorSpotlightMamaTRoute =
   BlogVendorSpotlightMamaTRouteImport.update({
     id: '/vendor-spotlight-mama-t',
@@ -154,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/faq': typeof FaqRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
+  '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
   '/profile': typeof ProfileRoute
@@ -161,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
+  '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
@@ -178,6 +193,7 @@ export interface FileRoutesByTo {
   '/faq': typeof FaqRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
+  '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
   '/profile': typeof ProfileRoute
@@ -185,6 +201,7 @@ export interface FileRoutesByTo {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
+  '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
@@ -203,6 +220,7 @@ export interface FileRoutesById {
   '/faq': typeof FaqRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
+  '/messages': typeof MessagesRoute
   '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
   '/profile': typeof ProfileRoute
@@ -210,6 +228,7 @@ export interface FileRoutesById {
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
+  '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
@@ -229,6 +248,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/maintenance'
     | '/meals'
+    | '/messages'
     | '/notifications'
     | '/press'
     | '/profile'
@@ -236,6 +256,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/vendor-dashboard'
+    | '/vendor-signup'
     | '/vendors'
     | '/wishlist'
     | '/blog/5-tips-perfect-jollof'
@@ -253,6 +274,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/maintenance'
     | '/meals'
+    | '/messages'
     | '/notifications'
     | '/press'
     | '/profile'
@@ -260,6 +282,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/vendor-dashboard'
+    | '/vendor-signup'
     | '/vendors'
     | '/wishlist'
     | '/blog/5-tips-perfect-jollof'
@@ -277,6 +300,7 @@ export interface FileRouteTypes {
     | '/faq'
     | '/maintenance'
     | '/meals'
+    | '/messages'
     | '/notifications'
     | '/press'
     | '/profile'
@@ -284,6 +308,7 @@ export interface FileRouteTypes {
     | '/signin'
     | '/signup'
     | '/vendor-dashboard'
+    | '/vendor-signup'
     | '/vendors'
     | '/wishlist'
     | '/blog/5-tips-perfect-jollof'
@@ -302,6 +327,7 @@ export interface RootRouteChildren {
   FaqRoute: typeof FaqRoute
   MaintenanceRoute: typeof MaintenanceRoute
   MealsRoute: typeof MealsRoute
+  MessagesRoute: typeof MessagesRoute
   NotificationsRoute: typeof NotificationsRoute
   PressRoute: typeof PressRoute
   ProfileRoute: typeof ProfileRoute
@@ -309,6 +335,7 @@ export interface RootRouteChildren {
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   VendorDashboardRoute: typeof VendorDashboardRoute
+  VendorSignupRoute: typeof VendorSignupRoute
   VendorsRoute: typeof VendorsRouteWithChildren
   WishlistRoute: typeof WishlistRoute
   OrderConfirmationOrderIdRoute: typeof OrderConfirmationOrderIdRoute
@@ -328,6 +355,13 @@ declare module '@tanstack/react-router' {
       path: '/vendors'
       fullPath: '/vendors'
       preLoaderRoute: typeof VendorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendor-signup': {
+      id: '/vendor-signup'
+      path: '/vendor-signup'
+      fullPath: '/vendor-signup'
+      preLoaderRoute: typeof VendorSignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vendor-dashboard': {
@@ -377,6 +411,13 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messages': {
+      id: '/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof MessagesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/meals': {
@@ -506,6 +547,7 @@ const rootRouteChildren: RootRouteChildren = {
   FaqRoute: FaqRoute,
   MaintenanceRoute: MaintenanceRoute,
   MealsRoute: MealsRoute,
+  MessagesRoute: MessagesRoute,
   NotificationsRoute: NotificationsRoute,
   PressRoute: PressRoute,
   ProfileRoute: ProfileRoute,
@@ -513,6 +555,7 @@ const rootRouteChildren: RootRouteChildren = {
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   VendorDashboardRoute: VendorDashboardRoute,
+  VendorSignupRoute: VendorSignupRoute,
   VendorsRoute: VendorsRouteWithChildren,
   WishlistRoute: WishlistRoute,
   OrderConfirmationOrderIdRoute: OrderConfirmationOrderIdRoute,

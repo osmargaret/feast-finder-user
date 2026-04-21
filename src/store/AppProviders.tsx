@@ -83,7 +83,7 @@ export type Order = {
   subtotal: number;
   delivery: number;
   total: number;
-  status: "pending" | "preparing" | "delivered" | "cancelled";
+  status: "pending" | "preparing" | "out-for-delivery" | "delivered" | "cancelled";
   address: { name: string; phone: string; street: string; city: string; notes?: string };
   payment: "card" | "transfer" | "cash";
   userEmail: string | null;
@@ -95,25 +95,50 @@ type OrdersCtx = {
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
 
-// ---------- Messages (vendor inbox) ----------
+// ---------- Messages (chat threads between user ↔ vendor) ----------
 export type Message = {
   id: string;
   vendorId: string;
   fromName: string;
-  fromEmail: string;
+  fromEmail: string;       // user email = thread key with vendorId
   body: string;
   ts: number;
   read: boolean;
+  from: "user" | "vendor"; // who sent this message
+  /** @deprecated kept for backward compat with old single-reply messages */
   reply?: string;
 };
 type MessagesCtx = {
   items: Message[];
-  send: (m: Omit<Message, "id" | "ts" | "read">) => void;
+  send: (m: Omit<Message, "id" | "ts" | "read" | "from"> & { from?: "user" | "vendor" }) => void;
   markRead: (id: string) => void;
-  reply: (id: string, text: string) => void;
+  /** vendor replies inside a thread */
+  reply: (vendorId: string, userEmail: string, text: string, vendorName: string) => void;
+  /** user sends a message inside an existing thread */
+  sendAsUser: (vendorId: string, text: string, fromName: string, fromEmail: string) => void;
   remove: (id: string) => void;
 };
 const MessagesContext = createContext<MessagesCtx | null>(null);
+
+// ---------- Vendor profile (mock vendor account info) ----------
+export type VendorProfile = {
+  businessName: string;
+  ownerName: string;
+  email: string;
+  phone: string;
+  cac?: string;
+  category: string;
+  address: string;
+  bannerUrl?: string;
+  about?: string;
+  createdAt: number;
+};
+type VendorProfileCtx = {
+  profile: VendorProfile | null;
+  save: (p: Omit<VendorProfile, "createdAt">) => void;
+  clear: () => void;
+};
+const VendorProfileContext = createContext<VendorProfileCtx | null>(null);
 
 // ---------- Vendor menu (CRUD overlay on top of seed meals) ----------
 type VendorMenuCtx = {
@@ -133,6 +158,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [follows, setFollows] = useLocalState<string[]>("mm:follows", []);
   const [orders, setOrders] = useLocalState<Order[]>("mm:orders", []);
   const [messages, setMessages] = useLocalState<Message[]>("mm:messages", []);
+  const [vendorProfile, setVendorProfile] = useLocalState<VendorProfile | null>("mm:vendor-profile", null);
   const [extraMeals, setExtraMeals] = useLocalState<Meal[]>("mm:extra-meals", []);
   const [mealPatches, setMealPatches] = useLocalState<Record<string, Partial<Meal>>>("mm:meal-patches", {});
   const [removedMealIds, setRemovedMealIds] = useLocalState<string[]>("mm:meal-removed", []);
@@ -276,15 +302,64 @@ export function AppProviders({ children }: { children: ReactNode }) {
       items: messages,
       send: (m) =>
         setMessages((prev) => [
-          { id: Math.random().toString(36).slice(2), ts: Date.now(), read: false, ...m },
+          {
+            id: Math.random().toString(36).slice(2),
+            ts: Date.now(),
+            read: false,
+            from: m.from ?? "user",
+            vendorId: m.vendorId,
+            fromName: m.fromName,
+            fromEmail: m.fromEmail,
+            body: m.body,
+          },
           ...prev,
         ]),
       markRead: (id) => setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m))),
-      reply: (id, text) =>
-        setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, reply: text, read: true } : m))),
+      reply: (vendorId, userEmail, text, vendorName) =>
+        setMessages((prev) => [
+          {
+            id: Math.random().toString(36).slice(2),
+            ts: Date.now(),
+            read: false,
+            from: "vendor",
+            vendorId,
+            fromName: vendorName,
+            fromEmail: userEmail, // thread key
+            body: text,
+          },
+          ...prev.map((m) =>
+            m.vendorId === vendorId && m.fromEmail === userEmail && m.from === "user" ? { ...m, read: true } : m,
+          ),
+        ]),
+      sendAsUser: (vendorId, text, fromName, fromEmail) =>
+        setMessages((prev) => [
+          {
+            id: Math.random().toString(36).slice(2),
+            ts: Date.now(),
+            read: false,
+            from: "user",
+            vendorId,
+            fromName,
+            fromEmail,
+            body: text,
+          },
+          ...prev,
+        ]),
       remove: (id) => setMessages((prev) => prev.filter((m) => m.id !== id)),
     }),
     [messages, setMessages],
+  );
+
+  const vendorProfileValue = useMemo<VendorProfileCtx>(
+    () => ({
+      profile: vendorProfile,
+      save: (p) => {
+        setVendorProfile({ ...p, createdAt: vendorProfile?.createdAt ?? Date.now() });
+        toast.success("Vendor account ready");
+      },
+      clear: () => setVendorProfile(null),
+    }),
+    [vendorProfile, setVendorProfile],
   );
 
   const vendorMenuValue = useMemo<VendorMenuCtx>(
@@ -336,7 +411,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
             <FollowContext.Provider value={followValue}>
               <OrdersContext.Provider value={ordersValue}>
                 <MessagesContext.Provider value={messagesValue}>
-                  <VendorMenuContext.Provider value={vendorMenuValue}>{children}</VendorMenuContext.Provider>
+                  <VendorProfileContext.Provider value={vendorProfileValue}>
+                    <VendorMenuContext.Provider value={vendorMenuValue}>{children}</VendorMenuContext.Provider>
+                  </VendorProfileContext.Provider>
                 </MessagesContext.Provider>
               </OrdersContext.Provider>
             </FollowContext.Provider>
@@ -387,5 +464,11 @@ export function useVendorMenu() {
   if (!c) throw new Error("VendorMenuContext missing");
   return c;
 }
+export function useVendorProfile() {
+  const c = useContext(VendorProfileContext);
+  if (!c) throw new Error("VendorProfileContext missing");
+  return c;
+}
 
 export type { Meal };
+

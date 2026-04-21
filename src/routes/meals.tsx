@@ -3,7 +3,8 @@ import { useMemo, useState } from "react";
 import { Search, MapPin, SlidersHorizontal } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
 import { MealCard } from "@/components/site/MealCard";
-import { meals, categories } from "@/data/mock";
+import { categories } from "@/data/mock";
+import { useVendorMenu } from "@/store/AppProviders";
 
 export const Route = createFileRoute("/meals")({
   head: () => ({
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/meals")({
 });
 
 function MealsPage() {
+  const { meals } = useVendorMenu();
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("All");
   const [maxPrice, setMaxPrice] = useState(6000);
@@ -33,7 +35,7 @@ function MealsPage() {
       if (diet !== "Any" && !(m.dietary || []).includes(diet)) return false;
       return true;
     });
-  }, [q, cat, maxPrice, diet]);
+  }, [q, cat, maxPrice, diet, meals]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const pageItems = filtered.slice((page - 1) * perPage, page * perPage);

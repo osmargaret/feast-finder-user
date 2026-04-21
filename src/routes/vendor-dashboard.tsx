@@ -88,7 +88,7 @@ function VendorDashboardPage() {
 
           {tab === "Menu" && <MenuTab vendorId={vendorId} meals={myMeals} />}
           {tab === "Orders" && <OrdersTab vendorId={vendorId} orders={myOrders} />}
-          {tab === "Messages" && <MessagesTab messages={myMessages} />}
+          {tab === "Messages" && <MessagesTab messages={myMessages} vendorName={vendor.name} />}
         </div>
       </section>
     </>
@@ -223,6 +223,7 @@ function OrdersTab({ vendorId, orders }: { vendorId: string; orders: ReturnType<
               <select value={o.status} onChange={(e) => ordersCtx.setStatus(o.id, e.target.value as typeof o.status)} className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-bold capitalize">
                 <option value="pending">pending</option>
                 <option value="preparing">preparing</option>
+                <option value="out-for-delivery">out for delivery</option>
                 <option value="delivered">delivered</option>
                 <option value="cancelled">cancelled</option>
               </select>
@@ -243,38 +244,76 @@ function OrdersTab({ vendorId, orders }: { vendorId: string; orders: ReturnType<
   );
 }
 
-function MessagesTab({ messages }: { messages: ReturnType<typeof useMessages>["items"] }) {
+function MessagesTab({ messages, vendorName }: { messages: ReturnType<typeof useMessages>["items"]; vendorName: string }) {
   const ctx = useMessages();
-  const [replyDraft, setReplyDraft] = useState<Record<string, string>>({});
+  const [draft, setDraft] = useState<Record<string, string>>({});
 
-  if (messages.length === 0) {
+  // Group messages into threads keyed by user email
+  const threads = useMemo(() => {
+    const map = new Map<string, typeof messages>();
+    [...messages]
+      .sort((a, b) => a.ts - b.ts)
+      .forEach((m) => {
+        const list = map.get(m.fromEmail) ?? [];
+        list.push(m);
+        map.set(m.fromEmail, list);
+      });
+    return Array.from(map.entries()).map(([email, msgs]) => {
+      const last = msgs[msgs.length - 1];
+      const userMsg = [...msgs].reverse().find((m) => m.from === "user");
+      return { email, msgs, last, customerName: userMsg?.fromName ?? "Customer", vendorId: msgs[0].vendorId };
+    }).sort((a, b) => b.last.ts - a.last.ts);
+  }, [messages]);
+
+  if (threads.length === 0) {
     return <div className="card-mm p-10 text-center"><p className="text-sm text-muted-foreground">No customer messages yet.</p></div>;
   }
   return (
     <ul className="space-y-3">
-      {messages.map((m) => (
-        <li key={m.id} className={`card-mm p-4 ${!m.read ? "border-primary/40 bg-primary/5" : ""}`}>
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-extrabold">{m.fromName} <span className="text-xs font-normal text-muted-foreground">· {m.fromEmail}</span></p>
-              <p className="text-[11px] font-bold text-muted-foreground">{new Date(m.ts).toLocaleString()}</p>
+      {threads.map((t) => {
+        const unread = t.msgs.some((m) => m.from === "user" && !m.read);
+        return (
+          <li key={t.email} className={`card-mm p-4 ${unread ? "border-primary/40 bg-primary/5" : ""}`}>
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-extrabold">{t.customerName} <span className="text-xs font-normal text-muted-foreground">· {t.email}</span></p>
+                <p className="text-[11px] font-bold text-muted-foreground">{t.msgs.length} message(s) · last {new Date(t.last.ts).toLocaleString()}</p>
+              </div>
             </div>
-            <button onClick={() => ctx.remove(m.id)} className="icon-btn" aria-label="Delete"><Trash2 className="h-3.5 w-3.5" /></button>
-          </div>
-          <p className="mt-2 text-sm">{m.body}</p>
-          {m.reply ? (
-            <div className="mt-3 rounded-2xl bg-secondary p-3 text-sm">
-              <p className="text-xs font-bold text-muted-foreground">Your reply</p>
-              <p>{m.reply}</p>
+            <div className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
+              {t.msgs.map((m) => (
+                <div key={m.id} className={`flex ${m.from === "vendor" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${m.from === "vendor" ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>
+                    <p>{m.body}</p>
+                    <p className={`mt-0.5 text-[10px] ${m.from === "vendor" ? "text-primary-foreground/75" : "text-muted-foreground"}`}>{new Date(m.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ) : (
             <div className="mt-3 flex gap-2">
-              <input value={replyDraft[m.id] ?? ""} onChange={(e) => setReplyDraft({ ...replyDraft, [m.id]: e.target.value })} placeholder="Type a reply…" className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm" />
-              <button onClick={() => { const t = (replyDraft[m.id] ?? "").trim(); if (t) { ctx.reply(m.id, t); toast.success("Reply sent"); } }} className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"><Check className="h-3.5 w-3.5" /> Reply</button>
+              <input
+                value={draft[t.email] ?? ""}
+                onChange={(e) => setDraft({ ...draft, [t.email]: e.target.value })}
+                placeholder="Type a reply…"
+                className="flex-1 rounded-full border border-border bg-background px-4 py-2 text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const text = (draft[t.email] ?? "").trim();
+                    if (text) { ctx.reply(t.vendorId, t.email, text, vendorName); setDraft({ ...draft, [t.email]: "" }); toast.success("Reply sent"); }
+                  }
+                }}
+              />
+              <button
+                onClick={() => {
+                  const text = (draft[t.email] ?? "").trim();
+                  if (text) { ctx.reply(t.vendorId, t.email, text, vendorName); setDraft({ ...draft, [t.email]: "" }); toast.success("Reply sent"); }
+                }}
+                className="inline-flex items-center gap-1 rounded-full bg-primary px-4 py-2 text-xs font-bold text-primary-foreground"
+              ><Check className="h-3.5 w-3.5" /> Reply</button>
             </div>
-          )}
-        </li>
-      ))}
+          </li>
+        );
+      })}
     </ul>
   );
 }

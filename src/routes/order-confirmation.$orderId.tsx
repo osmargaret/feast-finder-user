@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { CheckCircle2, Package } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
+import { OrderTimeline } from "@/components/site/OrderTimeline";
 import { useOrders } from "@/store/AppProviders";
 import { formatPrice } from "@/data/mock";
 
@@ -37,6 +38,11 @@ function ConfirmationPage() {
             </div>
             <h2 className="text-2xl font-extrabold">Your order is on its way</h2>
             <p className="mt-2 text-sm text-muted-foreground">We've notified the kitchen{order.address.name ? `, ${order.address.name}` : ""}. Track your order in your profile.</p>
+          </div>
+
+          <div className="card-mm mt-6 p-6">
+            <h3 className="text-base font-extrabold">Order tracking</h3>
+            <div className="mt-5"><OrderTimeline status={order.status} /></div>
           </div>
 
           <div className="card-mm mt-6 p-6">
