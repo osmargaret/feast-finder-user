@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Menu, ShoppingBag, Heart, Bell, UtensilsCrossed, X, LogOut, User as UserIcon } from "lucide-react";
+import { Menu, ShoppingBag, Heart, Bell, UtensilsCrossed, X, LogOut, User as UserIcon, MessageSquare } from "lucide-react";
 import { useAuth, useCart, useNotifications, useWishlist } from "@/store/AppProviders";
 
 const nav = [
@@ -80,6 +80,11 @@ export function Header() {
                 </span>
               )}
             </Link>
+            {auth.user && (
+              <Link to="/messages" className="icon-btn hidden sm:inline-flex" aria-label="Messages">
+                <MessageSquare className="h-4 w-4" />
+              </Link>
+            )}
             <Link to="/cart" className="icon-btn relative" aria-label="Cart">
               <ShoppingBag className="h-4 w-4" />
               {cart.count > 0 && (
@@ -134,8 +139,10 @@ export function Header() {
               <Link to="/cart" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Cart ({cart.count})</Link>
               <Link to="/wishlist" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Wishlist ({wish.ids.length})</Link>
               <Link to="/notifications" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Notifications ({notif.unread})</Link>
+              {auth.user && <Link to="/messages" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Messages</Link>}
               <Link to="/profile" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">My Profile</Link>
               <Link to="/vendor-dashboard" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Vendor Dashboard</Link>
+              <Link to="/vendor-signup" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-primary hover:bg-secondary">Become a vendor</Link>
               <Link to="/faq" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">FAQ</Link>
               <Link to="/press" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Press</Link>
             </nav>
