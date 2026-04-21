@@ -15,12 +15,14 @@ const nav = [
 export function Header() {
   const [stuck, setStuck] = useState(false);
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const cart = useCart();
   const wish = useWishlist();
   const notif = useNotifications();
   const auth = useAuth();
 
   useEffect(() => {
+    setMounted(true);
     const onScroll = () => setStuck(window.scrollY > 24);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -66,7 +68,7 @@ export function Header() {
           <div className="flex items-center gap-2">
             <Link to="/wishlist" className="icon-btn hidden sm:inline-flex" aria-label="Wishlist">
               <Heart className="h-4 w-4" />
-              {wish.ids.length > 0 && (
+              {mounted && wish.ids.length > 0 && (
                 <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
                   {wish.ids.length}
                 </span>
@@ -74,26 +76,26 @@ export function Header() {
             </Link>
             <Link to="/notifications" className="icon-btn hidden sm:inline-flex" aria-label="Notifications">
               <Bell className="h-4 w-4" />
-              {notif.unread > 0 && (
+              {mounted && notif.unread > 0 && (
                 <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
                   {notif.unread}
                 </span>
               )}
             </Link>
-            {auth.user && (
+            {mounted && auth.user && (
               <Link to="/messages" className="icon-btn hidden sm:inline-flex" aria-label="Messages">
                 <MessageSquare className="h-4 w-4" />
               </Link>
             )}
             <Link to="/cart" className="icon-btn relative" aria-label="Cart">
               <ShoppingBag className="h-4 w-4" />
-              {cart.count > 0 && (
+              {mounted && cart.count > 0 && (
                 <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
                   {cart.count}
                 </span>
               )}
             </Link>
-            {auth.user ? (
+            {mounted && auth.user ? (
               <>
                 <Link to="/profile" className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold sm:inline-flex hover:bg-primary/10">
                   <UserIcon className="h-3.5 w-3.5" /> {auth.user.name}
