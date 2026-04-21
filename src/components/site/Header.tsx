@@ -90,9 +90,9 @@ export function Header() {
             </Link>
             {auth.user ? (
               <>
-                <span className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold sm:inline-flex">
+                <Link to="/profile" className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold sm:inline-flex hover:bg-primary/10">
                   <UserIcon className="h-3.5 w-3.5" /> {auth.user.name}
-                </span>
+                </Link>
                 <button onClick={auth.signOut} className="icon-btn hidden sm:inline-flex" aria-label="Sign out">
                   <LogOut className="h-4 w-4" />
                 </button>
@@ -134,6 +134,8 @@ export function Header() {
               <Link to="/cart" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Cart ({cart.count})</Link>
               <Link to="/wishlist" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Wishlist ({wish.ids.length})</Link>
               <Link to="/notifications" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Notifications ({notif.unread})</Link>
+              <Link to="/profile" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">My Profile</Link>
+              <Link to="/vendor-dashboard" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Vendor Dashboard</Link>
               <Link to="/faq" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">FAQ</Link>
               <Link to="/press" onClick={() => setOpen(false)} className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary">Press</Link>
             </nav>

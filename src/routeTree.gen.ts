@@ -11,20 +11,24 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as VendorsRouteImport } from './routes/vendors'
+import { Route as VendorDashboardRouteImport } from './routes/vendor-dashboard'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PressRouteImport } from './routes/press'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MealsRouteImport } from './routes/meals'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ContactRouteImport } from './routes/contact'
+import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CartRouteImport } from './routes/cart'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VendorsVendorIdRouteImport } from './routes/vendors.$vendorId'
+import { Route as OrderConfirmationOrderIdRouteImport } from './routes/order-confirmation.$orderId'
 import { Route as BlogVendorSpotlightMamaTRouteImport } from './routes/blog.vendor-spotlight-mama-t'
 import { Route as Blog5TipsPerfectJollofRouteImport } from './routes/blog.5-tips-perfect-jollof'
 
@@ -36,6 +40,11 @@ const WishlistRoute = WishlistRouteImport.update({
 const VendorsRoute = VendorsRouteImport.update({
   id: '/vendors',
   path: '/vendors',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VendorDashboardRoute = VendorDashboardRouteImport.update({
+  id: '/vendor-dashboard',
+  path: '/vendor-dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -51,6 +60,11 @@ const SigninRoute = SigninRouteImport.update({
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PressRoute = PressRouteImport.update({
@@ -83,6 +97,11 @@ const ContactRoute = ContactRouteImport.update({
   path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CheckoutRoute = CheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CartRoute = CartRouteImport.update({
   id: '/cart',
   path: '/cart',
@@ -108,6 +127,11 @@ const VendorsVendorIdRoute = VendorsVendorIdRouteImport.update({
   path: '/$vendorId',
   getParentRoute: () => VendorsRoute,
 } as any)
+const OrderConfirmationOrderIdRoute = OrderConfirmationOrderIdRouteImport.update({
+  id: '/order-confirmation/$orderId',
+  path: '/order-confirmation/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogVendorSpotlightMamaTRoute =
   BlogVendorSpotlightMamaTRouteImport.update({
     id: '/vendor-spotlight-mama-t',
@@ -125,19 +149,23 @@ export interface FileRoutesByFullPath {
   '/about': typeof AboutRoute
   '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
   '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
+  '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendors': typeof VendorsRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
   '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
+  '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
 }
 export interface FileRoutesByTo {
@@ -145,19 +173,23 @@ export interface FileRoutesByTo {
   '/about': typeof AboutRoute
   '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
   '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
+  '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendors': typeof VendorsRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
   '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
+  '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
 }
 export interface FileRoutesById {
@@ -166,19 +198,23 @@ export interface FileRoutesById {
   '/about': typeof AboutRoute
   '/blog': typeof BlogRouteWithChildren
   '/cart': typeof CartRoute
+  '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
   '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
+  '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendors': typeof VendorsRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
   '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
+  '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
 }
 export interface FileRouteTypes {
@@ -188,19 +224,23 @@ export interface FileRouteTypes {
     | '/about'
     | '/blog'
     | '/cart'
+    | '/checkout'
     | '/contact'
     | '/faq'
     | '/maintenance'
     | '/meals'
     | '/notifications'
     | '/press'
+    | '/profile'
     | '/search'
     | '/signin'
     | '/signup'
+    | '/vendor-dashboard'
     | '/vendors'
     | '/wishlist'
     | '/blog/5-tips-perfect-jollof'
     | '/blog/vendor-spotlight-mama-t'
+    | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -208,19 +248,23 @@ export interface FileRouteTypes {
     | '/about'
     | '/blog'
     | '/cart'
+    | '/checkout'
     | '/contact'
     | '/faq'
     | '/maintenance'
     | '/meals'
     | '/notifications'
     | '/press'
+    | '/profile'
     | '/search'
     | '/signin'
     | '/signup'
+    | '/vendor-dashboard'
     | '/vendors'
     | '/wishlist'
     | '/blog/5-tips-perfect-jollof'
     | '/blog/vendor-spotlight-mama-t'
+    | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
   id:
     | '__root__'
@@ -228,19 +272,23 @@ export interface FileRouteTypes {
     | '/about'
     | '/blog'
     | '/cart'
+    | '/checkout'
     | '/contact'
     | '/faq'
     | '/maintenance'
     | '/meals'
     | '/notifications'
     | '/press'
+    | '/profile'
     | '/search'
     | '/signin'
     | '/signup'
+    | '/vendor-dashboard'
     | '/vendors'
     | '/wishlist'
     | '/blog/5-tips-perfect-jollof'
     | '/blog/vendor-spotlight-mama-t'
+    | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
   fileRoutesById: FileRoutesById
 }
@@ -249,17 +297,21 @@ export interface RootRouteChildren {
   AboutRoute: typeof AboutRoute
   BlogRoute: typeof BlogRouteWithChildren
   CartRoute: typeof CartRoute
+  CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
   FaqRoute: typeof FaqRoute
   MaintenanceRoute: typeof MaintenanceRoute
   MealsRoute: typeof MealsRoute
   NotificationsRoute: typeof NotificationsRoute
   PressRoute: typeof PressRoute
+  ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  VendorDashboardRoute: typeof VendorDashboardRoute
   VendorsRoute: typeof VendorsRouteWithChildren
   WishlistRoute: typeof WishlistRoute
+  OrderConfirmationOrderIdRoute: typeof OrderConfirmationOrderIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -276,6 +328,13 @@ declare module '@tanstack/react-router' {
       path: '/vendors'
       fullPath: '/vendors'
       preLoaderRoute: typeof VendorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/vendor-dashboard': {
+      id: '/vendor-dashboard'
+      path: '/vendor-dashboard'
+      fullPath: '/vendor-dashboard'
+      preLoaderRoute: typeof VendorDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -297,6 +356,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/search'
       preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/press': {
@@ -341,6 +407,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/checkout': {
+      id: '/checkout'
+      path: '/checkout'
+      fullPath: '/checkout'
+      preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cart': {
       id: '/cart'
       path: '/cart'
@@ -375,6 +448,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/vendors/$vendorId'
       preLoaderRoute: typeof VendorsVendorIdRouteImport
       parentRoute: typeof VendorsRoute
+    }
+    '/order-confirmation/$orderId': {
+      id: '/order-confirmation/$orderId'
+      path: '/order-confirmation/$orderId'
+      fullPath: '/order-confirmation/$orderId'
+      preLoaderRoute: typeof OrderConfirmationOrderIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/blog/vendor-spotlight-mama-t': {
       id: '/blog/vendor-spotlight-mama-t'
@@ -421,18 +501,31 @@ const rootRouteChildren: RootRouteChildren = {
   AboutRoute: AboutRoute,
   BlogRoute: BlogRouteWithChildren,
   CartRoute: CartRoute,
+  CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
   FaqRoute: FaqRoute,
   MaintenanceRoute: MaintenanceRoute,
   MealsRoute: MealsRoute,
   NotificationsRoute: NotificationsRoute,
   PressRoute: PressRoute,
+  ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  VendorDashboardRoute: VendorDashboardRoute,
   VendorsRoute: VendorsRouteWithChildren,
   WishlistRoute: WishlistRoute,
+  OrderConfirmationOrderIdRoute: OrderConfirmationOrderIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

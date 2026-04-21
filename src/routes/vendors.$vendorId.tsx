@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { Star, Plus, Check, MapPin, Clock, Share2, Mail, Phone } from "lucide-react";
 import { vendors, vendorById, meals as allMeals } from "@/data/mock";
-import { useFollow } from "@/store/AppProviders";
+import { useFollow, useMessages } from "@/store/AppProviders";
 import { MealCard } from "@/components/site/MealCard";
 import { toast } from "sonner";
 
@@ -47,6 +47,7 @@ const SAMPLE_REVIEWS = [
 function VendorPage() {
   const { vendor } = Route.useLoaderData();
   const follow = useFollow();
+  const messages = useMessages();
   const following = follow.has(vendor.id);
   const vendorMeals = allMeals.filter((m) => m.vendorId === vendor.id);
   const otherVendors = vendors.filter((v) => v.id !== vendor.id).slice(0, 4);
@@ -166,6 +167,7 @@ function VendorPage() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
+                    messages.send({ vendorId: vendor.id, fromName: form.name, fromEmail: form.email, body: form.message });
                     setSent(true);
                     toast.success(`Message sent to ${vendor.name}`);
                     setForm({ name: "", email: "", message: "" });
