@@ -83,7 +83,7 @@ export type Order = {
   subtotal: number;
   delivery: number;
   total: number;
-  status: "pending" | "preparing" | "delivered" | "cancelled";
+  status: "pending" | "preparing" | "out-for-delivery" | "delivered" | "cancelled";
   address: { name: string; phone: string; street: string; city: string; notes?: string };
   payment: "card" | "transfer" | "cash";
   userEmail: string | null;
@@ -95,25 +95,50 @@ type OrdersCtx = {
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
 
-// ---------- Messages (vendor inbox) ----------
+// ---------- Messages (chat threads between user ↔ vendor) ----------
 export type Message = {
   id: string;
   vendorId: string;
   fromName: string;
-  fromEmail: string;
+  fromEmail: string;       // user email = thread key with vendorId
   body: string;
   ts: number;
   read: boolean;
+  from: "user" | "vendor"; // who sent this message
+  /** @deprecated kept for backward compat with old single-reply messages */
   reply?: string;
 };
 type MessagesCtx = {
   items: Message[];
-  send: (m: Omit<Message, "id" | "ts" | "read">) => void;
+  send: (m: Omit<Message, "id" | "ts" | "read" | "from"> & { from?: "user" | "vendor" }) => void;
   markRead: (id: string) => void;
-  reply: (id: string, text: string) => void;
+  /** vendor replies inside a thread */
+  reply: (vendorId: string, userEmail: string, text: string, vendorName: string) => void;
+  /** user sends a message inside an existing thread */
+  sendAsUser: (vendorId: string, text: string, fromName: string, fromEmail: string) => void;
   remove: (id: string) => void;
 };
 const MessagesContext = createContext<MessagesCtx | null>(null);
+
+// ---------- Vendor profile (mock vendor account info) ----------
+export type VendorProfile = {
+  businessName: string;
+  ownerName: string;
+  email: string;
+  phone: string;
+  cac?: string;
+  category: string;
+  address: string;
+  bannerUrl?: string;
+  about?: string;
+  createdAt: number;
+};
+type VendorProfileCtx = {
+  profile: VendorProfile | null;
+  save: (p: Omit<VendorProfile, "createdAt">) => void;
+  clear: () => void;
+};
+const VendorProfileContext = createContext<VendorProfileCtx | null>(null);
 
 // ---------- Vendor menu (CRUD overlay on top of seed meals) ----------
 type VendorMenuCtx = {
