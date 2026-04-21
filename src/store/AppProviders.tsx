@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { meals as allMeals, vendors as allVendors, type Meal } from "@/data/mock";
+import { meals as seedMeals, vendors as allVendors, type Meal } from "@/data/mock";
 
 // ---------- helpers ----------
 function useLocalState<T>(key: string, initial: T) {
@@ -74,6 +74,56 @@ type FollowCtx = {
 };
 const FollowContext = createContext<FollowCtx | null>(null);
 
+// ---------- Orders ----------
+export type OrderItem = { mealId: string; name: string; price: number; qty: number; vendorId: string };
+export type Order = {
+  id: string;
+  ts: number;
+  items: OrderItem[];
+  subtotal: number;
+  delivery: number;
+  total: number;
+  status: "pending" | "preparing" | "delivered" | "cancelled";
+  address: { name: string; phone: string; street: string; city: string; notes?: string };
+  payment: "card" | "transfer" | "cash";
+  userEmail: string | null;
+};
+type OrdersCtx = {
+  items: Order[];
+  place: (o: Omit<Order, "id" | "ts" | "status">) => Order;
+  setStatus: (id: string, status: Order["status"]) => void;
+};
+const OrdersContext = createContext<OrdersCtx | null>(null);
+
+// ---------- Messages (vendor inbox) ----------
+export type Message = {
+  id: string;
+  vendorId: string;
+  fromName: string;
+  fromEmail: string;
+  body: string;
+  ts: number;
+  read: boolean;
+  reply?: string;
+};
+type MessagesCtx = {
+  items: Message[];
+  send: (m: Omit<Message, "id" | "ts" | "read">) => void;
+  markRead: (id: string) => void;
+  reply: (id: string, text: string) => void;
+  remove: (id: string) => void;
+};
+const MessagesContext = createContext<MessagesCtx | null>(null);
+
+// ---------- Vendor menu (CRUD overlay on top of seed meals) ----------
+type VendorMenuCtx = {
+  meals: Meal[];
+  addMeal: (m: Omit<Meal, "id">) => void;
+  updateMeal: (id: string, patch: Partial<Meal>) => void;
+  removeMeal: (id: string) => void;
+};
+const VendorMenuContext = createContext<VendorMenuCtx | null>(null);
+
 // ---------- Provider ----------
 export function AppProviders({ children }: { children: ReactNode }) {
   const [cart, setCart] = useLocalState<CartItem[]>("mm:cart", []);
@@ -81,6 +131,19 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [notifs, setNotifs] = useLocalState<Notif[]>("mm:notifs", []);
   const [user, setUser] = useLocalState<User | null>("mm:user", null);
   const [follows, setFollows] = useLocalState<string[]>("mm:follows", []);
+  const [orders, setOrders] = useLocalState<Order[]>("mm:orders", []);
+  const [messages, setMessages] = useLocalState<Message[]>("mm:messages", []);
+  const [extraMeals, setExtraMeals] = useLocalState<Meal[]>("mm:extra-meals", []);
+  const [mealPatches, setMealPatches] = useLocalState<Record<string, Partial<Meal>>>("mm:meal-patches", {});
+  const [removedMealIds, setRemovedMealIds] = useLocalState<string[]>("mm:meal-removed", []);
+
+  // Effective meal list = (seed - removed, with patches) + extra
+  const allMeals = useMemo<Meal[]>(() => {
+    const base = seedMeals
+      .filter((m) => !removedMealIds.includes(m.id))
+      .map((m) => ({ ...m, ...(mealPatches[m.id] ?? {}) }));
+    return [...base, ...extraMeals];
+  }, [extraMeals, mealPatches, removedMealIds]);
 
   // Cart value
   const cartValue = useMemo<CartCtx>(() => {
@@ -109,7 +172,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         ),
       clear: () => setCart([]),
     };
-  }, [cart, setCart]);
+  }, [cart, setCart, allMeals]);
 
   const wishValue = useMemo<WishCtx>(
     () => ({
@@ -129,7 +192,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       remove: (id) => setWish((prev) => prev.filter((x) => x !== id)),
       clear: () => setWish([]),
     }),
-    [wish, setWish],
+    [wish, setWish, allMeals],
   );
 
   const notifValue = useMemo<NotifCtx>(
@@ -189,6 +252,71 @@ export function AppProviders({ children }: { children: ReactNode }) {
     [follows, setFollows],
   );
 
+  const ordersValue = useMemo<OrdersCtx>(
+    () => ({
+      items: orders,
+      place: (o) => {
+        const order: Order = {
+          ...o,
+          id: "ORD-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
+          ts: Date.now(),
+          status: "pending",
+        };
+        setOrders((prev) => [order, ...prev]);
+        return order;
+      },
+      setStatus: (id, status) =>
+        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o))),
+    }),
+    [orders, setOrders],
+  );
+
+  const messagesValue = useMemo<MessagesCtx>(
+    () => ({
+      items: messages,
+      send: (m) =>
+        setMessages((prev) => [
+          { id: Math.random().toString(36).slice(2), ts: Date.now(), read: false, ...m },
+          ...prev,
+        ]),
+      markRead: (id) => setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m))),
+      reply: (id, text) =>
+        setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, reply: text, read: true } : m))),
+      remove: (id) => setMessages((prev) => prev.filter((m) => m.id !== id)),
+    }),
+    [messages, setMessages],
+  );
+
+  const vendorMenuValue = useMemo<VendorMenuCtx>(
+    () => ({
+      meals: allMeals,
+      addMeal: (m) => {
+        const id = "m-" + Math.random().toString(36).slice(2, 8);
+        setExtraMeals((prev) => [...prev, { ...m, id }]);
+        toast.success("Menu item added");
+      },
+      updateMeal: (id, patch) => {
+        const isExtra = extraMeals.some((m) => m.id === id);
+        if (isExtra) {
+          setExtraMeals((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+        } else {
+          setMealPatches((prev) => ({ ...prev, [id]: { ...(prev[id] ?? {}), ...patch } }));
+        }
+        toast.success("Menu item updated");
+      },
+      removeMeal: (id) => {
+        const isExtra = extraMeals.some((m) => m.id === id);
+        if (isExtra) {
+          setExtraMeals((prev) => prev.filter((m) => m.id !== id));
+        } else {
+          setRemovedMealIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+        }
+        toast("Menu item removed");
+      },
+    }),
+    [allMeals, extraMeals, setExtraMeals, setMealPatches, setRemovedMealIds],
+  );
+
   // seed welcome notification once
   useEffect(() => {
     if (notifs.length === 0) {
@@ -205,7 +333,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
       <CartContext.Provider value={cartValue}>
         <WishContext.Provider value={wishValue}>
           <NotifContext.Provider value={notifValue}>
-            <FollowContext.Provider value={followValue}>{children}</FollowContext.Provider>
+            <FollowContext.Provider value={followValue}>
+              <OrdersContext.Provider value={ordersValue}>
+                <MessagesContext.Provider value={messagesValue}>
+                  <VendorMenuContext.Provider value={vendorMenuValue}>{children}</VendorMenuContext.Provider>
+                </MessagesContext.Provider>
+              </OrdersContext.Provider>
+            </FollowContext.Provider>
           </NotifContext.Provider>
         </WishContext.Provider>
       </CartContext.Provider>
@@ -236,6 +370,21 @@ export function useAuth() {
 export function useFollow() {
   const c = useContext(FollowContext);
   if (!c) throw new Error("FollowContext missing");
+  return c;
+}
+export function useOrders() {
+  const c = useContext(OrdersContext);
+  if (!c) throw new Error("OrdersContext missing");
+  return c;
+}
+export function useMessages() {
+  const c = useContext(MessagesContext);
+  if (!c) throw new Error("MessagesContext missing");
+  return c;
+}
+export function useVendorMenu() {
+  const c = useContext(VendorMenuContext);
+  if (!c) throw new Error("VendorMenuContext missing");
   return c;
 }
 
