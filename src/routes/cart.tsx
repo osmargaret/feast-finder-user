@@ -87,15 +87,9 @@ function CartPage() {
                   <div className="my-2 border-t border-border" />
                   <div className="flex justify-between text-base font-black"><dt>Total</dt><dd>{formatPrice(total)}</dd></div>
                 </dl>
-                <button
-                  onClick={() => {
-                    toast.success("Order placed!", { description: "We've sent a confirmation to your email." });
-                    cart.clear();
-                  }}
-                  className="btn-primary mt-6 w-full"
-                >
+                <Link to="/checkout" className="btn-primary mt-6 w-full">
                   Checkout
-                </button>
+                </Link>
                 <Link to="/meals" className="btn-ghost mt-2 w-full">Continue shopping</Link>
               </aside>
             </div>
