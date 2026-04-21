@@ -223,6 +223,7 @@ function OrdersTab({ vendorId, orders }: { vendorId: string; orders: ReturnType<
               <select value={o.status} onChange={(e) => ordersCtx.setStatus(o.id, e.target.value as typeof o.status)} className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-bold capitalize">
                 <option value="pending">pending</option>
                 <option value="preparing">preparing</option>
+                <option value="out-for-delivery">out for delivery</option>
                 <option value="delivered">delivered</option>
                 <option value="cancelled">cancelled</option>
               </select>
