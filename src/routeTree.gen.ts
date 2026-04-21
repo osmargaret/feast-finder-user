@@ -127,12 +127,11 @@ const VendorsVendorIdRoute = VendorsVendorIdRouteImport.update({
   path: '/$vendorId',
   getParentRoute: () => VendorsRoute,
 } as any)
-const OrderConfirmationOrderIdRoute =
-  OrderConfirmationOrderIdRouteImport.update({
-    id: '/order-confirmation/$orderId',
-    path: '/order-confirmation/$orderId',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const OrderConfirmationOrderIdRoute = OrderConfirmationOrderIdRouteImport.update({
+  id: '/order-confirmation/$orderId',
+  path: '/order-confirmation/$orderId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BlogVendorSpotlightMamaTRoute =
   BlogVendorSpotlightMamaTRouteImport.update({
     id: '/vendor-spotlight-mama-t',
