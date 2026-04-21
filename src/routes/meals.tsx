@@ -35,7 +35,7 @@ function MealsPage() {
       if (diet !== "Any" && !(m.dietary || []).includes(diet)) return false;
       return true;
     });
-  }, [q, cat, maxPrice, diet]);
+  }, [q, cat, maxPrice, diet, meals]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   const pageItems = filtered.slice((page - 1) * perPage, page * perPage);
