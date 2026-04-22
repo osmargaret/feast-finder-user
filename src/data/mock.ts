@@ -39,9 +39,12 @@ export type Vendor = {
   avatar: string;
   cover: string;
   followers: string;
+  followerCount: number;
   rating: number;
   tagline: string;
   type: string;
+  location?: string;
+  priceRange?: "$" | "$$" | "$$$";
 };
 
 export const vendors: Vendor[] = [
