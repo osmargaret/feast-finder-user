@@ -94,73 +94,77 @@ export function Header() {
                 <ChevronDown className="h-3 w-3" />
               </button>
               {desktopCategoriesOpen && (
-                <div className="absolute left-1/2 top-full z-50 mt-2 w-[600px] -translate-x-1/2">
-                  <div className="glass-nav rounded-2xl p-4 shadow-lg border border-border">
-                    <div className="grid grid-cols-2 gap-4">
+                <div className="absolute left-1/2 top-full z-50 pt-2 w-[680px] -translate-x-1/2">
+                  <div className="rounded-3xl border border-border bg-background p-5 shadow-2xl ring-1 ring-black/5">
+                    <div className="grid grid-cols-[200px_1fr] gap-5">
                       {/* Column 1: Category list */}
                       <div className="space-y-1 border-r border-border pr-4">
-                        <p className="mb-2 text-xs font-bold text-muted-foreground">Categories</p>
-                        {categories.map((cat) => (
-                          <button
-                            key={cat.name}
-                            onMouseEnter={() => setHoveredCat(cat)}
-                            className={`w-full rounded-xl px-3 py-2 text-left text-sm font-medium transition-colors ${
-                              hoveredCat?.name === cat.name
-                                ? "bg-primary/10 text-primary"
-                                : "hover:bg-secondary text-foreground/80"
-                            }`}
-                          >
-                            <span className="mr-2">{cat.icon}</span>
-                            {cat.name}
-                          </button>
-                        ))}
-                        <Link
-                          to="/meals"
-                          className="mt-3 block rounded-full bg-secondary px-4 py-2 text-center text-xs font-bold hover:bg-primary hover:text-primary-foreground transition-colors"
-                        >
-                          View all categories
-                        </Link>
+                        <p className="mb-2 px-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">Browse</p>
+                        {categories.map((cat) => {
+                          const active = hoveredCat?.name === cat.name;
+                          return (
+                            <button
+                              key={cat.name}
+                              onMouseEnter={() => setHoveredCat(cat)}
+                              className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm font-semibold transition-all ${
+                                active
+                                  ? "bg-primary text-primary-foreground shadow-sm"
+                                  : "text-foreground/80 hover:bg-secondary"
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <span className="text-base">{cat.icon}</span>
+                                {cat.name}
+                              </span>
+                              <ChevronDown className={`h-3 w-3 -rotate-90 ${active ? "opacity-100" : "opacity-40"}`} />
+                            </button>
+                          );
+                        })}
                       </div>
                       {/* Column 2: Subcategories */}
-                      <div className="pl-2">
-                        <p className="mb-2 text-xs font-bold text-muted-foreground">
-                          {hoveredCat
-                            ? `${hoveredCat.icon} ${hoveredCat.name} subcategories`
-                            : "Select a category"}
-                        </p>
+                      <div className="min-h-[280px]">
                         {hoveredCat ? (
-                          <div className="space-y-1">
-                            {hoveredCat.subcategories.map((sub) => (
-                              <div key={sub.name}>
-                                <p className="px-3 py-1.5 text-xs font-semibold text-foreground/60">
-                                  {sub.name}
-                                </p>
-                                {sub.items.map((item) => (
-                                  <Link
-                                    key={item}
-                                    to="/meals"
-                                    search={{ category: hoveredCat.name, sub: item }}
-                                    className="block rounded-lg px-3 py-1.5 text-sm text-foreground/75 hover:bg-secondary hover:text-foreground transition-colors"
-                                  >
-                                    {item}
-                                  </Link>
-                                ))}
-                              </div>
-                            ))}
-                          </div>
+                          <>
+                            <div className="mb-3 flex items-center justify-between">
+                              <p className="text-sm font-extrabold">
+                                <span className="mr-1.5">{hoveredCat.icon}</span>
+                                {hoveredCat.name}
+                              </p>
+                              <Link
+                                to="/meals"
+                                search={{ category: hoveredCat.name, sub: undefined }}
+                                className="text-xs font-bold text-primary hover:underline"
+                              >
+                                View all →
+                              </Link>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                              {hoveredCat.subcategories.map((sub) => (
+                                <div key={sub.name}>
+                                  <p className="mb-1 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                                    {sub.name}
+                                  </p>
+                                  <ul className="space-y-0.5">
+                                    {sub.items.map((item) => (
+                                      <li key={item}>
+                                        <Link
+                                          to="/meals"
+                                          search={{ category: hoveredCat.name, sub: item }}
+                                          className="block rounded-lg px-2 py-1 text-sm text-foreground/75 hover:bg-secondary hover:text-primary transition-colors"
+                                        >
+                                          {item}
+                                        </Link>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              ))}
+                            </div>
+                          </>
                         ) : (
-                          <div className="flex items-center justify-center py-8 text-xs text-muted-foreground">
-                            Hover a category to see subcategories
+                          <div className="flex h-full items-center justify-center rounded-2xl bg-secondary/40 p-8 text-center text-sm text-muted-foreground">
+                            Hover a category to see what's inside
                           </div>
-                        )}
-                        {hoveredCat && (
-                          <Link
-                            to="/meals"
-                            search={{ category: hoveredCat.name, sub: undefined }}
-                            className="mt-3 block rounded-full bg-primary px-4 py-2 text-center text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
-                          >
-                            View all {hoveredCat.name}
-                          </Link>
                         )}
                       </div>
                     </div>
