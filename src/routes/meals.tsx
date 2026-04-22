@@ -6,8 +6,10 @@ import { MealCard } from "@/components/site/MealCard";
 import { categories } from "@/data/mock";
 import { useVendorMenu } from "@/store/AppProviders";
 
+type MealsSearch = { category?: string; sub?: string };
+
 export const Route = createFileRoute("/meals")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): MealsSearch => ({
     category: typeof search.category === "string" ? search.category : undefined,
     sub: typeof search.sub === "string" ? search.sub : undefined,
   }),
