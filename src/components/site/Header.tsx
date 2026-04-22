@@ -136,7 +136,8 @@ export function Header() {
                                 {sub.items.map((item) => (
                                   <Link
                                     key={item}
-                                    to={`/meals?category=${encodeURIComponent(hoveredCat.name)}&sub=${encodeURIComponent(item)}`}
+                                    to="/meals"
+                                    search={{ category: hoveredCat.name, sub: item }}
                                     className="block rounded-lg px-3 py-1.5 text-sm text-foreground/75 hover:bg-secondary hover:text-foreground transition-colors"
                                   >
                                     {item}
@@ -152,7 +153,8 @@ export function Header() {
                         )}
                         {hoveredCat && (
                           <Link
-                            to={`/meals?category=${encodeURIComponent(hoveredCat.name)}`}
+                            to="/meals"
+                            search={{ category: hoveredCat.name, sub: undefined }}
                             className="mt-3 block rounded-full bg-primary px-4 py-2 text-center text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
                           >
                             View all {hoveredCat.name}
@@ -288,7 +290,8 @@ export function Header() {
                       {isOpen && (
                         <div className="border-t border-border bg-secondary/20 px-4 py-2 space-y-1">
                           <Link
-                            to={`/meals?category=${encodeURIComponent(cat.name)}`}
+                            to="/meals"
+                            search={{ category: cat.name, sub: undefined }}
                             onClick={() => setOpen(false)}
                             className="block rounded-lg px-3 py-2 text-sm font-semibold text-primary hover:bg-secondary"
                           >
@@ -302,7 +305,8 @@ export function Header() {
                               {sub.items.map((item) => (
                                 <Link
                                   key={item}
-                                  to={`/meals?category=${encodeURIComponent(cat.name)}&sub=${encodeURIComponent(item)}`}
+                                  to="/meals"
+                                  search={{ category: cat.name, sub: item }}
                                   onClick={() => setOpen(false)}
                                   className="block rounded-lg px-3 py-1.5 text-sm text-foreground/75 hover:bg-secondary hover:text-foreground"
                                 >

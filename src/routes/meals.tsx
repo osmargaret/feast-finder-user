@@ -7,6 +7,10 @@ import { categories } from "@/data/mock";
 import { useVendorMenu } from "@/store/AppProviders";
 
 export const Route = createFileRoute("/meals")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    category: typeof search.category === "string" ? search.category : undefined,
+    sub: typeof search.sub === "string" ? search.sub : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Browse Meals — MenuMenu" },
