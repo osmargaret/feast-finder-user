@@ -6,15 +6,15 @@ import {
   Phone,
   MapPin,
   FileText,
-  Image as ImageIcon,
   ChefHat,
   Upload,
   X,
 } from "lucide-react";
 import { useAuth, useVendorProfile } from "@/store/AppProviders";
-import { categories, type Category } from "@/data/mock";
+import { categories } from "@/data/mock";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ImageUpload } from "@/components/site/ImageUpload";
 
 export const Route = createFileRoute("/vendor-signup")({
   head: () => ({
@@ -215,18 +215,12 @@ function VendorSignupPage() {
               className="input-mm pl-11"
             />
           </Field>
-          <Field
-            label="Storefront banner / image URL (optional)"
-            icon={<ImageIcon className="h-4 w-4" />}
-            className="sm:col-span-2"
-          >
-            <input
-              value={bannerUrl}
-              onChange={(e) => setBannerUrl(e.target.value)}
-              placeholder="https://…"
-              className="input-mm pl-11"
-            />
-          </Field>
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-xs font-bold text-muted-foreground">
+              Storefront banner (optional)
+            </label>
+            <ImageUpload value={bannerUrl} onChange={setBannerUrl} label="Upload storefront banner" height="h-44" />
+          </div>
           {/* Kitchen images */}
           <div className="sm:col-span-2">
             <label className="mb-1.5 block text-xs font-bold text-muted-foreground">

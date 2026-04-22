@@ -21,7 +21,7 @@ const heroCategories = ["Soups", "Swallow", "Pastries", "Confectioneries", "Gril
 
 function HomePage() {
   const featured = meals.slice(0, 6);
-  const more = meals.slice(6, 10);
+  const explore = meals.slice(6, 16);
 
   return (
     <>
@@ -88,15 +88,18 @@ function HomePage() {
         </div>
       </section>
 
-      {/* More meals */}
+      {/* Explore meals — 5×2 grid */}
       <section className="pb-4">
         <div className="container-mm">
-          <div className="mb-6">
-            <h2 className="section-title">More meals</h2>
-            <p className="section-sub">Explore more delicious options.</p>
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="section-title">Explore meals</h2>
+              <p className="section-sub">Ten more dishes to discover today.</p>
+            </div>
+            <Link to="/meals" className="hidden items-center gap-1 text-sm font-bold text-primary sm:inline-flex">Browse all <ArrowRight className="h-4 w-4" /></Link>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {more.map((m) => <MealCard key={m.id} meal={m} compact />)}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+            {explore.map((m) => <MealCard key={m.id} meal={m} compact />)}
           </div>
         </div>
       </section>

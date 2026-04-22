@@ -350,7 +350,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
         setOrders((prev) => {
           const target = prev.find((o) => o.id === id);
           if (target && target.status !== status) {
-            // push a notification (visible to current user inbox; in this demo single-tenant)
             const labels: Record<Order["status"], string> = {
               pending: "is pending",
               preparing: "is being prepared 👩‍🍳",
@@ -358,16 +357,16 @@ export function AppProviders({ children }: { children: ReactNode }) {
               delivered: "has been delivered ✅",
               cancelled: "was cancelled",
             };
+            const title = `Order ${target.id} ${labels[status]}`;
+            const body = `${target.items.length} item(s) · ₦${target.total.toLocaleString()}`;
             setNotifs((p) => [
-              {
-                id: Math.random().toString(36).slice(2),
-                ts: Date.now(),
-                read: false,
-                title: `Order ${target.id} ${labels[status]}`,
-                body: `${target.items.length} item(s) · ₦${target.total.toLocaleString()}`,
-              },
+              { id: Math.random().toString(36).slice(2), ts: Date.now(), read: false, title, body },
               ...p,
             ]);
+            // Live toast for the customer
+            if (status === "delivered") toast.success(title, { description: body });
+            else if (status === "cancelled") toast.error(title, { description: body });
+            else toast(title, { description: body });
           }
           return prev.map((o) => (o.id === id ? { ...o, status } : o));
         });
