@@ -357,13 +357,13 @@ export function Header() {
               >
                 Notifications ({notif.unread})
               </Link>
-              {auth.user && (
+              {mounted && auth.user && (
                 <Link
                   to="/messages"
                   onClick={() => setOpen(false)}
                   className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
                 >
-                  Messages
+                  Messages{unreadMsgs > 0 ? ` (${unreadMsgs})` : ""}
                 </Link>
               )}
               <Link
