@@ -4,15 +4,15 @@ import { meals as seedMeals, vendors as allVendors, type Meal } from "@/data/moc
 
 // ---------- helpers ----------
 function useLocalState<T>(key: string, initial: T) {
-  const [state, setState] = useState<T>(() => {
-    if (typeof window === "undefined") return initial;
+  const [state, setState] = useState<T>(initial);
+  // Hydrate from localStorage AFTER mount to keep SSR/client output identical.
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(key);
-      return raw ? (JSON.parse(raw) as T) : initial;
-    } catch {
-      return initial;
-    }
-  });
+      if (raw) setState(JSON.parse(raw) as T);
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   useEffect(() => {
     try {
       localStorage.setItem(key, JSON.stringify(state));
@@ -71,6 +71,8 @@ type FollowCtx = {
   ids: string[];
   has: (id: string) => boolean;
   toggle: (id: string) => void;
+  /** how many followers a vendor has (base + 1 if current user follows) */
+  countFor: (vendorId: string, base?: number) => number;
 };
 const FollowContext = createContext<FollowCtx | null>(null);
 
@@ -101,32 +103,31 @@ type OrdersCtx = {
 };
 const OrdersContext = createContext<OrdersCtx | null>(null);
 
-// ---------- Messages (chat threads between user ↔ vendor) ----------
+// ---------- Messages ----------
 export type Message = {
   id: string;
   vendorId: string;
   fromName: string;
-  fromEmail: string; // user email = thread key with vendorId
+  fromEmail: string;
   body: string;
   ts: number;
   read: boolean;
-  from: "user" | "vendor"; // who sent this message
-  /** @deprecated kept for backward compat with old single-reply messages */
+  from: "user" | "vendor";
   reply?: string;
 };
 type MessagesCtx = {
   items: Message[];
   send: (m: Omit<Message, "id" | "ts" | "read" | "from"> & { from?: "user" | "vendor" }) => void;
   markRead: (id: string) => void;
-  /** vendor replies inside a thread */
   reply: (vendorId: string, userEmail: string, text: string, vendorName: string) => void;
-  /** user sends a message inside an existing thread */
   sendAsUser: (vendorId: string, text: string, fromName: string, fromEmail: string) => void;
   remove: (id: string) => void;
+  /** count of vendor → user messages still unread */
+  unreadFromVendors: (userEmail: string) => number;
 };
 const MessagesContext = createContext<MessagesCtx | null>(null);
 
-// ---------- Vendor profile (mock vendor account info) ----------
+// ---------- Vendor profile ----------
 export type VendorProfile = {
   businessName: string;
   ownerName: string;
@@ -147,7 +148,7 @@ type VendorProfileCtx = {
 };
 const VendorProfileContext = createContext<VendorProfileCtx | null>(null);
 
-// ---------- Vendor menu (CRUD overlay on top of seed meals) ----------
+// ---------- Vendor menu ----------
 type VendorMenuCtx = {
   meals: Meal[];
   addMeal: (m: Omit<Meal, "id">) => void;
@@ -155,6 +156,43 @@ type VendorMenuCtx = {
   removeMeal: (id: string) => void;
 };
 const VendorMenuContext = createContext<VendorMenuCtx | null>(null);
+
+// ---------- Blog (vendor-authored) ----------
+export type BlogDraft = {
+  id: string;
+  vendorId: string;
+  title: string;
+  excerpt: string;
+  body: string;
+  cover?: string;
+  ts: number;
+  views: number;
+  authorEmail: string;
+};
+type BlogCtx = {
+  posts: BlogDraft[];
+  create: (p: Omit<BlogDraft, "id" | "ts" | "views">) => BlogDraft;
+  update: (id: string, patch: Partial<BlogDraft>) => void;
+  remove: (id: string) => void;
+  view: (id: string) => void;
+};
+const BlogContext = createContext<BlogCtx | null>(null);
+
+// ---------- Team (vendor admins) ----------
+export type TeamMember = {
+  id: string;
+  vendorId: string;
+  name: string;
+  email: string;
+  role: "manager" | "accountant" | "sales" | "blog-admin";
+  ts: number;
+};
+type TeamCtx = {
+  members: TeamMember[];
+  add: (m: Omit<TeamMember, "id" | "ts">) => void;
+  remove: (id: string) => void;
+};
+const TeamContext = createContext<TeamCtx | null>(null);
 
 // ---------- Provider ----------
 export function AppProviders({ children }: { children: ReactNode }) {
@@ -175,8 +213,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
     {},
   );
   const [removedMealIds, setRemovedMealIds] = useLocalState<string[]>("mm:meal-removed", []);
+  const [blogPosts, setBlogPosts] = useLocalState<BlogDraft[]>("mm:blog-posts", []);
+  const [team, setTeam] = useLocalState<TeamMember[]>("mm:team", []);
 
-  // Effective meal list = (seed - removed, with patches) + extra
   const allMeals = useMemo<Meal[]>(() => {
     const base = seedMeals
       .filter((m) => !removedMealIds.includes(m.id))
@@ -184,7 +223,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
     return [...base, ...extraMeals];
   }, [extraMeals, mealPatches, removedMealIds]);
 
-  // Cart value
   const cartValue = useMemo<CartCtx>(() => {
     const subtotal = cart.reduce((sum, it) => {
       const meal = allMeals.find((m) => m.id === it.mealId);
@@ -257,13 +295,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
     () => ({
       user,
       signIn: async (email) => {
-        await new Promise((r) => setTimeout(r, 400));
+        await new Promise((r) => setTimeout(r, 300));
         const name = email.split("@")[0] || "Friend";
         setUser({ name, email });
         toast.success(`Welcome back, ${name}`);
       },
       signUp: async (name, email) => {
-        await new Promise((r) => setTimeout(r, 400));
+        await new Promise((r) => setTimeout(r, 300));
         setUser({ name, email });
         toast.success(`Welcome, ${name}!`);
       },
@@ -290,6 +328,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           return [...prev, id];
         });
       },
+      countFor: (id, base = 0) => base + (follows.includes(id) ? 1 : 0),
     }),
     [follows, setFollows],
   );
@@ -307,10 +346,34 @@ export function AppProviders({ children }: { children: ReactNode }) {
         setOrders((prev) => [order, ...prev]);
         return order;
       },
-      setStatus: (id, status) =>
-        setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status } : o))),
+      setStatus: (id, status) => {
+        setOrders((prev) => {
+          const target = prev.find((o) => o.id === id);
+          if (target && target.status !== status) {
+            // push a notification (visible to current user inbox; in this demo single-tenant)
+            const labels: Record<Order["status"], string> = {
+              pending: "is pending",
+              preparing: "is being prepared 👩‍🍳",
+              "out-for-delivery": "is out for delivery 🛵",
+              delivered: "has been delivered ✅",
+              cancelled: "was cancelled",
+            };
+            setNotifs((p) => [
+              {
+                id: Math.random().toString(36).slice(2),
+                ts: Date.now(),
+                read: false,
+                title: `Order ${target.id} ${labels[status]}`,
+                body: `${target.items.length} item(s) · ₦${target.total.toLocaleString()}`,
+              },
+              ...p,
+            ]);
+          }
+          return prev.map((o) => (o.id === id ? { ...o, status } : o));
+        });
+      },
     }),
-    [orders, setOrders],
+    [orders, setOrders, setNotifs],
   );
 
   const messagesValue = useMemo<MessagesCtx>(
@@ -332,7 +395,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         ]),
       markRead: (id) =>
         setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m))),
-      reply: (vendorId, userEmail, text, vendorName) =>
+      reply: (vendorId, userEmail, text, vendorName) => {
         setMessages((prev) => [
           {
             id: Math.random().toString(36).slice(2),
@@ -341,7 +404,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
             from: "vendor",
             vendorId,
             fromName: vendorName,
-            fromEmail: userEmail, // thread key
+            fromEmail: userEmail,
             body: text,
           },
           ...prev.map((m) =>
@@ -349,7 +412,19 @@ export function AppProviders({ children }: { children: ReactNode }) {
               ? { ...m, read: true }
               : m,
           ),
-        ]),
+        ]);
+        // Notify the customer about the reply
+        setNotifs((p) => [
+          {
+            id: Math.random().toString(36).slice(2),
+            ts: Date.now(),
+            read: false,
+            title: `${vendorName} replied`,
+            body: text.length > 80 ? text.slice(0, 77) + "…" : text,
+          },
+          ...p,
+        ]);
+      },
       sendAsUser: (vendorId, text, fromName, fromEmail) =>
         setMessages((prev) => [
           {
@@ -365,8 +440,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
           ...prev,
         ]),
       remove: (id) => setMessages((prev) => prev.filter((m) => m.id !== id)),
+      unreadFromVendors: (userEmail) =>
+        messages.filter((m) => m.from === "vendor" && !m.read && m.fromEmail === userEmail).length,
     }),
-    [messages, setMessages],
+    [messages, setMessages, setNotifs],
   );
 
   const vendorProfileValue = useMemo<VendorProfileCtx>(
@@ -411,6 +488,44 @@ export function AppProviders({ children }: { children: ReactNode }) {
     [allMeals, extraMeals, setExtraMeals, setMealPatches, setRemovedMealIds],
   );
 
+  const blogValue = useMemo<BlogCtx>(
+    () => ({
+      posts: blogPosts,
+      create: (p) => {
+        const post: BlogDraft = {
+          ...p,
+          id: "bp-" + Math.random().toString(36).slice(2, 8),
+          ts: Date.now(),
+          views: 0,
+        };
+        setBlogPosts((prev) => [post, ...prev]);
+        toast.success("Blog post published");
+        return post;
+      },
+      update: (id, patch) =>
+        setBlogPosts((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p))),
+      remove: (id) => setBlogPosts((prev) => prev.filter((p) => p.id !== id)),
+      view: (id) =>
+        setBlogPosts((prev) => prev.map((p) => (p.id === id ? { ...p, views: p.views + 1 } : p))),
+    }),
+    [blogPosts, setBlogPosts],
+  );
+
+  const teamValue = useMemo<TeamCtx>(
+    () => ({
+      members: team,
+      add: (m) => {
+        setTeam((prev) => [
+          { ...m, id: "tm-" + Math.random().toString(36).slice(2, 8), ts: Date.now() },
+          ...prev,
+        ]);
+        toast.success(`Added ${m.name} as ${m.role}`);
+      },
+      remove: (id) => setTeam((prev) => prev.filter((m) => m.id !== id)),
+    }),
+    [team, setTeam],
+  );
+
   // seed welcome notification once
   useEffect(() => {
     if (notifs.length === 0) {
@@ -444,7 +559,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
                 <MessagesContext.Provider value={messagesValue}>
                   <VendorProfileContext.Provider value={vendorProfileValue}>
                     <VendorMenuContext.Provider value={vendorMenuValue}>
-                      {children}
+                      <BlogContext.Provider value={blogValue}>
+                        <TeamContext.Provider value={teamValue}>{children}</TeamContext.Provider>
+                      </BlogContext.Provider>
                     </VendorMenuContext.Provider>
                   </VendorProfileContext.Provider>
                 </MessagesContext.Provider>
@@ -500,6 +617,16 @@ export function useVendorMenu() {
 export function useVendorProfile() {
   const c = useContext(VendorProfileContext);
   if (!c) throw new Error("VendorProfileContext missing");
+  return c;
+}
+export function useBlog() {
+  const c = useContext(BlogContext);
+  if (!c) throw new Error("BlogContext missing");
+  return c;
+}
+export function useTeam() {
+  const c = useContext(TeamContext);
+  if (!c) throw new Error("TeamContext missing");
   return c;
 }
 
