@@ -75,7 +75,13 @@ type FollowCtx = {
 const FollowContext = createContext<FollowCtx | null>(null);
 
 // ---------- Orders ----------
-export type OrderItem = { mealId: string; name: string; price: number; qty: number; vendorId: string };
+export type OrderItem = {
+  mealId: string;
+  name: string;
+  price: number;
+  qty: number;
+  vendorId: string;
+};
 export type Order = {
   id: string;
   ts: number;
@@ -100,7 +106,7 @@ export type Message = {
   id: string;
   vendorId: string;
   fromName: string;
-  fromEmail: string;       // user email = thread key with vendorId
+  fromEmail: string; // user email = thread key with vendorId
   body: string;
   ts: number;
   read: boolean;
@@ -127,8 +133,9 @@ export type VendorProfile = {
   email: string;
   phone: string;
   cac?: string;
-  category: string;
+  categories: string[];
   address: string;
+  images: string[];
   bannerUrl?: string;
   about?: string;
   createdAt: number;
@@ -158,9 +165,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [follows, setFollows] = useLocalState<string[]>("mm:follows", []);
   const [orders, setOrders] = useLocalState<Order[]>("mm:orders", []);
   const [messages, setMessages] = useLocalState<Message[]>("mm:messages", []);
-  const [vendorProfile, setVendorProfile] = useLocalState<VendorProfile | null>("mm:vendor-profile", null);
+  const [vendorProfile, setVendorProfile] = useLocalState<VendorProfile | null>(
+    "mm:vendor-profile",
+    null,
+  );
   const [extraMeals, setExtraMeals] = useLocalState<Meal[]>("mm:extra-meals", []);
-  const [mealPatches, setMealPatches] = useLocalState<Record<string, Partial<Meal>>>("mm:meal-patches", {});
+  const [mealPatches, setMealPatches] = useLocalState<Record<string, Partial<Meal>>>(
+    "mm:meal-patches",
+    {},
+  );
   const [removedMealIds, setRemovedMealIds] = useLocalState<string[]>("mm:meal-removed", []);
 
   // Effective meal list = (seed - removed, with patches) + extra
@@ -185,7 +198,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
       add: (mealId, qty = 1) => {
         setCart((prev) => {
           const existing = prev.find((p) => p.mealId === mealId);
-          if (existing) return prev.map((p) => (p.mealId === mealId ? { ...p, qty: p.qty + qty } : p));
+          if (existing)
+            return prev.map((p) => (p.mealId === mealId ? { ...p, qty: p.qty + qty } : p));
           return [...prev, { mealId, qty }];
         });
         const m = allMeals.find((x) => x.id === mealId);
@@ -194,7 +208,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
       remove: (mealId) => setCart((prev) => prev.filter((p) => p.mealId !== mealId)),
       setQty: (mealId, qty) =>
         setCart((prev) =>
-          qty <= 0 ? prev.filter((p) => p.mealId !== mealId) : prev.map((p) => (p.mealId === mealId ? { ...p, qty } : p)),
+          qty <= 0
+            ? prev.filter((p) => p.mealId !== mealId)
+            : prev.map((p) => (p.mealId === mealId ? { ...p, qty } : p)),
         ),
       clear: () => setCart([]),
     };
@@ -314,7 +330,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
           },
           ...prev,
         ]),
-      markRead: (id) => setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m))),
+      markRead: (id) =>
+        setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m))),
       reply: (vendorId, userEmail, text, vendorName) =>
         setMessages((prev) => [
           {
@@ -328,7 +345,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
             body: text,
           },
           ...prev.map((m) =>
-            m.vendorId === vendorId && m.fromEmail === userEmail && m.from === "user" ? { ...m, read: true } : m,
+            m.vendorId === vendorId && m.fromEmail === userEmail && m.from === "user"
+              ? { ...m, read: true }
+              : m,
           ),
         ]),
       sendAsUser: (vendorId, text, fromName, fromEmail) =>
@@ -396,8 +415,20 @@ export function AppProviders({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (notifs.length === 0) {
       setNotifs([
-        { id: "welcome", ts: Date.now(), read: false, title: "Welcome to MenuMenu 🎉", body: "Discover top kitchens and order in minutes." },
-        { id: "promo", ts: Date.now() - 3600_000, read: false, title: "10% off your first order", body: "Use code TASTE10 at checkout." },
+        {
+          id: "welcome",
+          ts: Date.now(),
+          read: false,
+          title: "Welcome to MenuMenu 🎉",
+          body: "Discover top kitchens and order in minutes.",
+        },
+        {
+          id: "promo",
+          ts: Date.now() - 3600_000,
+          read: false,
+          title: "10% off your first order",
+          body: "Use code TASTE10 at checkout.",
+        },
       ]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -412,7 +443,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
               <OrdersContext.Provider value={ordersValue}>
                 <MessagesContext.Provider value={messagesValue}>
                   <VendorProfileContext.Provider value={vendorProfileValue}>
-                    <VendorMenuContext.Provider value={vendorMenuValue}>{children}</VendorMenuContext.Provider>
+                    <VendorMenuContext.Provider value={vendorMenuValue}>
+                      {children}
+                    </VendorMenuContext.Provider>
                   </VendorProfileContext.Provider>
                 </MessagesContext.Provider>
               </OrdersContext.Provider>
@@ -471,4 +504,3 @@ export function useVendorProfile() {
 }
 
 export type { Meal };
-

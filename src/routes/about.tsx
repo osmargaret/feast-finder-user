@@ -32,10 +32,10 @@ const values = [
 ];
 
 const team = [
-  { n: "Adaeze Okafor", r: "Co-founder & CEO", a: chef1 },
-  { n: "Tunde Bello",   r: "Co-founder & CTO", a: chef2 },
-  { n: "Kenechi Eze",   r: "Head of Vendors",  a: chef3 },
-  { n: "Hauwa Bala",    r: "Head of Design",   a: chef4 },
+  { n: "Oluwadamilola I. Samuel", r: "Founder", a: chef1 },
+  { n: "Margaret O. Samuel",   r: "Co-founder & CTO", a: chef2 },
+  { n: "Onaoluwa Joan. Samuel",   r: "Head of Vendors",  a: chef3 },
+  { n: "Iyeoluwa Joshua Samuel",    r: "Head of Design",   a: chef4 },
 ];
 
 function AboutPage() {
