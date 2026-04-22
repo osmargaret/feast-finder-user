@@ -1,18 +1,20 @@
 import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { Search, MapPin, SlidersHorizontal, X } from "lucide-react";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { PageHero } from "@/components/site/PageHero";
 import { MealCard } from "@/components/site/MealCard";
 import { categories } from "@/data/mock";
 import { useVendorMenu } from "@/store/AppProviders";
 
-type MealsSearch = { category?: string; sub?: string };
+const mealsSearchSchema = z.object({
+  category: fallback(z.string().optional(), undefined).default(undefined),
+  sub: fallback(z.string().optional(), undefined).default(undefined),
+});
 
 export const Route = createFileRoute("/meals")({
-  validateSearch: (search: Record<string, unknown>): MealsSearch => ({
-    category: typeof search.category === "string" ? search.category : undefined,
-    sub: typeof search.sub === "string" ? search.sub : undefined,
-  }),
+  validateSearch: zodValidator(mealsSearchSchema),
   head: () => ({
     meta: [
       { title: "Browse Meals — MenuMenu" },
