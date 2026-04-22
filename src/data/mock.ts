@@ -350,6 +350,8 @@ export const meals: Meal[] = [
   { id: "amala", name: "Amala & Ewedu", price: 3500, image: poundedyam, blurb: "Yoruba favourite", vendorId: "naija-swallow", category: "Swallow" },
   { id: "donut", name: "Glazed Donuts (4pcs)", price: 2000, image: bread, blurb: "Soft & sweet", vendorId: "sweet-tooth", category: "Confectioneries", dietary: ["Vegetarian"] },
 ];
+
+export interface SubCategory {
   name: string;
   items: string[]; // meal names or generic item names
 }
