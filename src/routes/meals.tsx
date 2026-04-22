@@ -134,14 +134,13 @@ function MealsPage() {
                   setCat(newCat);
                   setSub("");
                   setPage(1);
-                  const newSearch: Record<string, string> = { ...search };
-                  if (newCat === "All") {
-                    delete newSearch.category;
-                  } else {
-                    newSearch.category = newCat;
-                  }
-                  delete newSearch.sub;
-                  navigate({ to: ".", search: newSearch });
+                  navigate({
+                    to: ".",
+                    search: {
+                      category: newCat === "All" ? undefined : newCat,
+                      sub: undefined,
+                    },
+                  });
                 }}
                 className="input-mm"
               >
