@@ -1,12 +1,20 @@
 import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
 import { Search, MapPin, SlidersHorizontal, X } from "lucide-react";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
+import { z } from "zod";
 import { PageHero } from "@/components/site/PageHero";
 import { MealCard } from "@/components/site/MealCard";
 import { categories } from "@/data/mock";
 import { useVendorMenu } from "@/store/AppProviders";
 
+const mealsSearchSchema = z.object({
+  category: fallback(z.string().optional(), undefined).default(undefined),
+  sub: fallback(z.string().optional(), undefined).default(undefined),
+});
+
 export const Route = createFileRoute("/meals")({
+  validateSearch: zodValidator(mealsSearchSchema),
   head: () => ({
     meta: [
       { title: "Browse Meals — MenuMenu" },
@@ -128,14 +136,13 @@ function MealsPage() {
                   setCat(newCat);
                   setSub("");
                   setPage(1);
-                  const newSearch: Record<string, string> = { ...search };
-                  if (newCat === "All") {
-                    delete newSearch.category;
-                  } else {
-                    newSearch.category = newCat;
-                  }
-                  delete newSearch.sub;
-                  navigate({ to: ".", search: newSearch });
+                  navigate({
+                    to: ".",
+                    search: {
+                      category: newCat === "All" ? undefined : newCat,
+                      sub: undefined,
+                    },
+                  });
                 }}
                 className="input-mm"
               >
