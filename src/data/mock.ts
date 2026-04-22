@@ -39,9 +39,12 @@ export type Vendor = {
   avatar: string;
   cover: string;
   followers: string;
+  followerCount: number;
   rating: number;
   tagline: string;
   type: string;
+  location?: string;
+  priceRange?: "$" | "$$" | "$$$";
 };
 
 export const vendors: Vendor[] = [
@@ -51,9 +54,12 @@ export const vendors: Vendor[] = [
     avatar: chef1,
     cover: cover1,
     followers: "1.2k",
+    followerCount: 1240,
     rating: 4.7,
     tagline: "Swallow & soups",
     type: "Home Kitchen",
+    location: "Lagos",
+    priceRange: "$$",
   },
   {
     id: "oven-fresh",
@@ -61,9 +67,12 @@ export const vendors: Vendor[] = [
     avatar: chef2,
     cover: cover2,
     followers: "890",
+    followerCount: 890,
     rating: 4.6,
     tagline: "Pastries & bread",
     type: "Bakery",
+    location: "Abuja",
+    priceRange: "$",
   },
   {
     id: "spice-palace",
@@ -71,9 +80,12 @@ export const vendors: Vendor[] = [
     avatar: chef3,
     cover: cover4,
     followers: "2.1k",
+    followerCount: 2100,
     rating: 4.8,
     tagline: "Rice & grills",
     type: "Restaurant",
+    location: "Lagos",
+    priceRange: "$$$",
   },
   {
     id: "suya-republic",
@@ -81,9 +93,12 @@ export const vendors: Vendor[] = [
     avatar: chef4,
     cover: cover3,
     followers: "980",
+    followerCount: 980,
     rating: 4.5,
     tagline: "Grills & skewers",
     type: "Street Food",
+    location: "Port Harcourt",
+    priceRange: "$$",
   },
   {
     id: "morning-glory",
@@ -91,9 +106,12 @@ export const vendors: Vendor[] = [
     avatar: chef1,
     cover: cover2,
     followers: "640",
+    followerCount: 640,
     rating: 4.4,
     tagline: "Breakfast specials",
     type: "Cafe",
+    location: "Ibadan",
+    priceRange: "$",
   },
   {
     id: "ocean-catch",
@@ -101,9 +119,12 @@ export const vendors: Vendor[] = [
     avatar: chef3,
     cover: cover3,
     followers: "720",
+    followerCount: 720,
     rating: 4.6,
     tagline: "Seafood",
     type: "Restaurant",
+    location: "Port Harcourt",
+    priceRange: "$$$",
   },
   {
     id: "naija-swallow",
@@ -111,9 +132,12 @@ export const vendors: Vendor[] = [
     avatar: chef1,
     cover: cover1,
     followers: "1.5k",
+    followerCount: 1500,
     rating: 4.7,
     tagline: "Pounded yam & soups",
     type: "Home Kitchen",
+    location: "Lagos",
+    priceRange: "$$",
   },
   {
     id: "sweet-tooth",
@@ -121,9 +145,12 @@ export const vendors: Vendor[] = [
     avatar: chef2,
     cover: cover2,
     followers: "510",
+    followerCount: 510,
     rating: 4.5,
     tagline: "Confectioneries",
     type: "Bakery",
+    location: "Abuja",
+    priceRange: "$$",
   },
   {
     id: "grill-house",
@@ -131,9 +158,51 @@ export const vendors: Vendor[] = [
     avatar: chef4,
     cover: cover3,
     followers: "830",
+    followerCount: 830,
     rating: 4.6,
     tagline: "BBQ & grills",
     type: "Restaurant",
+    location: "Lagos",
+    priceRange: "$$$",
+  },
+  {
+    id: "jollof-junction",
+    name: "Jollof Junction",
+    avatar: chef3,
+    cover: cover4,
+    followers: "1.1k",
+    followerCount: 1100,
+    rating: 4.7,
+    tagline: "Party jollof specialists",
+    type: "Restaurant",
+    location: "Lagos",
+    priceRange: "$$",
+  },
+  {
+    id: "bites-and-bakes",
+    name: "Bites & Bakes",
+    avatar: chef2,
+    cover: cover2,
+    followers: "420",
+    followerCount: 420,
+    rating: 4.4,
+    tagline: "Snacks & small chops",
+    type: "Bakery",
+    location: "Abuja",
+    priceRange: "$",
+  },
+  {
+    id: "village-pot",
+    name: "Village Pot",
+    avatar: chef1,
+    cover: cover1,
+    followers: "760",
+    followerCount: 760,
+    rating: 4.6,
+    tagline: "Home-style soups",
+    type: "Home Kitchen",
+    location: "Ibadan",
+    priceRange: "$$",
   },
 ];
 
@@ -264,6 +333,22 @@ export const meals: Meal[] = [
     vendorId: "naija-swallow",
     category: "Swallow",
   },
+  { id: "jollof3", name: "Smoky Jollof Combo", price: 4200, image: jollof, badge: "🍚 Popular", blurb: "With plantain & egg", vendorId: "jollof-junction", category: "Rice", dietary: ["Halal"] },
+  { id: "jollof4", name: "Coconut Jollof", price: 3800, image: jollof, blurb: "Aromatic & rich", vendorId: "jollof-junction", category: "Rice" },
+  { id: "meatpie2", name: "Chicken Pie (4pcs)", price: 2400, image: meatpie, blurb: "Buttery crust", vendorId: "bites-and-bakes", category: "Pastries" },
+  { id: "smallchops", name: "Small Chops Box", price: 6500, image: meatpie, badge: "🎉 Party", blurb: "Puff puff, samosa, gizzard", vendorId: "bites-and-bakes", category: "Pastries" },
+  { id: "okra", name: "Okra Soup & Eba", price: 3700, image: egusi, blurb: "Hearty Naija classic", vendorId: "village-pot", category: "Swallow" },
+  { id: "ofada", name: "Ofada Rice & Ayamase", price: 4800, image: jollof, badge: "🌶️ Spicy", blurb: "Local rice, palm-oil stew", vendorId: "spice-palace", category: "Rice", dietary: ["Spicy"] },
+  { id: "cake", name: "Chocolate Cake Slice", price: 1800, image: bread, badge: "🍰 Sweet", blurb: "Moist & fudgy", vendorId: "sweet-tooth", category: "Confectioneries", dietary: ["Vegetarian"] },
+  { id: "akara", name: "Akara & Pap", price: 1500, image: pancakes, blurb: "Classic Naija breakfast", vendorId: "morning-glory", category: "Breakfast" },
+  { id: "moimoi", name: "Moi Moi Trio", price: 2200, image: pancakes, blurb: "Steamed bean pudding", vendorId: "morning-glory", category: "Breakfast", dietary: ["Vegetarian"] },
+  { id: "shrimp", name: "Garlic Butter Shrimp", price: 6200, image: catfish, badge: "🦐 New", blurb: "Buttery & herby", vendorId: "ocean-catch", category: "Seafood" },
+  { id: "ribs", name: "Smoky BBQ Ribs", price: 7500, image: suya, badge: "🔥 Hot", blurb: "Slow-cooked tender ribs", vendorId: "grill-house", category: "Grills" },
+  { id: "kebabs", name: "Mixed Kebab Skewers", price: 4900, image: suya, blurb: "Beef, chicken, veggie", vendorId: "grill-house", category: "Grills" },
+  { id: "puffpuff", name: "Puff Puff (12pcs)", price: 1500, image: bread, blurb: "Fluffy fried dough", vendorId: "oven-fresh", category: "Pastries", dietary: ["Vegetarian"] },
+  { id: "fufu", name: "Fufu & Ogbono", price: 3600, image: poundedyam, blurb: "Stretchy & rich", vendorId: "village-pot", category: "Swallow" },
+  { id: "amala", name: "Amala & Ewedu", price: 3500, image: poundedyam, blurb: "Yoruba favourite", vendorId: "naija-swallow", category: "Swallow" },
+  { id: "donut", name: "Glazed Donuts (4pcs)", price: 2000, image: bread, blurb: "Soft & sweet", vendorId: "sweet-tooth", category: "Confectioneries", dietary: ["Vegetarian"] },
 ];
 
 export interface SubCategory {

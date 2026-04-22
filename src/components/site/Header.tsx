@@ -12,7 +12,7 @@ import {
   MessageSquare,
   ChevronDown,
 } from "lucide-react";
-import { useAuth, useCart, useNotifications, useWishlist } from "@/store/AppProviders";
+import { useAuth, useCart, useMessages, useNotifications, useWishlist } from "@/store/AppProviders";
 import { categories, type Category } from "@/data/mock";
 
 const nav = [
@@ -32,6 +32,8 @@ export function Header() {
   const wish = useWishlist();
   const notif = useNotifications();
   const auth = useAuth();
+  const messages = useMessages();
+  const unreadMsgs = mounted && auth.user ? messages.unreadFromVendors(auth.user.email) : 0;
 
   useEffect(() => {
     setMounted(true);
@@ -201,6 +203,11 @@ export function Header() {
             {mounted && auth.user && (
               <Link to="/messages" className="icon-btn hidden sm:inline-flex" aria-label="Messages">
                 <MessageSquare className="h-4 w-4" />
+                {unreadMsgs > 0 && (
+                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
+                    {unreadMsgs}
+                  </span>
+                )}
               </Link>
             )}
             <Link to="/cart" className="icon-btn relative" aria-label="Cart">
@@ -350,13 +357,13 @@ export function Header() {
               >
                 Notifications ({notif.unread})
               </Link>
-              {auth.user && (
+              {mounted && auth.user && (
                 <Link
                   to="/messages"
                   onClick={() => setOpen(false)}
                   className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
                 >
-                  Messages
+                  Messages{unreadMsgs > 0 ? ` (${unreadMsgs})` : ""}
                 </Link>
               )}
               <Link

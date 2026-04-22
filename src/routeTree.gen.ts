@@ -31,8 +31,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as VendorsVendorIdRouteImport } from './routes/vendors.$vendorId'
 import { Route as OrderConfirmationOrderIdRouteImport } from './routes/order-confirmation.$orderId'
-import { Route as BlogVendorSpotlightMamaTRouteImport } from './routes/blog.vendor-spotlight-mama-t'
-import { Route as Blog5TipsPerfectJollofRouteImport } from './routes/blog.5-tips-perfect-jollof'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
@@ -145,15 +144,9 @@ const OrderConfirmationOrderIdRoute =
     path: '/order-confirmation/$orderId',
     getParentRoute: () => rootRouteImport,
   } as any)
-const BlogVendorSpotlightMamaTRoute =
-  BlogVendorSpotlightMamaTRouteImport.update({
-    id: '/vendor-spotlight-mama-t',
-    path: '/vendor-spotlight-mama-t',
-    getParentRoute: () => BlogRoute,
-  } as any)
-const Blog5TipsPerfectJollofRoute = Blog5TipsPerfectJollofRouteImport.update({
-  id: '/5-tips-perfect-jollof',
-  path: '/5-tips-perfect-jollof',
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
   getParentRoute: () => BlogRoute,
 } as any)
 
@@ -178,8 +171,7 @@ export interface FileRoutesByFullPath {
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
   '/wishlist': typeof WishlistRoute
-  '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
-  '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
 }
@@ -204,8 +196,7 @@ export interface FileRoutesByTo {
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
   '/wishlist': typeof WishlistRoute
-  '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
-  '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
 }
@@ -231,8 +222,7 @@ export interface FileRoutesById {
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
   '/wishlist': typeof WishlistRoute
-  '/blog/5-tips-perfect-jollof': typeof Blog5TipsPerfectJollofRoute
-  '/blog/vendor-spotlight-mama-t': typeof BlogVendorSpotlightMamaTRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
 }
@@ -259,8 +249,7 @@ export interface FileRouteTypes {
     | '/vendor-signup'
     | '/vendors'
     | '/wishlist'
-    | '/blog/5-tips-perfect-jollof'
-    | '/blog/vendor-spotlight-mama-t'
+    | '/blog/$slug'
     | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
   fileRoutesByTo: FileRoutesByTo
@@ -285,8 +274,7 @@ export interface FileRouteTypes {
     | '/vendor-signup'
     | '/vendors'
     | '/wishlist'
-    | '/blog/5-tips-perfect-jollof'
-    | '/blog/vendor-spotlight-mama-t'
+    | '/blog/$slug'
     | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
   id:
@@ -311,8 +299,7 @@ export interface FileRouteTypes {
     | '/vendor-signup'
     | '/vendors'
     | '/wishlist'
-    | '/blog/5-tips-perfect-jollof'
-    | '/blog/vendor-spotlight-mama-t'
+    | '/blog/$slug'
     | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
   fileRoutesById: FileRoutesById
@@ -497,31 +484,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrderConfirmationOrderIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/blog/vendor-spotlight-mama-t': {
-      id: '/blog/vendor-spotlight-mama-t'
-      path: '/vendor-spotlight-mama-t'
-      fullPath: '/blog/vendor-spotlight-mama-t'
-      preLoaderRoute: typeof BlogVendorSpotlightMamaTRouteImport
-      parentRoute: typeof BlogRoute
-    }
-    '/blog/5-tips-perfect-jollof': {
-      id: '/blog/5-tips-perfect-jollof'
-      path: '/5-tips-perfect-jollof'
-      fullPath: '/blog/5-tips-perfect-jollof'
-      preLoaderRoute: typeof Blog5TipsPerfectJollofRouteImport
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
       parentRoute: typeof BlogRoute
     }
   }
 }
 
 interface BlogRouteChildren {
-  Blog5TipsPerfectJollofRoute: typeof Blog5TipsPerfectJollofRoute
-  BlogVendorSpotlightMamaTRoute: typeof BlogVendorSpotlightMamaTRoute
+  BlogSlugRoute: typeof BlogSlugRoute
 }
 
 const BlogRouteChildren: BlogRouteChildren = {
-  Blog5TipsPerfectJollofRoute: Blog5TipsPerfectJollofRoute,
-  BlogVendorSpotlightMamaTRoute: BlogVendorSpotlightMamaTRoute,
+  BlogSlugRoute: BlogSlugRoute,
 }
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
