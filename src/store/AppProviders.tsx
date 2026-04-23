@@ -195,6 +195,13 @@ type TeamCtx = {
 };
 const TeamContext = createContext<TeamCtx | null>(null);
 
+// ---------- Delivery area (customer-side filter) ----------
+type DeliveryAreaCtx = {
+  area: string | null;
+  setArea: (a: string | null) => void;
+};
+const DeliveryAreaContext = createContext<DeliveryAreaCtx | null>(null);
+
 // ---------- Provider ----------
 export function AppProviders({ children }: { children: ReactNode }) {
   const [cart, setCart] = useLocalState<CartItem[]>("mm:cart", []);
@@ -216,6 +223,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [removedMealIds, setRemovedMealIds] = useLocalState<string[]>("mm:meal-removed", []);
   const [blogPosts, setBlogPosts] = useLocalState<BlogDraft[]>("mm:blog-posts", []);
   const [team, setTeam] = useLocalState<TeamMember[]>("mm:team", []);
+  const [deliveryArea, setDeliveryAreaState] = useLocalState<string | null>("mm:delivery-area", null);
+  const [lastVendorMsgId, setLastVendorMsgId] = useState<string | null>(null);
 
   const allMeals = useMemo<Meal[]>(() => {
     const base = seedMeals
@@ -526,6 +535,18 @@ export function AppProviders({ children }: { children: ReactNode }) {
     [team, setTeam],
   );
 
+  const deliveryAreaValue = useMemo<DeliveryAreaCtx>(
+    () => ({
+      area: deliveryArea,
+      setArea: (a) => {
+        setDeliveryAreaState(a);
+        if (a) toast.success(`Showing kitchens that deliver to ${a}`);
+        else toast("Delivery-area filter cleared");
+      },
+    }),
+    [deliveryArea, setDeliveryAreaState],
+  );
+
   // seed welcome notification once
   useEffect(() => {
     if (notifs.length === 0) {
@@ -549,6 +570,25 @@ export function AppProviders({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Browser push notifications when a vendor reply arrives for the current user
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (!user) return;
+    const newest = messages.find((m) => m.from === "vendor" && m.fromEmail === user.email);
+    if (!newest || newest.id === lastVendorMsgId) return;
+    setLastVendorMsgId(newest.id);
+    if (Notification.permission === "granted") {
+      try {
+        const v = allVendors.find((x) => x.id === newest.vendorId);
+        new Notification(`${v?.name ?? "Kitchen"} replied`, {
+          body: newest.body.length > 100 ? newest.body.slice(0, 97) + "…" : newest.body,
+          icon: v?.avatar,
+          tag: `mm-msg-${newest.vendorId}`,
+        });
+      } catch {}
+    }
+  }, [messages, user, lastVendorMsgId]);
+
   return (
     <AuthContext.Provider value={authValue}>
       <CartContext.Provider value={cartValue}>
@@ -560,7 +600,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
                   <VendorProfileContext.Provider value={vendorProfileValue}>
                     <VendorMenuContext.Provider value={vendorMenuValue}>
                       <BlogContext.Provider value={blogValue}>
-                        <TeamContext.Provider value={teamValue}>{children}</TeamContext.Provider>
+                        <TeamContext.Provider value={teamValue}>
+                          <DeliveryAreaContext.Provider value={deliveryAreaValue}>
+                            {children}
+                          </DeliveryAreaContext.Provider>
+                        </TeamContext.Provider>
                       </BlogContext.Provider>
                     </VendorMenuContext.Provider>
                   </VendorProfileContext.Provider>
@@ -627,6 +671,11 @@ export function useBlog() {
 export function useTeam() {
   const c = useContext(TeamContext);
   if (!c) throw new Error("TeamContext missing");
+  return c;
+}
+export function useDeliveryArea() {
+  const c = useContext(DeliveryAreaContext);
+  if (!c) throw new Error("DeliveryAreaContext missing");
   return c;
 }
 

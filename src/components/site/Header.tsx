@@ -12,8 +12,9 @@ import {
   MessageSquare,
   ChevronDown,
 } from "lucide-react";
-import { useAuth, useCart, useMessages, useNotifications, useWishlist } from "@/store/AppProviders";
+import { useAuth, useCart, useMessages, useNotifications, useVendorProfile, useWishlist } from "@/store/AppProviders";
 import { categories, type Category } from "@/data/mock";
+import { DeliveryAreaPicker } from "@/components/site/DeliveryAreaPicker";
 
 const nav = [
   { to: "/" as const, label: "Home" },
@@ -33,7 +34,9 @@ export function Header() {
   const notif = useNotifications();
   const auth = useAuth();
   const messages = useMessages();
+  const vendor = useVendorProfile();
   const unreadMsgs = mounted && auth.user ? messages.unreadFromVendors(auth.user.email) : 0;
+  const role: "vendor" | "user" | null = mounted ? (vendor.profile ? "vendor" : auth.user ? "user" : null) : null;
 
   useEffect(() => {
     setMounted(true);
@@ -184,6 +187,7 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <div className="hidden md:block"><DeliveryAreaPicker /></div>
             <Link to="/wishlist" className="icon-btn hidden sm:inline-flex" aria-label="Wishlist">
               <Heart className="h-4 w-4" />
               {mounted && wish.ids.length > 0 && (
@@ -229,6 +233,9 @@ export function Header() {
                   className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold sm:inline-flex hover:bg-primary/10"
                 >
                   <UserIcon className="h-3.5 w-3.5" /> {auth.user.name}
+                  <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${role === "vendor" ? "bg-primary text-primary-foreground" : "bg-foreground/10 text-foreground"}`}>
+                    {role === "vendor" ? "Vendor" : "User"}
+                  </span>
                 </Link>
                 <Link
                   to="/settings"

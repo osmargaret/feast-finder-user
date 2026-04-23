@@ -53,9 +53,26 @@ export type Vendor = {
   type: string;
   location?: string;
   priceRange?: "$" | "$$" | "$$$";
+  deliveryAreas?: string[];
 };
 
-export const vendors: Vendor[] = [
+/** Default delivery-area map for seed vendors (frontend-only mock) */
+const seedAreas: Record<string, string[]> = {
+  "mama-t": ["Ikeja", "Maryland", "Magodo", "Ojota", "Yaba"],
+  "oven-fresh": ["Ikeja", "Surulere", "Yaba", "Mushin", "Agege"],
+  "spice-palace": ["Lekki", "Ajah", "Victoria Island", "Ikoyi"],
+  "suya-republic": ["Surulere", "Yaba", "Mushin", "Oshodi", "Apapa"],
+  "morning-glory": ["Yaba", "Surulere", "Maryland", "Gbagada"],
+  "ocean-catch": ["Lekki", "Ajah", "Victoria Island", "Ikoyi", "Apapa"],
+  "naija-swallow": ["Ikeja", "Ikorodu", "Elepe", "Maryland", "Ojota"],
+  "sweet-tooth": ["Lekki", "Ikoyi", "Victoria Island", "Magodo"],
+  "grill-house": ["Lekki", "Ajah", "Victoria Island", "Ikoyi", "Surulere"],
+  "jollof-junction": ["Ikeja", "Yaba", "Surulere", "Maryland", "Gbagada"],
+  "bites-and-bakes": ["Ikeja", "Magodo", "Ojota", "Festac"],
+  "village-pot": ["Ikorodu", "Elepe", "Mushin", "Agege", "Oshodi"],
+};
+
+const baseVendors = [
   {
     id: "mama-t",
     name: "Mama T Kitchen",
@@ -212,7 +229,18 @@ export const vendors: Vendor[] = [
     location: "Ibadan",
     priceRange: "$$",
   },
-];
+] as const;
+
+export const vendors: Vendor[] = baseVendors.map((v) => ({
+  ...v,
+  deliveryAreas: seedAreas[v.id] ?? [],
+}));
+
+/** Returns the effective delivery areas for a vendor (override > seed > empty) */
+export function vendorAreas(vendorId: string, override?: string[]): string[] {
+  if (override && override.length) return override;
+  return seedAreas[vendorId] ?? [];
+}
 
 export const meals: Meal[] = [
   {

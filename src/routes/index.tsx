@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Search, ShieldCheck, Truck, Star, ArrowRight } from "lucide-react";
 import heroImg from "@/assets/hero-food.jpg";
-import { meals, vendors, categories } from "@/data/mock";
+import { meals, vendors, categories, vendorAreas } from "@/data/mock";
 import { MealCard } from "@/components/site/MealCard";
 import { KitchenCard } from "@/components/site/KitchenCard";
+import { DeliveryAreaPicker } from "@/components/site/DeliveryAreaPicker";
+import { useDeliveryArea } from "@/store/AppProviders";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,8 +22,12 @@ export const Route = createFileRoute("/")({
 const heroCategories = ["Soups", "Swallow", "Pastries", "Confectioneries", "Grills", "Breakfast"];
 
 function HomePage() {
-  const featured = meals.slice(0, 6);
-  const explore = meals.slice(6, 16);
+  const { area } = useDeliveryArea();
+  const matchesArea = (vendorId: string) =>
+    !area || vendorAreas(vendorId, vendors.find((v) => v.id === vendorId)?.deliveryAreas).includes(area);
+  const featured = meals.filter((m) => matchesArea(m.vendorId)).slice(0, 6);
+  const explore = meals.filter((m) => matchesArea(m.vendorId)).slice(6, 16);
+  const trendingVendors = vendors.filter((v) => matchesArea(v.id)).slice(0, 4);
 
   return (
     <>
@@ -72,6 +78,13 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Delivery area picker */}
+      <section className="pt-8">
+        <div className="container-mm">
+          <DeliveryAreaPicker variant="block" />
+        </div>
+      </section>
+
       {/* Featured meals */}
       <section className="section">
         <div className="container-mm">
@@ -115,7 +128,7 @@ function HomePage() {
             <Link to="/vendors" className="hidden items-center gap-1 text-sm font-bold text-primary sm:inline-flex">Discover <ArrowRight className="h-4 w-4" /></Link>
           </div>
           <div className="scroll-row sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            {vendors.slice(0, 4).map((v) => <KitchenCard key={v.id} vendor={v} />)}
+            {trendingVendors.map((v) => <KitchenCard key={v.id} vendor={v} />)}
           </div>
         </div>
       </section>
