@@ -106,6 +106,57 @@ function CheckoutPage() {
                   <PayOption icon={<Wallet className="h-4 w-4" />} label="Transfer" value="transfer" current={payment} onSelect={setPayment} />
                   <PayOption icon={<Banknote className="h-4 w-4" />} label="Cash on delivery" value="cash" current={payment} onSelect={setPayment} />
                 </div>
+
+                {payment === "card" && (
+                  <div className="mt-5 grid gap-3 rounded-2xl border border-border bg-secondary/30 p-4 sm:grid-cols-2">
+                    <p className="sm:col-span-2 text-xs font-bold uppercase text-muted-foreground">Card details</p>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-muted-foreground">Card number</label>
+                      <input required inputMode="numeric" maxLength={19} placeholder="1234 5678 9012 3456" className="mt-1.5 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-muted-foreground">Expiry (MM/YY)</label>
+                      <input required maxLength={5} placeholder="08/27" className="mt-1.5 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-muted-foreground">CVV</label>
+                      <input required maxLength={4} inputMode="numeric" placeholder="123" className="mt-1.5 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-muted-foreground">Name on card</label>
+                      <input required placeholder="As shown on card" className="mt-1.5 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm" />
+                    </div>
+                  </div>
+                )}
+
+                {payment === "transfer" && (
+                  <div className="mt-5 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 p-5">
+                    <p className="text-xs font-bold uppercase tracking-wide text-primary">Transfer to MenuMenu</p>
+                    <dl className="mt-3 grid gap-2 text-sm">
+                      <div className="flex justify-between"><dt className="font-semibold text-muted-foreground">Bank</dt><dd className="font-extrabold">Wema Bank</dd></div>
+                      <div className="flex justify-between"><dt className="font-semibold text-muted-foreground">Account name</dt><dd className="font-extrabold">MenuMenu Marketplace Ltd</dd></div>
+                      <div className="flex justify-between items-center">
+                        <dt className="font-semibold text-muted-foreground">Account number</dt>
+                        <dd className="flex items-center gap-2">
+                          <span className="font-extrabold tracking-wider">0123456789</span>
+                          <button
+                            type="button"
+                            onClick={() => { if (typeof navigator !== "undefined" && navigator.clipboard) { navigator.clipboard.writeText("0123456789"); notif.push({ title: "Account number copied", body: "0123456789 — Wema Bank" }); } }}
+                            className="rounded-full bg-background px-2.5 py-1 text-[10px] font-bold hover:bg-secondary"
+                          >Copy</button>
+                        </dd>
+                      </div>
+                      <div className="flex justify-between"><dt className="font-semibold text-muted-foreground">Amount</dt><dd className="font-extrabold">{formatPrice(total)}</dd></div>
+                    </dl>
+                    <p className="mt-3 text-xs text-muted-foreground">Transfer to the MenuMenu account above. Vendors are settled by us after delivery.</p>
+                  </div>
+                )}
+
+                {payment === "cash" && (
+                  <p className="mt-5 rounded-2xl bg-secondary/40 p-4 text-sm font-semibold text-muted-foreground">
+                    💵 Pay with cash when your order arrives. Please have the exact amount ready.
+                  </p>
+                )}
               </div>
             </div>
 
