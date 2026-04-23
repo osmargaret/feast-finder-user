@@ -15,12 +15,14 @@ import { Route as VendorSignupRouteImport } from './routes/vendor-signup'
 import { Route as VendorDashboardRouteImport } from './routes/vendor-dashboard'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PressRouteImport } from './routes/press'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MealsRouteImport } from './routes/meals'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -63,6 +65,11 @@ const SigninRoute = SigninRouteImport.update({
   path: '/signin',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SearchRoute = SearchRouteImport.update({
   id: '/search',
   path: '/search',
@@ -86,6 +93,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
 const MessagesRoute = MessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MealsRoute = MealsRouteImport.update({
@@ -165,6 +177,7 @@ export interface FileRoutesByFullPath {
   '/press': typeof PressRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
@@ -190,6 +203,7 @@ export interface FileRoutesByTo {
   '/press': typeof PressRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
@@ -216,6 +230,7 @@ export interface FileRoutesById {
   '/press': typeof PressRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
+  '/settings': typeof SettingsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
@@ -243,6 +258,7 @@ export interface FileRouteTypes {
     | '/press'
     | '/profile'
     | '/search'
+    | '/settings'
     | '/signin'
     | '/signup'
     | '/vendor-dashboard'
@@ -268,6 +284,7 @@ export interface FileRouteTypes {
     | '/press'
     | '/profile'
     | '/search'
+    | '/settings'
     | '/signin'
     | '/signup'
     | '/vendor-dashboard'
@@ -293,6 +310,7 @@ export interface FileRouteTypes {
     | '/press'
     | '/profile'
     | '/search'
+    | '/settings'
     | '/signin'
     | '/signup'
     | '/vendor-dashboard'
@@ -319,6 +337,7 @@ export interface RootRouteChildren {
   PressRoute: typeof PressRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
+  SettingsRoute: typeof SettingsRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   VendorDashboardRoute: typeof VendorDashboardRoute
@@ -370,6 +389,13 @@ declare module '@tanstack/react-router' {
       path: '/signin'
       fullPath: '/signin'
       preLoaderRoute: typeof SigninRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/search': {
@@ -530,6 +556,7 @@ const rootRouteChildren: RootRouteChildren = {
   PressRoute: PressRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
+  SettingsRoute: SettingsRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   VendorDashboardRoute: VendorDashboardRoute,
