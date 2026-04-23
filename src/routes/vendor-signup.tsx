@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth, useVendorProfile } from "@/store/AppProviders";
-import { categories } from "@/data/mock";
+import { categories, LAGOS_AREAS } from "@/data/mock";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "@/components/site/ImageUpload";
@@ -52,7 +52,11 @@ function VendorSignupPage() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [bannerUrl, setBannerUrl] = useState("");
   const [about, setAbout] = useState("");
+  const [deliveryAreas, setDeliveryAreas] = useState<string[]>([]);
   const [password, setPassword] = useState("");
+
+  const toggleArea = (a: string) =>
+    setDeliveryAreas((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
