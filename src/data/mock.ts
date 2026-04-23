@@ -72,7 +72,7 @@ const seedAreas: Record<string, string[]> = {
   "village-pot": ["Ikorodu", "Elepe", "Mushin", "Agege", "Oshodi"],
 };
 
-export const vendors: Vendor[] = [
+const baseVendors = [
   {
     id: "mama-t",
     name: "Mama T Kitchen",
@@ -229,7 +229,12 @@ export const vendors: Vendor[] = [
     location: "Ibadan",
     priceRange: "$$",
   },
-].map((v) => ({ ...v, deliveryAreas: seedAreas[v.id] ?? [] }));
+] as const;
+
+export const vendors: Vendor[] = baseVendors.map((v) => ({
+  ...v,
+  deliveryAreas: seedAreas[v.id] ?? [],
+}));
 
 /** Returns the effective delivery areas for a vendor (override > seed > empty) */
 export function vendorAreas(vendorId: string, override?: string[]): string[] {
