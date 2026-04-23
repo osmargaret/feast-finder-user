@@ -127,6 +127,7 @@ function VendorSignupPage() {
               images: imagePreviews,
               bannerUrl: bannerUrl || undefined,
               about: about || undefined,
+              deliveryAreas: deliveryAreas.length ? deliveryAreas : undefined,
             });
             setBusy(false);
             navigate({ to: "/vendor-dashboard" });
