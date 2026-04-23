@@ -4,6 +4,7 @@ import { CreditCard, Wallet, Banknote, ShoppingBag } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
 import { useCart, useOrders, useAuth, useNotifications } from "@/store/AppProviders";
 import { meals as allMeals, formatPrice } from "@/data/mock";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/checkout")({
   head: () => ({
@@ -28,8 +29,10 @@ function CheckoutPage() {
     .map((it) => ({ it, meal: allMeals.find((m) => m.id === it.mealId) }))
     .filter((x): x is { it: { mealId: string; qty: number }; meal: typeof allMeals[number] } => Boolean(x.meal));
 
-  const delivery = cart.subtotal > 0 ? 800 : 0;
-  const total = cart.subtotal + delivery;
+  const vendorIds = Array.from(new Set(items.map((x) => x.meal.vendorId)));
+  const deliveryPerVendor = 800;
+  const delivery = vendorIds.length * deliveryPerVendor;
+  const totalBeforeDiscount = cart.subtotal + delivery;
 
   const [name, setName] = useState(auth.user?.name ?? "");
   const [phone, setPhone] = useState("");
@@ -37,7 +40,11 @@ function CheckoutPage() {
   const [city, setCity] = useState("Lagos");
   const [notes, setNotes] = useState("");
   const [payment, setPayment] = useState<"card" | "transfer" | "cash">("card");
+  const [promoCode, setPromoCode] = useState("");
+  const [discount, setDiscount] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+
+  const total = totalBeforeDiscount - discount;
 
   const placeOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -157,8 +164,33 @@ function CheckoutPage() {
                     💵 Pay with cash when your order arrives. Please have the exact amount ready.
                   </p>
                 )}
+               </div>
+ 
+              <div className="card-mm p-6">
+                <h2 className="text-lg font-extrabold">Promo code</h2>
+                <div className="mt-4 flex gap-2">
+                  <input
+                    placeholder="Enter code (try TASTE10)"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    className="input-mm flex-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (promoCode === "TASTE10") {
+                        setDiscount(Math.floor(cart.subtotal * 0.1));
+                        toast.success("Promo code applied!");
+                      } else {
+                        toast.error("Invalid promo code");
+                      }
+                    }}
+                    className="btn-ghost"
+                  >Apply</button>
+                </div>
+                {discount > 0 && <p className="mt-2 text-xs font-bold text-primary">✓ 10% discount applied: -{formatPrice(discount)}</p>}
               </div>
-            </div>
+             </div>
 
             <aside className="card-mm h-fit p-6">
               <h3 className="text-lg font-extrabold">Order summary</h3>
@@ -176,8 +208,17 @@ function CheckoutPage() {
               </ul>
               <dl className="mt-4 space-y-2 border-t border-border pt-4 text-sm font-semibold">
                 <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd>{formatPrice(cart.subtotal)}</dd></div>
-                <div className="flex justify-between"><dt className="text-muted-foreground">Delivery</dt><dd>{formatPrice(delivery)}</dd></div>
-                <div className="flex justify-between text-base font-black"><dt>Total</dt><dd>{formatPrice(total)}</dd></div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Delivery ({vendorIds.length} kitchen{vendorIds.length > 1 ? "s" : ""})</dt>
+                  <dd>{formatPrice(delivery)}</dd>
+                </div>
+                {vendorIds.length > 1 && (
+                  <p className="text-[10px] text-muted-foreground text-right italic">₦{deliveryPerVendor} per kitchen</p>
+                )}
+                {discount > 0 && (
+                  <div className="flex justify-between text-primary"><dt>Discount</dt><dd>-{formatPrice(discount)}</dd></div>
+                )}
+                <div className="flex justify-between text-base font-black border-t border-border mt-2 pt-2"><dt>Total</dt><dd>{formatPrice(total)}</dd></div>
               </dl>
               <button type="submit" disabled={submitting} className="btn-primary mt-6 w-full disabled:opacity-60">
                 {submitting ? "Placing order…" : `Place order • ${formatPrice(total)}`}

@@ -16,6 +16,7 @@ import {
   Eye,
   Share2,
   TrendingUp,
+  Settings,
 } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
 import { ImageUpload } from "@/components/site/ImageUpload";
@@ -49,6 +50,7 @@ const sections = [
   { key: "messages", label: "Messages", icon: MessageSquare },
   { key: "analytics", label: "Analytics", icon: BarChart3 },
   { key: "income", label: "Income", icon: DollarSign },
+  { key: "wallet", label: "Wallet & Payout", icon: TrendingUp },
   { key: "blog", label: "Blog Manager", icon: Newspaper },
   { key: "team", label: "Team", icon: Users },
 ] as const;
@@ -129,6 +131,14 @@ function VendorDashboardPage() {
                     </button>
                   );
                 })}
+                <div className="mt-2 border-t border-border pt-2">
+                  <Link
+                    to="/settings"
+                    className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold text-foreground/75 transition hover:bg-secondary"
+                  >
+                    <Settings className="h-4 w-4" /> Settings
+                  </Link>
+                </div>
               </nav>
             </aside>
 
@@ -141,6 +151,7 @@ function VendorDashboardPage() {
                 <AnalyticsTab meals={myMeals} orders={myOrders} posts={myPosts} messages={myMessages} vendorId={vendorId} />
               )}
               {active === "income" && <IncomeTab orders={myOrders} vendorId={vendorId} />}
+              {active === "wallet" && <WalletTab orders={myOrders} vendorId={vendorId} />}
               {active === "blog" && <BlogTab vendorId={vendorId} authorEmail={auth.user.email} posts={myPosts} />}
               {active === "team" && <TeamTab vendorId={vendorId} />}
             </div>
@@ -474,38 +485,138 @@ function AnalyticsTab({
 function IncomeTab({ orders, vendorId }: { orders: ReturnType<typeof useOrders>["items"]; vendorId: string }) {
   const rows = orders.map((o) => {
     const sub = o.items.filter((i) => i.vendorId === vendorId).reduce((s, i) => s + i.price * i.qty, 0);
-    return { id: o.id, ts: o.ts, status: o.status, sub };
+    const commission = Math.floor(sub * 0.1);
+    const net = sub - commission;
+    return { id: o.id, ts: o.ts, status: o.status, sub, commission, net };
   });
   const total = rows.reduce((s, r) => s + r.sub, 0);
   const paid = rows.filter((r) => r.status === "delivered").reduce((s, r) => s + r.sub, 0);
-  const pending = total - paid;
+  const commissionTotal = rows.filter((r) => r.status === "delivered").reduce((s, r) => s + r.commission, 0);
+  const netTotal = paid - commissionTotal;
 
   return (
     <>
       <h2 className="mb-4 text-2xl font-black">Income</h2>
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard icon={<DollarSign className="h-4 w-4" />} label="Gross" value={formatPrice(total)} />
-        <StatCard icon={<Check className="h-4 w-4" />} label="Settled" value={formatPrice(paid)} hint="Delivered" />
-        <StatCard icon={<Package className="h-4 w-4" />} label="Pending" value={formatPrice(pending)} hint="In progress" />
+        <StatCard icon={<DollarSign className="h-4 w-4" />} label="Gross Sales" value={formatPrice(total)} />
+        <StatCard icon={<Check className="h-4 w-4" />} label="Settled (Net)" value={formatPrice(netTotal)} hint={`After 10% commission`} />
+        <StatCard icon={<Package className="h-4 w-4" />} label="Platform Fee" value={formatPrice(commissionTotal)} hint="10% commission" />
       </div>
       <div className="card-mm mt-6 overflow-hidden">
         <div className="border-b border-border bg-secondary/40 px-5 py-3 text-xs font-bold uppercase text-muted-foreground">Recent transactions</div>
         {rows.length === 0 ? (
           <p className="p-8 text-center text-sm text-muted-foreground">No income yet.</p>
         ) : (
-          <ul className="divide-y divide-border">
-            {rows.map((r) => (
-              <li key={r.id} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-extrabold">{r.id}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(r.ts).toLocaleString()}</p>
-                </div>
-                <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${r.status === "delivered" ? "bg-primary/10 text-primary" : "bg-secondary text-foreground/70"}`}>{r.status}</span>
-                <span className="text-base font-black">{formatPrice(r.sub)}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-secondary/20 text-[10px] font-bold uppercase text-muted-foreground">
+                <tr><th className="p-3">Order</th><th className="p-3">Gross</th><th className="p-3">Fee (10%)</th><th className="p-3">Net</th><th className="p-3 text-right">Status</th></tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {rows.map((r) => (
+                  <tr key={r.id}>
+                    <td className="p-3">
+                      <p className="font-extrabold">{r.id}</p>
+                      <p className="text-[10px] text-muted-foreground">{new Date(r.ts).toLocaleDateString()}</p>
+                    </td>
+                    <td className="p-3 font-bold">{formatPrice(r.sub)}</td>
+                    <td className="p-3 text-destructive font-bold">-{formatPrice(r.commission)}</td>
+                    <td className="p-3 font-black text-primary">{formatPrice(r.net)}</td>
+                    <td className="p-3 text-right"><span className={`rounded-full px-2 py-0.5 text-[9px] font-bold uppercase ${r.status === "delivered" ? "bg-primary/10 text-primary" : "bg-secondary text-foreground/70"}`}>{r.status}</span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
+      </div>
+    </>
+  );
+}
+
+function WalletTab({ orders, vendorId }: { orders: ReturnType<typeof useOrders>["items"]; vendorId: string }) {
+  const [payouts, setPayouts] = useState<{ id: string; amount: number; ts: number; status: string }[]>([]);
+  const rows = orders.filter(o => o.status === "delivered").map((o) => {
+    const sub = o.items.filter((i) => i.vendorId === vendorId).reduce((s, i) => s + i.price * i.qty, 0);
+    const net = sub - Math.floor(sub * 0.1);
+    return net;
+  });
+  
+  const totalEarned = rows.reduce((s, r) => s + r, 0);
+  const totalPaidOut = payouts.filter(p => p.status === "Completed").reduce((s, p) => s + p.amount, 0);
+  const balance = totalEarned - totalPaidOut;
+
+  const requestPayout = () => {
+    if (balance < 5000) return toast.error("Minimum withdrawal is ₦5,000");
+    const p = { id: "WTH-" + Math.random().toString(36).slice(2, 8).toUpperCase(), amount: balance, ts: Date.now(), status: "Processing" };
+    setPayouts([p, ...payouts]);
+    toast.success("Withdrawal request sent!");
+    setTimeout(() => {
+      setPayouts(prev => prev.map(x => x.id === p.id ? { ...x, status: "Completed" } : x));
+      toast.success(`₦${p.amount.toLocaleString()} has been settled to your bank account`);
+    }, 5000);
+  };
+
+  return (
+    <>
+      <h2 className="mb-4 text-2xl font-black">Wallet</h2>
+      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+        <div className="space-y-6">
+          <div className="card-mm bg-primary p-10 text-center text-primary-foreground shadow-xl shadow-primary/20">
+            <p className="text-xs font-bold uppercase tracking-widest opacity-80">Available Balance</p>
+            <h3 className="mt-2 text-4xl font-black">{formatPrice(balance)}</h3>
+            <button
+              onClick={requestPayout}
+              disabled={balance < 5000}
+              className="mt-6 rounded-full bg-white px-8 py-3 text-sm font-black text-primary shadow-lg transition hover:scale-105 disabled:opacity-50"
+            >Withdraw to Bank</button>
+            <p className="mt-4 text-[11px] font-bold opacity-60">Minimum withdrawal: ₦5,000</p>
+          </div>
+
+          <div className="card-mm p-6">
+            <h3 className="text-lg font-extrabold">Payout History</h3>
+            {payouts.length === 0 ? (
+              <p className="mt-4 text-sm text-muted-foreground">No withdrawals yet.</p>
+            ) : (
+              <ul className="mt-4 divide-y divide-border">
+                {payouts.map((p) => (
+                  <li key={p.id} className="flex items-center justify-between py-4">
+                    <div>
+                      <p className="text-sm font-extrabold">{p.id}</p>
+                      <p className="text-[11px] font-bold text-muted-foreground uppercase">{new Date(p.ts).toLocaleString()}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-black">{formatPrice(p.amount)}</p>
+                      <span className={`text-[10px] font-bold ${p.status === "Completed" ? "text-primary" : "text-orange-500 animate-pulse"}`}>{p.status}</span>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <aside className="space-y-5">
+          <div className="card-mm p-5 bg-secondary/30 border-dashed border-2 border-border">
+            <h4 className="text-sm font-extrabold uppercase text-muted-foreground">Settlement Info</h4>
+            <div className="mt-4 space-y-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase text-muted-foreground">Bank</p>
+                <p className="text-sm font-extrabold">Access Bank</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase text-muted-foreground">Account Number</p>
+                <p className="text-sm font-extrabold">0123****89</p>
+              </div>
+              <Link to="/settings" className="btn-ghost w-full mt-2 text-xs">Update Bank Details</Link>
+            </div>
+          </div>
+          <div className="card-mm p-5">
+             <h4 className="text-sm font-extrabold">Auto-Settlement</h4>
+             <p className="mt-2 text-xs text-muted-foreground">Enable auto-withdrawals every Monday at 8:00 AM.</p>
+             <button className="mt-4 w-full rounded-xl border border-primary/40 px-4 py-2 text-xs font-bold text-primary hover:bg-primary/5">Enable Auto-Pay</button>
+          </div>
+        </aside>
       </div>
     </>
   );

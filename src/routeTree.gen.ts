@@ -13,6 +13,7 @@ import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as VendorsRouteImport } from './routes/vendors'
 import { Route as VendorSignupRouteImport } from './routes/vendor-signup'
 import { Route as VendorDashboardRouteImport } from './routes/vendor-dashboard'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -52,6 +53,11 @@ const VendorSignupRoute = VendorSignupRouteImport.update({
 const VendorDashboardRoute = VendorDashboardRouteImport.update({
   id: '/vendor-dashboard',
   path: '/vendor-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -174,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/support': typeof SupportRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/support': typeof SupportRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
+  '/support': typeof SupportRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
@@ -255,6 +264,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signin'
     | '/signup'
+    | '/support'
     | '/vendor-dashboard'
     | '/vendor-signup'
     | '/vendors'
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signin'
     | '/signup'
+    | '/support'
     | '/vendor-dashboard'
     | '/vendor-signup'
     | '/vendors'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/signin'
     | '/signup'
+    | '/support'
     | '/vendor-dashboard'
     | '/vendor-signup'
     | '/vendors'
@@ -334,6 +346,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
+  SupportRoute: typeof SupportRoute
   VendorDashboardRoute: typeof VendorDashboardRoute
   VendorSignupRoute: typeof VendorSignupRoute
   VendorsRoute: typeof VendorsRouteWithChildren
@@ -369,6 +382,13 @@ declare module '@tanstack/react-router' {
       path: '/vendor-dashboard'
       fullPath: '/vendor-dashboard'
       preLoaderRoute: typeof VendorDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -553,6 +573,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
+  SupportRoute: SupportRoute,
   VendorDashboardRoute: VendorDashboardRoute,
   VendorSignupRoute: VendorSignupRoute,
   VendorsRoute: VendorsRouteWithChildren,

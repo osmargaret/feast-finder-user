@@ -1,8 +1,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
-import { Star, Plus, Check, MapPin, Clock, Share2, Mail, Phone } from "lucide-react";
+import { Star, Plus, Check, MapPin, Clock, Share2, Mail, Phone, MessageSquare } from "lucide-react";
 import { vendors, vendorById } from "@/data/mock";
-import { useAuth, useFollow, useMessages, useVendorMenu } from "@/store/AppProviders";
+import { useAuth, useFollow, useMessages, useVendorMenu, useReviews } from "@/store/AppProviders";
 import { MealCard } from "@/components/site/MealCard";
 import { toast } from "sonner";
 
@@ -20,6 +20,28 @@ export const Route = createFileRoute("/vendors/$vendorId")({
       { property: "og:description", content: loaderData?.vendor ? `${loaderData.vendor.name} on MenuMenu — ${loaderData.vendor.tagline}.` : "" },
       ...(loaderData?.vendor ? [{ property: "og:image", content: loaderData.vendor.cover }] : []),
     ],
+    scripts: loaderData?.vendor ? [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FoodEstablishment",
+          "name": loaderData.vendor.name,
+          "description": loaderData.vendor.tagline,
+          "image": loaderData.vendor.cover,
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": loaderData.vendor.location,
+            "addressCountry": "NG"
+          },
+          "aggregateRating": {
+            "@type": "AggregateRating",
+            "ratingValue": loaderData.vendor.rating,
+            "reviewCount": loaderData.vendor.followers
+          }
+        })
+      }
+    ] : [],
   }),
   notFoundComponent: () => (
     <div className="flex min-h-screen items-center justify-center px-4 pt-32">
@@ -48,10 +70,12 @@ function VendorPage() {
   const { vendor } = Route.useLoaderData();
   const follow = useFollow();
   const messages = useMessages();
+  const reviews = useReviews();
   const auth = useAuth();
   const { meals: allMeals } = useVendorMenu();
   const following = follow.has(vendor.id);
   const vendorMeals = allMeals.filter((m) => m.vendorId === vendor.id);
+  const myReviews = reviews.forVendor(vendor.id);
   const otherVendors = vendors.filter((v) => v.id !== vendor.id).slice(0, 4);
 
   // contact form — prefill from auth if available
@@ -144,19 +168,38 @@ function VendorPage() {
             <div>
               <h2 className="text-2xl font-extrabold">Reviews</h2>
               <div className="mt-4 space-y-3">
-                {SAMPLE_REVIEWS.map((r, i) => (
-                  <div key={i} className="card-mm p-5">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-extrabold">{r.name}</p>
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: 5 }).map((_, j) => (
-                          <Star key={j} className={`h-3.5 w-3.5 ${j < r.rating ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-                        ))}
+                {myReviews.length > 0 ? (
+                  myReviews.map((r) => (
+                    <div key={r.id} className="card-mm p-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-extrabold">{r.userName}</p>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase">{new Date(r.ts).toLocaleDateString()}</p>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, j) => (
+                            <Star key={j} className={`h-3.5 w-3.5 ${j < r.rating ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                          ))}
+                        </div>
                       </div>
+                      <p className="mt-2 text-sm text-muted-foreground">{r.comment}</p>
                     </div>
-                    <p className="mt-2 text-sm text-muted-foreground">{r.body}</p>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  SAMPLE_REVIEWS.map((r, i) => (
+                    <div key={i} className="card-mm p-5 opacity-75">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-extrabold">{r.name}</p>
+                        <div className="flex items-center gap-0.5">
+                          {Array.from({ length: 5 }).map((_, j) => (
+                            <Star key={j} className={`h-3.5 w-3.5 ${j < r.rating ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+                          ))}
+                        </div>
+                      </div>
+                      <p className="mt-2 text-sm text-muted-foreground">{r.body}</p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 

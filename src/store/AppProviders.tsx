@@ -195,6 +195,50 @@ type TeamCtx = {
 };
 const TeamContext = createContext<TeamCtx | null>(null);
 
+// ---------- Reviews ----------
+export type Review = {
+  id: string;
+  orderId: string;
+  vendorId: string;
+  userEmail: string;
+  userName: string;
+  rating: number;
+  comment: string;
+  ts: number;
+};
+type ReviewCtx = {
+  items: Review[];
+  add: (r: Omit<Review, "id" | "ts">) => void;
+  forVendor: (vendorId: string) => Review[];
+};
+const ReviewContext = createContext<ReviewCtx | null>(null);
+
+// ---------- Support Tickets ----------
+export type SupportTicket = {
+  id: string;
+  orderId: string;
+  userEmail: string;
+  subject: string;
+  message: string;
+  status: "open" | "resolved" | "closed";
+  ts: number;
+};
+type SupportCtx = {
+  tickets: SupportTicket[];
+  create: (t: Omit<SupportTicket, "id" | "ts" | "status">) => void;
+  resolve: (id: string) => void;
+};
+const SupportContext = createContext<SupportCtx | null>(null);
+
+// ---------- Loyalty ----------
+type LoyaltyCtx = {
+  points: number;
+  history: { ts: number; amount: number; reason: string }[];
+  addPoints: (amount: number, reason: string) => void;
+  redeemPoints: (amount: number) => boolean;
+};
+const LoyaltyContext = createContext<LoyaltyCtx | null>(null);
+
 // ---------- Delivery area (customer-side filter) ----------
 type DeliveryAreaCtx = {
   area: string | null;
@@ -224,6 +268,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [blogPosts, setBlogPosts] = useLocalState<BlogDraft[]>("mm:blog-posts", []);
   const [team, setTeam] = useLocalState<TeamMember[]>("mm:team", []);
   const [deliveryArea, setDeliveryAreaState] = useLocalState<string | null>("mm:delivery-area", null);
+  const [reviews, setReviews] = useLocalState<Review[]>("mm:reviews", []);
+  const [tickets, setTickets] = useLocalState<SupportTicket[]>("mm:tickets", []);
+  const [loyalty, setLoyalty] = useLocalState<{ points: number; history: { ts: number; amount: number; reason: string }[] }>("mm:loyalty", { points: 0, history: [] });
   const [lastVendorMsgId, setLastVendorMsgId] = useState<string | null>(null);
 
   const allMeals = useMemo<Meal[]>(() => {
@@ -547,6 +594,53 @@ export function AppProviders({ children }: { children: ReactNode }) {
     [deliveryArea, setDeliveryAreaState],
   );
 
+  const reviewValue = useMemo<ReviewCtx>(
+    () => ({
+      items: reviews,
+      add: (r) => {
+        setReviews((prev) => [{ ...r, id: "rev-" + Math.random().toString(36).slice(2, 8), ts: Date.now() }, ...prev]);
+        toast.success("Review submitted! Thank you.");
+      },
+      forVendor: (vid) => reviews.filter((r) => r.vendorId === vid),
+    }),
+    [reviews, setReviews],
+  );
+
+  const supportValue = useMemo<SupportCtx>(
+    () => ({
+      tickets,
+      create: (t) => {
+        setTickets((prev) => [{ ...t, id: "tk-" + Math.random().toString(36).slice(2, 8), ts: Date.now(), status: "open" }, ...prev]);
+        toast.success("Ticket created. Support will review shortly.");
+      },
+      resolve: (id) => setTickets((prev) => prev.map((tk) => tk.id === id ? { ...tk, status: "resolved" } : tk)),
+    }),
+    [tickets, setTickets],
+  );
+
+  const loyaltyValue = useMemo<LoyaltyCtx>(
+    () => ({
+      points: loyalty.points,
+      history: loyalty.history,
+      addPoints: (amount, reason) => {
+        setLoyalty((prev) => ({
+          points: prev.points + amount,
+          history: [{ ts: Date.now(), amount, reason }, ...prev.history],
+        }));
+        toast.success(`You earned ${amount} points!`, { description: reason });
+      },
+      redeemPoints: (amount) => {
+        if (loyalty.points < amount) return false;
+        setLoyalty((prev) => ({
+          points: prev.points - amount,
+          history: [{ ts: Date.now(), amount: -amount, reason: "Points redemption" }, ...prev.history],
+        }));
+        return true;
+      },
+    }),
+    [loyalty, setLoyalty],
+  );
+
   // seed welcome notification once
   useEffect(() => {
     if (notifs.length === 0) {
@@ -602,7 +696,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
                       <BlogContext.Provider value={blogValue}>
                         <TeamContext.Provider value={teamValue}>
                           <DeliveryAreaContext.Provider value={deliveryAreaValue}>
-                            {children}
+                            <ReviewContext.Provider value={reviewValue}>
+                              <SupportContext.Provider value={supportValue}>
+                                <LoyaltyContext.Provider value={loyaltyValue}>
+                                  {children}
+                                </LoyaltyContext.Provider>
+                              </SupportContext.Provider>
+                            </ReviewContext.Provider>
                           </DeliveryAreaContext.Provider>
                         </TeamContext.Provider>
                       </BlogContext.Provider>
@@ -676,6 +776,21 @@ export function useTeam() {
 export function useDeliveryArea() {
   const c = useContext(DeliveryAreaContext);
   if (!c) throw new Error("DeliveryAreaContext missing");
+  return c;
+}
+export function useReviews() {
+  const c = useContext(ReviewContext);
+  if (!c) throw new Error("ReviewContext missing");
+  return c;
+}
+export function useSupport() {
+  const c = useContext(SupportContext);
+  if (!c) throw new Error("SupportContext missing");
+  return c;
+}
+export function useLoyalty() {
+  const c = useContext(LoyaltyContext);
+  if (!c) throw new Error("LoyaltyContext missing");
   return c;
 }
 

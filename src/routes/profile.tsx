@@ -1,24 +1,25 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { User as UserIcon, Heart, Bell, ShoppingBag, Receipt, LogOut, MessageSquare } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
 import { OrderTimeline } from "@/components/site/OrderTimeline";
-import { useAuth, useNotifications, useOrders, useWishlist, useFollow, useMessages, useVendorMenu } from "@/store/AppProviders";
+import { Star, AlertCircle, X, Settings, HelpCircle, Heart, Bell, ShoppingBag, Receipt, MessageSquare, User as UserIcon, LogOut } from "lucide-react";
+import { useAuth, useNotifications, useOrders, useWishlist, useFollow, useMessages, useVendorMenu, useReviews, useSupport, useLoyalty } from "@/store/AppProviders";
 import { vendors, formatPrice } from "@/data/mock";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Your Profile — MenuMenu" },
+      { title: "Your Profile â€” MenuMenu" },
       { name: "description", content: "Your activity, orders, wishlist, and notifications in one place." },
-      { property: "og:title", content: "Your Profile — MenuMenu" },
+      { property: "og:title", content: "Your Profile â€” MenuMenu" },
       { property: "og:description", content: "Your activity, orders, wishlist, and notifications in one place." },
     ],
   }),
   component: ProfilePage,
 });
 
-const tabs = ["Overview", "Orders", "Messages", "Transactions", "Wishlist", "Notifications", "Following"] as const;
+const tabs = ["Overview", "Orders", "Messages", "Transactions", "Wishlist", "Notifications", "Following", "Loyalty"] as const;
 type Tab = (typeof tabs)[number];
 
 function ProfilePage() {
@@ -28,8 +29,13 @@ function ProfilePage() {
   const notif = useNotifications();
   const follow = useFollow();
   const msgs = useMessages();
+  const reviews = useReviews();
+  const support = useSupport();
+  const loyalty = useLoyalty();
   const { meals: allMeals } = useVendorMenu();
   const [tab, setTab] = useState<Tab>("Overview");
+  const [reviewingOrderId, setReviewingOrderId] = useState<string | null>(null);
+  const [reportingOrderId, setReportingOrderId] = useState<string | null>(null);
 
   if (!auth.user) {
     return (
@@ -62,12 +68,22 @@ function ProfilePage() {
             <ul className="flex flex-row gap-1 overflow-x-auto lg:flex-col">
               {tabs.map((t) => (
                 <li key={t}>
-                  <button onClick={() => setTab(t)} className={`w-full whitespace-nowrap rounded-xl px-4 py-2.5 text-left text-sm font-bold transition ${tab === t ? "bg-primary/10 text-primary" : "hover:bg-secondary"}`}>
-                    {t}
+                  <button 
+                    onClick={() => setTab(t)} 
+                    className={`relative w-full overflow-hidden whitespace-nowrap rounded-xl px-4 py-2.5 text-left text-sm font-bold transition-all duration-300 ${tab === t ? "bg-primary/10 text-primary shadow-[inset_3px_0_0_var(--color-primary)]" : "text-foreground/75 hover:bg-secondary hover:text-foreground"}`}
+                  >
+                    {tab === t && <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-50" />}
+                    <span className="relative z-10">{t}</span>
                   </button>
                 </li>
               ))}
-              <li className="mt-2 border-t border-border pt-2">
+              <li className="mt-2 border-t border-border pt-2 space-y-1">
+                <Link to="/support" className="flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-left text-sm font-bold text-foreground/75 hover:bg-secondary">
+                  <HelpCircle className="h-4 w-4" /> Help & Support
+                </Link>
+                <Link to="/settings" className="flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-left text-sm font-bold text-foreground/75 hover:bg-secondary">
+                  <Settings className="h-4 w-4" /> Settings
+                </Link>
                 <button onClick={auth.signOut} className="flex w-full items-center gap-2 rounded-xl px-4 py-2.5 text-left text-sm font-bold text-muted-foreground hover:bg-secondary hover:text-destructive">
                   <LogOut className="h-4 w-4" /> Sign out
                 </button>
@@ -82,15 +98,16 @@ function ProfilePage() {
                 <Stat icon={<Receipt className="h-4 w-4" />} label="Total spent" value={formatPrice(orders.items.reduce((s, o) => s + o.total, 0))} />
                 <Stat icon={<Heart className="h-4 w-4" />} label="Wishlist" value={wish.ids.length} />
                 <Stat icon={<Bell className="h-4 w-4" />} label="Unread alerts" value={notif.unread} />
+                <Stat icon={<Star className="h-4 w-4" />} label="Loyalty Points" value={loyalty.points} />
                 <div className="card-mm p-6 sm:col-span-2 xl:col-span-4">
                   <h3 className="text-base font-extrabold">Recent activity</h3>
                   {orders.items.length === 0 ? (
-                    <p className="mt-2 text-sm text-muted-foreground">No orders yet. <Link to="/meals" className="font-bold text-primary">Browse meals →</Link></p>
+                    <p className="mt-2 text-sm text-muted-foreground">No orders yet. <Link to="/meals" className="font-bold text-primary">Browse meals â†’</Link></p>
                   ) : (
                     <ul className="mt-4 space-y-3 text-sm">
                       {orders.items.slice(0, 4).map((o) => (
                         <li key={o.id} className="flex items-center justify-between">
-                          <span><span className="font-bold">{o.id}</span> · {o.items.length} item(s) · <span className="capitalize text-muted-foreground">{o.status}</span></span>
+                          <span><span className="font-bold">{o.id}</span> Â· {o.items.length} item(s) Â· <span className="capitalize text-muted-foreground">{o.status}</span></span>
                           <span className="font-extrabold">{formatPrice(o.total)}</span>
                         </li>
                       ))}
@@ -105,29 +122,50 @@ function ProfilePage() {
                 <Empty icon={<ShoppingBag className="h-6 w-6" />} title="No orders yet" cta={<Link to="/meals" className="btn-primary mt-4 inline-flex">Browse meals</Link>} />
               ) : (
                 <ul className="space-y-4">
-                  {orders.items.map((o) => (
-                    <li key={o.id} className="card-mm p-5">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{new Date(o.ts).toLocaleString()}</p>
-                          <h4 className="text-base font-extrabold">{o.id}</h4>
+                  {orders.items.map((o) => {
+                    const isReviewed = reviews.items.some((r) => r.orderId === o.id);
+                    return (
+                      <li key={o.id} className="card-mm p-5">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{new Date(o.ts).toLocaleString()}</p>
+                            <h4 className="text-base font-extrabold">{o.id}</h4>
+                          </div>
+                          <div className="flex gap-2">
+                            {o.status === "delivered" && !isReviewed && (
+                              <button
+                                onClick={() => setReviewingOrderId(o.id)}
+                                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/20"
+                              >
+                                <Star className="h-3 w-3" /> Rate & Review
+                              </button>
+                            )}
+                            {o.status !== "cancelled" && (
+                              <button
+                                onClick={() => setReportingOrderId(o.id)}
+                                className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-xs font-bold hover:bg-secondary"
+                              >
+                                <AlertCircle className="h-3 w-3" /> Report
+                              </button>
+                            )}
+                            <span className={`rounded-full px-3 py-1 text-xs font-extrabold capitalize ${o.status === "delivered" ? "bg-emerald-100 text-emerald-700" : o.status === "cancelled" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{o.status}</span>
+                          </div>
                         </div>
-                        <span className={`rounded-full px-3 py-1 text-xs font-extrabold capitalize ${o.status === "delivered" ? "bg-emerald-100 text-emerald-700" : o.status === "cancelled" ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{o.status}</span>
-                      </div>
-                      <ul className="mt-3 space-y-1 text-sm">
-                        {o.items.map((i) => (
-                          <li key={i.mealId} className="flex justify-between"><span>{i.qty}× {i.name}</span><span className="font-bold">{formatPrice(i.price * i.qty)}</span></li>
-                        ))}
-                      </ul>
-                      <div className="mt-4 border-t border-border pt-4">
-                        <OrderTimeline status={o.status} />
-                      </div>
-                      <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-sm">
-                        <span className="text-muted-foreground">Deliver to {o.address.street}, {o.address.city}</span>
-                        <span className="text-base font-black">{formatPrice(o.total)}</span>
-                      </div>
-                    </li>
-                  ))}
+                        <ul className="mt-3 space-y-1 text-sm">
+                          {o.items.map((i) => (
+                            <li key={i.mealId} className="flex justify-between"><span>{i.qty}Ã— {i.name}</span><span className="font-bold">{formatPrice(i.price * i.qty)}</span></li>
+                          ))}
+                        </ul>
+                        <div className="mt-4 border-t border-border pt-4">
+                          <OrderTimeline status={o.status} />
+                        </div>
+                        <div className="mt-3 flex items-center justify-between border-t border-border pt-3 text-sm">
+                          <span className="text-muted-foreground">Deliver to {o.address.street}, {o.address.city}</span>
+                          <span className="text-base font-black">{formatPrice(o.total)}</span>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               )
             )}
@@ -216,25 +254,194 @@ function ProfilePage() {
                         <p className="font-extrabold">{v.name}</p>
                         <p className="text-xs text-muted-foreground">{v.tagline}</p>
                       </div>
-                      <Link to="/vendors/$vendorId" params={{ vendorId: v.id }} className="text-xs font-bold text-primary hover:underline">Visit →</Link>
+                      <Link to="/vendors/$vendorId" params={{ vendorId: v.id }} className="text-xs font-bold text-primary hover:underline">Visit â†’</Link>
                     </li>
                   ))}
                 </ul>
               )
             )}
+
+            {tab === "Loyalty" && (
+              <div className="space-y-6">
+                <div className="card-mm bg-primary p-8 text-center text-primary-foreground">
+                  <div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-white/20">
+                    <Star className="h-8 w-8 fill-current" />
+                  </div>
+                  <h3 className="text-3xl font-black">{loyalty.points} points</h3>
+                  <p className="mt-1 font-bold opacity-80">You're a MenuMenu Gold Member</p>
+                  <div className="mt-6 h-2 overflow-hidden rounded-full bg-white/20">
+                    <div className="h-full bg-white" style={{ width: "65%" }} />
+                  </div>
+                  <p className="mt-2 text-xs font-bold opacity-70">350 points until your next free meal</p>
+                </div>
+
+                <div className="card-mm p-6">
+                  <h3 className="text-lg font-extrabold">Points history</h3>
+                  {loyalty.history.length === 0 ? (
+                    <p className="mt-4 text-sm text-muted-foreground">No points earned yet. Order from any kitchen to earn points!</p>
+                  ) : (
+                    <ul className="mt-4 divide-y divide-border">
+                      {loyalty.history.map((h, i) => (
+                        <li key={i} className="flex items-center justify-between py-3 text-sm">
+                          <div>
+                            <p className="font-extrabold">{h.reason}</p>
+                            <p className="text-xs text-muted-foreground">{new Date(h.ts).toLocaleDateString()}</p>
+                          </div>
+                          <span className={`font-black ${h.amount > 0 ? "text-primary" : "text-destructive"}`}>
+                            {h.amount > 0 ? "+" : ""}{h.amount}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
+
+      {reviewingOrderId && (
+        <ReviewModal
+          orderId={reviewingOrderId}
+          onClose={() => setReviewingOrderId(null)}
+          onSuccess={() => {
+            setReviewingOrderId(null);
+            toast.success("Review submitted!");
+          }}
+        />
+      )}
+
+      {reportingOrderId && (
+        <ReportModal
+          orderId={reportingOrderId}
+          onClose={() => setReportingOrderId(null)}
+          onSuccess={() => {
+            setReportingOrderId(null);
+            toast.success("Problem reported. We'll look into it.");
+          }}
+        />
+      )}
     </>
+  );
+}
+
+function ReviewModal({ orderId, onClose, onSuccess }: { orderId: string; onClose: () => void; onSuccess: () => void }) {
+  const orders = useOrders();
+  const reviews = useReviews();
+  const auth = useAuth();
+  const order = orders.items.find((o) => o.id === orderId)!;
+  const vendorId = order.items[0].vendorId; // Assuming all items from same vendor for now, or just picking first
+
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    reviews.add({
+      orderId,
+      vendorId,
+      userEmail: auth.user!.email,
+      userName: auth.user!.name,
+      rating,
+      comment,
+    });
+    onSuccess();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="card-mm w-full max-w-md p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-black">Rate your order</h3>
+          <button onClick={onClose} className="icon-btn"><X className="h-4 w-4" /></button>
+        </div>
+        <form onSubmit={submit} className="space-y-4">
+          <div className="flex justify-center gap-1">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <button key={s} type="button" onClick={() => setRating(s)}>
+                <Star className={`h-8 w-8 ${s <= rating ? "fill-primary text-primary" : "text-muted-foreground"}`} />
+              </button>
+            ))}
+          </div>
+          <textarea
+            required
+            placeholder="What did you think of the food and delivery?"
+            rows={4}
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            className="input-mm rounded-2xl py-3"
+          />
+          <button type="submit" className="btn-primary w-full">Submit Review</button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function ReportModal({ orderId, onClose, onSuccess }: { orderId: string; onClose: () => void; onSuccess: () => void }) {
+  const support = useSupport();
+  const auth = useAuth();
+  const [subject, setSubject] = useState("Missing items");
+  const [message, setMessage] = useState("");
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    support.create({
+      orderId,
+      userEmail: auth.user!.email,
+      subject,
+      message,
+    });
+    onSuccess();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="card-mm w-full max-w-md p-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-black">Report a problem</h3>
+          <button onClick={onClose} className="icon-btn"><X className="h-4 w-4" /></button>
+        </div>
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-muted-foreground">Reason</label>
+            <select value={subject} onChange={(e) => setSubject(e.target.value)} className="input-mm">
+              <option>Missing items</option>
+              <option>Food was cold</option>
+              <option>Wrong order</option>
+              <option>Spilled/Damaged</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <textarea
+            required
+            placeholder="Tell us more about what happened..."
+            rows={4}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            className="input-mm rounded-2xl py-3"
+          />
+          <button type="submit" className="btn-primary w-full">Submit Ticket</button>
+        </form>
+      </div>
+    </div>
   );
 }
 
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string | number }) {
   return (
-    <div className="card-mm p-5">
-      <div className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">{icon}</div>
-      <p className="mt-3 text-xs font-bold uppercase text-muted-foreground">{label}</p>
-      <p className="text-2xl font-black">{value}</p>
+    <div className="card-mm group relative overflow-hidden p-5 transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
+      <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary/5 blur-2xl transition-all duration-500 group-hover:bg-primary/15 group-hover:blur-3xl" />
+      <div className="relative z-10 flex items-start justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+          <p className="mt-1 text-2xl font-black tracking-tight">{value}</p>
+        </div>
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 text-primary shadow-sm ring-1 ring-primary/20 transition-transform duration-300 group-hover:scale-110">
+          {icon}
+        </div>
+      </div>
     </div>
   );
 }

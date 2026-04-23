@@ -1,6 +1,6 @@
 import { createFileRoute, useSearch, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { Search, MapPin, SlidersHorizontal, X } from "lucide-react";
+import { Search, MapPin, SlidersHorizontal, X, ChevronDown, ListFilter, DollarSign, Utensils, ChefHat } from "lucide-react";
 import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { z } from "zod";
 import { PageHero } from "@/components/site/PageHero";
@@ -117,46 +117,51 @@ function MealsPage() {
               <span className="mb-1.5 block text-xs font-bold text-muted-foreground">Location</span>
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <select className="input-mm pl-9">
+                <select className="input-mm appearance-none pl-9 pr-10">
                   <option>All locations</option>
                   <option>Lagos</option>
                   <option>Abuja</option>
                   <option>Port Harcourt</option>
                   <option>Ibadan</option>
                 </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               </div>
             </label>
 
             <label className="mb-4 block">
               <span className="mb-1.5 block text-xs font-bold text-muted-foreground">Category</span>
-              <select
-                value={cat}
-                onChange={(e) => {
-                  const newCat = e.target.value;
-                  setCat(newCat);
-                  setSub("");
-                  setPage(1);
-                  navigate({
-                    to: ".",
-                    search: {
-                      category: newCat === "All" ? undefined : newCat,
-                      sub: undefined,
-                    },
-                  });
-                }}
-                className="input-mm"
-              >
-                <option>All</option>
-                {categories.map((c) => (
-                  <option key={c.name}>{c.name}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <ListFilter className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <select
+                  value={cat}
+                  onChange={(e) => {
+                    const newCat = e.target.value;
+                    setCat(newCat);
+                    setSub("");
+                    setPage(1);
+                    navigate({
+                      to: ".",
+                      search: {
+                        category: newCat === "All" ? undefined : newCat,
+                        sub: undefined,
+                      },
+                    });
+                  }}
+                  className="input-mm appearance-none pl-9 pr-10"
+                >
+                  <option>All</option>
+                  {categories.map((c) => (
+                    <option key={c.name}>{c.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              </div>
             </label>
 
             <div className="mb-4">
               <div className="mb-1.5 flex items-center justify-between">
-                <span className="text-xs font-bold text-muted-foreground">Max price</span>
-                <span className="text-xs font-extrabold">₦{maxPrice.toLocaleString()}</span>
+                <span className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground"><DollarSign className="h-3.5 w-3.5" /> Max price</span>
+                <span className="text-xs font-extrabold text-primary">₦{maxPrice.toLocaleString()}</span>
               </div>
               <input
                 type="range"
@@ -174,33 +179,41 @@ function MealsPage() {
 
             <label className="mb-4 block">
               <span className="mb-1.5 block text-xs font-bold text-muted-foreground">Dietary</span>
-              <select
-                value={diet}
-                onChange={(e) => {
-                  setDiet(e.target.value);
-                  setPage(1);
-                }}
-                className="input-mm"
-              >
-                <option>Any</option>
-                <option>Halal</option>
-                <option>Vegetarian</option>
-                <option>Spicy</option>
-              </select>
+              <div className="relative">
+                <Utensils className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <select
+                  value={diet}
+                  onChange={(e) => {
+                    setDiet(e.target.value);
+                    setPage(1);
+                  }}
+                  className="input-mm appearance-none pl-9 pr-10"
+                >
+                  <option>Any</option>
+                  <option>Halal</option>
+                  <option>Vegetarian</option>
+                  <option>Spicy</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              </div>
             </label>
 
             <label className="block">
               <span className="mb-1.5 block text-xs font-bold text-muted-foreground">
                 Kitchen Type
               </span>
-              <select className="input-mm">
-                <option>All</option>
-                <option>Home Kitchen</option>
-                <option>Bakery</option>
-                <option>Restaurant</option>
-                <option>Street Food</option>
-                <option>Cafe</option>
-              </select>
+              <div className="relative">
+                <ChefHat className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <select className="input-mm appearance-none pl-9 pr-10">
+                  <option>All</option>
+                  <option>Home Kitchen</option>
+                  <option>Bakery</option>
+                  <option>Restaurant</option>
+                  <option>Street Food</option>
+                  <option>Cafe</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              </div>
             </label>
           </aside>
 

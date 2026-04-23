@@ -33,21 +33,27 @@ function HomePage() {
     <>
       {/* Hero */}
       <section
-        className="relative isolate overflow-hidden pb-20 pt-32 text-white sm:pt-44"
-        style={{
-          backgroundImage: `var(--gradient-hero), url(${heroImg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+        className="relative isolate overflow-hidden pb-24 pt-32 text-white sm:pt-48"
       >
-        <div className="container-mm text-center">
-          <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold uppercase tracking-wider backdrop-blur">
-            <span className="inline-block h-2 w-2 rounded-full bg-primary" /> Find nearby meals from trusted kitchens
+        <div 
+          className="absolute inset-0 -z-20"
+          style={{
+            backgroundImage: `url(${heroImg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        />
+        {/* Premium dark overlay with gradient for better contrast */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/70 via-black/40 to-black/80" />
+        
+        <div className="container-mm relative text-center">
+          <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/20 px-4 py-2 text-xs font-black uppercase tracking-widest backdrop-blur-md shadow-lg">
+            <span className="inline-block h-2 w-2 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)]" /> Find nearby meals from trusted kitchens
           </span>
-          <h1 className="mx-auto mt-5 max-w-3xl text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-            Hungry? <span style={{ background: "var(--gradient-primary)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>Discover meals</span> from local food vendors.
+          <h1 className="mx-auto mt-6 max-w-4xl text-5xl font-black leading-[1.05] tracking-tight drop-shadow-xl sm:text-6xl lg:text-7xl">
+            Hungry? <span style={{ background: "var(--gradient-primary)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }} className="drop-shadow-none">Discover meals</span> from local food vendors.
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base font-semibold text-white/85 sm:text-lg">
+          <p className="mx-auto mt-6 max-w-2xl text-lg font-bold text-white/95 drop-shadow-md sm:text-xl">
             Order from verified kitchens. Pickup or delivery — all in one place.
           </p>
 
@@ -64,9 +70,16 @@ function HomePage() {
             <button type="submit" className="btn-primary"><Search className="h-4 w-4" /> Search</button>
           </form>
 
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {heroCategories.map((c) => (
-              <Link key={c} to="/meals" className="pill">{c}</Link>
+              <Link 
+                key={c} 
+                to="/meals" 
+                className="group relative overflow-hidden rounded-full border border-white/20 bg-white/5 px-5 py-2.5 text-sm font-bold text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-white/40 hover:bg-white/15 hover:shadow-[0_8px_20px_-6px_rgba(0,0,0,0.5)]"
+              >
+                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                <span className="relative z-10">{c}</span>
+              </Link>
             ))}
           </div>
 
@@ -127,7 +140,7 @@ function HomePage() {
             </div>
             <Link to="/vendors" className="hidden items-center gap-1 text-sm font-bold text-primary sm:inline-flex">Discover <ArrowRight className="h-4 w-4" /></Link>
           </div>
-          <div className="scroll-row sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
+          <div className="scroll-row gap-5">
             {trendingVendors.map((v) => <KitchenCard key={v.id} vendor={v} />)}
           </div>
         </div>

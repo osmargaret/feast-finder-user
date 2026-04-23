@@ -54,6 +54,7 @@ export type Vendor = {
   location?: string;
   priceRange?: "$" | "$$" | "$$$";
   deliveryAreas?: string[];
+  openHours?: { start: string; end: string }; // 24h format, e.g. { start: "08:00", end: "22:00" }
 };
 
 /** Default delivery-area map for seed vendors (frontend-only mock) */
@@ -85,6 +86,7 @@ const baseVendors = [
     type: "Home Kitchen",
     location: "Lagos",
     priceRange: "$$",
+    openHours: { start: "09:00", end: "21:00" },
   },
   {
     id: "oven-fresh",
@@ -98,6 +100,7 @@ const baseVendors = [
     type: "Bakery",
     location: "Abuja",
     priceRange: "$",
+    openHours: { start: "07:00", end: "19:00" },
   },
   {
     id: "spice-palace",
@@ -111,6 +114,7 @@ const baseVendors = [
     type: "Restaurant",
     location: "Lagos",
     priceRange: "$$$",
+    openHours: { start: "11:00", end: "23:00" },
   },
   {
     id: "suya-republic",
@@ -124,6 +128,7 @@ const baseVendors = [
     type: "Street Food",
     location: "Port Harcourt",
     priceRange: "$$",
+    openHours: { start: "09:00", end: "21:00" },
   },
   {
     id: "morning-glory",
@@ -137,6 +142,7 @@ const baseVendors = [
     type: "Cafe",
     location: "Ibadan",
     priceRange: "$",
+    openHours: { start: "07:00", end: "19:00" },
   },
   {
     id: "ocean-catch",
@@ -150,6 +156,7 @@ const baseVendors = [
     type: "Restaurant",
     location: "Port Harcourt",
     priceRange: "$$$",
+    openHours: { start: "11:00", end: "23:00" },
   },
   {
     id: "naija-swallow",
@@ -163,6 +170,7 @@ const baseVendors = [
     type: "Home Kitchen",
     location: "Lagos",
     priceRange: "$$",
+    openHours: { start: "09:00", end: "21:00" },
   },
   {
     id: "sweet-tooth",
@@ -176,6 +184,7 @@ const baseVendors = [
     type: "Bakery",
     location: "Abuja",
     priceRange: "$$",
+    openHours: { start: "09:00", end: "21:00" },
   },
   {
     id: "grill-house",
@@ -189,6 +198,7 @@ const baseVendors = [
     type: "Restaurant",
     location: "Lagos",
     priceRange: "$$$",
+    openHours: { start: "11:00", end: "23:00" },
   },
   {
     id: "jollof-junction",
@@ -202,6 +212,7 @@ const baseVendors = [
     type: "Restaurant",
     location: "Lagos",
     priceRange: "$$",
+    openHours: { start: "09:00", end: "21:00" },
   },
   {
     id: "bites-and-bakes",
@@ -215,6 +226,7 @@ const baseVendors = [
     type: "Bakery",
     location: "Abuja",
     priceRange: "$",
+    openHours: { start: "07:00", end: "19:00" },
   },
   {
     id: "village-pot",
