@@ -195,6 +195,13 @@ type TeamCtx = {
 };
 const TeamContext = createContext<TeamCtx | null>(null);
 
+// ---------- Delivery area (customer-side filter) ----------
+type DeliveryAreaCtx = {
+  area: string | null;
+  setArea: (a: string | null) => void;
+};
+const DeliveryAreaContext = createContext<DeliveryAreaCtx | null>(null);
+
 // ---------- Provider ----------
 export function AppProviders({ children }: { children: ReactNode }) {
   const [cart, setCart] = useLocalState<CartItem[]>("mm:cart", []);
@@ -216,6 +223,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [removedMealIds, setRemovedMealIds] = useLocalState<string[]>("mm:meal-removed", []);
   const [blogPosts, setBlogPosts] = useLocalState<BlogDraft[]>("mm:blog-posts", []);
   const [team, setTeam] = useLocalState<TeamMember[]>("mm:team", []);
+  const [deliveryArea, setDeliveryAreaState] = useLocalState<string | null>("mm:delivery-area", null);
+  const [lastVendorMsgId, setLastVendorMsgId] = useState<string | null>(null);
 
   const allMeals = useMemo<Meal[]>(() => {
     const base = seedMeals
