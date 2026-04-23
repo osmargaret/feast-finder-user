@@ -12,8 +12,9 @@ import {
   MessageSquare,
   ChevronDown,
 } from "lucide-react";
-import { useAuth, useCart, useMessages, useNotifications, useWishlist } from "@/store/AppProviders";
+import { useAuth, useCart, useMessages, useNotifications, useVendorProfile, useWishlist } from "@/store/AppProviders";
 import { categories, type Category } from "@/data/mock";
+import { DeliveryAreaPicker } from "@/components/site/DeliveryAreaPicker";
 
 const nav = [
   { to: "/" as const, label: "Home" },
@@ -33,7 +34,9 @@ export function Header() {
   const notif = useNotifications();
   const auth = useAuth();
   const messages = useMessages();
+  const vendor = useVendorProfile();
   const unreadMsgs = mounted && auth.user ? messages.unreadFromVendors(auth.user.email) : 0;
+  const role: "vendor" | "user" | null = mounted ? (vendor.profile ? "vendor" : auth.user ? "user" : null) : null;
 
   useEffect(() => {
     setMounted(true);
