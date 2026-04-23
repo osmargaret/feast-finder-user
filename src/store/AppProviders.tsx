@@ -535,6 +535,18 @@ export function AppProviders({ children }: { children: ReactNode }) {
     [team, setTeam],
   );
 
+  const deliveryAreaValue = useMemo<DeliveryAreaCtx>(
+    () => ({
+      area: deliveryArea,
+      setArea: (a) => {
+        setDeliveryAreaState(a);
+        if (a) toast.success(`Showing kitchens that deliver to ${a}`);
+        else toast("Delivery-area filter cleared");
+      },
+    }),
+    [deliveryArea, setDeliveryAreaState],
+  );
+
   // seed welcome notification once
   useEffect(() => {
     if (notifs.length === 0) {
@@ -557,6 +569,25 @@ export function AppProviders({ children }: { children: ReactNode }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Browser push notifications when a vendor reply arrives for the current user
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (!user) return;
+    const newest = messages.find((m) => m.from === "vendor" && m.fromEmail === user.email);
+    if (!newest || newest.id === lastVendorMsgId) return;
+    setLastVendorMsgId(newest.id);
+    if (Notification.permission === "granted") {
+      try {
+        const v = allVendors.find((x) => x.id === newest.vendorId);
+        new Notification(`${v?.name ?? "Kitchen"} replied`, {
+          body: newest.body.length > 100 ? newest.body.slice(0, 97) + "…" : newest.body,
+          icon: v?.avatar,
+          tag: `mm-msg-${newest.vendorId}`,
+        });
+      } catch {}
+    }
+  }, [messages, user, lastVendorMsgId]);
 
   return (
     <AuthContext.Provider value={authValue}>
