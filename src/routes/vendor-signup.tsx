@@ -220,6 +220,28 @@ function VendorSignupPage() {
               className="input-mm pl-11"
             />
           </Field>
+          {/* Delivery areas */}
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-xs font-bold text-muted-foreground">
+              Areas you deliver to (optional — pick any within your state)
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {LAGOS_AREAS.map((a) => {
+                const on = deliveryAreas.includes(a);
+                return (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => toggleArea(a)}
+                    className={`rounded-full border-2 px-3 py-1.5 text-xs font-bold transition ${on ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-secondary"}`}
+                  >
+                    {a}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">You can update this anytime in Settings → Delivery.</p>
+          </div>
           <div className="sm:col-span-2">
             <label className="mb-1.5 block text-xs font-bold text-muted-foreground">
               Storefront banner (optional)
