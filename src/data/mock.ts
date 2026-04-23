@@ -229,7 +229,13 @@ export const vendors: Vendor[] = [
     location: "Ibadan",
     priceRange: "$$",
   },
-];
+].map((v) => ({ ...v, deliveryAreas: seedAreas[v.id] ?? [] }));
+
+/** Returns the effective delivery areas for a vendor (override > seed > empty) */
+export function vendorAreas(vendorId: string, override?: string[]): string[] {
+  if (override && override.length) return override;
+  return seedAreas[vendorId] ?? [];
+}
 
 export const meals: Meal[] = [
   {
