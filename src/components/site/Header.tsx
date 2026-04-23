@@ -378,6 +378,13 @@ export function Header() {
                 My Profile
               </Link>
               <Link
+                to="/settings"
+                onClick={() => setOpen(false)}
+                className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
+              >
+                Settings
+              </Link>
+              <Link
                 to="/vendor-dashboard"
                 onClick={() => setOpen(false)}
                 className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
