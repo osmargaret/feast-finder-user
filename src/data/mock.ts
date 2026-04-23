@@ -30,8 +30,16 @@ export type Meal = {
   blurb: string;
   vendorId: string;
   category: string;
+  subcategory?: string;
   dietary?: string[];
 };
+
+/** Common Lagos delivery areas — used by vendor delivery settings */
+export const LAGOS_AREAS = [
+  "Ikeja", "Ikorodu", "Elepe", "Yaba", "Surulere", "Lekki", "Ajah",
+  "Victoria Island", "Ikoyi", "Apapa", "Festac", "Ojo", "Mushin",
+  "Maryland", "Magodo", "Gbagada", "Oshodi", "Agege", "Ojota",
+];
 
 export type Vendor = {
   id: string;
