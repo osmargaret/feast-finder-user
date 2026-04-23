@@ -230,6 +230,12 @@ export function Header() {
                 >
                   <UserIcon className="h-3.5 w-3.5" /> {auth.user.name}
                 </Link>
+                <Link
+                  to="/settings"
+                  className="hidden text-xs font-bold text-foreground/70 hover:text-foreground sm:inline-flex"
+                >
+                  Settings
+                </Link>
                 <button
                   onClick={auth.signOut}
                   className="icon-btn hidden sm:inline-flex"
