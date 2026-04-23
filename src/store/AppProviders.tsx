@@ -600,7 +600,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
                   <VendorProfileContext.Provider value={vendorProfileValue}>
                     <VendorMenuContext.Provider value={vendorMenuValue}>
                       <BlogContext.Provider value={blogValue}>
-                        <TeamContext.Provider value={teamValue}>{children}</TeamContext.Provider>
+                        <TeamContext.Provider value={teamValue}>
+                          <DeliveryAreaContext.Provider value={deliveryAreaValue}>
+                            {children}
+                          </DeliveryAreaContext.Provider>
+                        </TeamContext.Provider>
                       </BlogContext.Provider>
                     </VendorMenuContext.Provider>
                   </VendorProfileContext.Provider>
