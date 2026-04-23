@@ -673,5 +673,10 @@ export function useTeam() {
   if (!c) throw new Error("TeamContext missing");
   return c;
 }
+export function useDeliveryArea() {
+  const c = useContext(DeliveryAreaContext);
+  if (!c) throw new Error("DeliveryAreaContext missing");
+  return c;
+}
 
 export type { Meal };
