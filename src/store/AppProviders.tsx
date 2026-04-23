@@ -139,6 +139,7 @@ export type VendorProfile = {
   images: string[];
   bannerUrl?: string;
   about?: string;
+  deliveryAreas?: string[];
   createdAt: number;
 };
 type VendorProfileCtx = {

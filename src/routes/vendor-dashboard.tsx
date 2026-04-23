@@ -215,16 +215,19 @@ function MealEditor({ vendorId, meal, onClose }: { vendorId: string; meal: Meal 
   const [price, setPrice] = useState(meal?.price ?? 1000);
   const [blurb, setBlurb] = useState(meal?.blurb ?? "");
   const [category, setCategory] = useState(meal?.category ?? categories[0].name);
+  const [subcategory, setSubcategory] = useState(meal?.subcategory ?? "");
   const [image, setImage] = useState(meal?.image ?? "");
+
+  const subcatOptions = categories.find((c) => c.name === category)?.subcategories ?? [];
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return toast.error("Name required");
     const fallback = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600";
     if (meal) {
-      menu.updateMeal(meal.id, { name, price: Number(price), blurb, category, image: image || meal.image });
+      menu.updateMeal(meal.id, { name, price: Number(price), blurb, category, subcategory: subcategory || undefined, image: image || meal.image });
     } else {
-      menu.addMeal({ name, price: Number(price), blurb, category, image: image || fallback, vendorId });
+      menu.addMeal({ name, price: Number(price), blurb, category, subcategory: subcategory || undefined, image: image || fallback, vendorId });
     }
     onClose();
   };
@@ -238,16 +241,25 @@ function MealEditor({ vendorId, meal, onClose }: { vendorId: string; meal: Meal 
         </div>
         <div className="space-y-3">
           <div>
-            <label className="mb-1.5 block text-xs font-bold text-muted-foreground">Photo</label>
-            <ImageUpload value={image} onChange={setImage} label="Upload meal photo" />
+            <label className="mb-1.5 block text-xs font-bold text-muted-foreground">Photo — upload from your device</label>
+            <ImageUpload value={image} onChange={setImage} label="Click to upload meal photo" />
           </div>
           <Input label="Name" value={name} onChange={setName} />
           <Input label="Price (₦)" type="number" value={String(price)} onChange={(v) => setPrice(Number(v))} />
-          <div>
-            <label className="block text-xs font-bold text-muted-foreground">Category</label>
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className="mt-1.5 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm">
-              {categories.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
-            </select>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <label className="block text-xs font-bold text-muted-foreground">Category</label>
+              <select value={category} onChange={(e) => { setCategory(e.target.value); setSubcategory(""); }} className="mt-1.5 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm">
+                {categories.map((c) => <option key={c.name} value={c.name}>{c.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-muted-foreground">Subcategory</label>
+              <select value={subcategory} onChange={(e) => setSubcategory(e.target.value)} className="mt-1.5 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm">
+                <option value="">— None —</option>
+                {subcatOptions.map((s) => <option key={s.name} value={s.name}>{s.name}</option>)}
+              </select>
+            </div>
           </div>
           <Input label="Description" value={blurb} onChange={setBlurb} />
         </div>

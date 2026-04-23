@@ -230,6 +230,12 @@ export function Header() {
                 >
                   <UserIcon className="h-3.5 w-3.5" /> {auth.user.name}
                 </Link>
+                <Link
+                  to="/settings"
+                  className="hidden text-xs font-bold text-foreground/70 hover:text-foreground sm:inline-flex"
+                >
+                  Settings
+                </Link>
                 <button
                   onClick={auth.signOut}
                   className="icon-btn hidden sm:inline-flex"
@@ -376,6 +382,13 @@ export function Header() {
                 className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
               >
                 My Profile
+              </Link>
+              <Link
+                to="/settings"
+                onClick={() => setOpen(false)}
+                className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
+              >
+                Settings
               </Link>
               <Link
                 to="/vendor-dashboard"

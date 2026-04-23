@@ -11,7 +11,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth, useVendorProfile } from "@/store/AppProviders";
-import { categories } from "@/data/mock";
+import { categories, LAGOS_AREAS } from "@/data/mock";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUpload } from "@/components/site/ImageUpload";
@@ -52,7 +52,11 @@ function VendorSignupPage() {
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [bannerUrl, setBannerUrl] = useState("");
   const [about, setAbout] = useState("");
+  const [deliveryAreas, setDeliveryAreas] = useState<string[]>([]);
   const [password, setPassword] = useState("");
+
+  const toggleArea = (a: string) =>
+    setDeliveryAreas((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -123,6 +127,7 @@ function VendorSignupPage() {
               images: imagePreviews,
               bannerUrl: bannerUrl || undefined,
               about: about || undefined,
+              deliveryAreas: deliveryAreas.length ? deliveryAreas : undefined,
             });
             setBusy(false);
             navigate({ to: "/vendor-dashboard" });
@@ -215,6 +220,28 @@ function VendorSignupPage() {
               className="input-mm pl-11"
             />
           </Field>
+          {/* Delivery areas */}
+          <div className="sm:col-span-2">
+            <label className="mb-1.5 block text-xs font-bold text-muted-foreground">
+              Areas you deliver to (optional — pick any within your state)
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {LAGOS_AREAS.map((a) => {
+                const on = deliveryAreas.includes(a);
+                return (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => toggleArea(a)}
+                    className={`rounded-full border-2 px-3 py-1.5 text-xs font-bold transition ${on ? "border-primary bg-primary/10 text-primary" : "border-border hover:bg-secondary"}`}
+                  >
+                    {a}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">You can update this anytime in Settings → Delivery.</p>
+          </div>
           <div className="sm:col-span-2">
             <label className="mb-1.5 block text-xs font-bold text-muted-foreground">
               Storefront banner (optional)
