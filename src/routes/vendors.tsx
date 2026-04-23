@@ -3,7 +3,9 @@ import { useMemo, useState } from "react";
 import { Search, MapPin, SlidersHorizontal, X } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
 import { KitchenCard } from "@/components/site/KitchenCard";
-import { vendors, categories } from "@/data/mock";
+import { vendors, categories, vendorAreas } from "@/data/mock";
+import { DeliveryAreaPicker } from "@/components/site/DeliveryAreaPicker";
+import { useDeliveryArea } from "@/store/AppProviders";
 
 export const Route = createFileRoute("/vendors")({
   head: () => ({
@@ -27,6 +29,7 @@ function VendorsPage() {
   const [loc, setLoc] = useState("All locations");
   const [type, setType] = useState("All");
   const [price, setPrice] = useState("All");
+  const { area } = useDeliveryArea();
 
   const filtered = useMemo(() => {
     return vendors.filter((v) => {
@@ -35,9 +38,10 @@ function VendorsPage() {
       if (type !== "All" && v.type !== type) return false;
       if (price !== "All" && v.priceRange !== price) return false;
       if (cat !== "All" && !v.tagline.toLowerCase().includes(cat.toLowerCase()) && v.type !== cat) return false;
+      if (area && !vendorAreas(v.id, v.deliveryAreas).includes(area)) return false;
       return true;
     });
-  }, [q, cat, loc, type, price]);
+  }, [q, cat, loc, type, price, area]);
 
   const reset = () => { setQ(""); setCat("All"); setLoc("All locations"); setType("All"); setPrice("All"); };
   const activeCount = (q ? 1 : 0) + (cat !== "All" ? 1 : 0) + (loc !== "All locations" ? 1 : 0) + (type !== "All" ? 1 : 0) + (price !== "All" ? 1 : 0);
@@ -46,7 +50,9 @@ function VendorsPage() {
     <>
       <PageHero eyebrow="Marketplace" title="Kitchens & Vendors" subtitle="Discover the people cooking your favourite meals." />
       <section className="section">
-        <div className="container-mm grid gap-8 lg:grid-cols-[280px_1fr]">
+        <div className="container-mm space-y-6">
+          <DeliveryAreaPicker variant="block" />
+          <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
           <aside className="card-mm h-fit p-5 lg:sticky lg:top-28">
             <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -127,6 +133,7 @@ function VendorsPage() {
                 {filtered.map((v) => <KitchenCard key={v.id} vendor={v} />)}
               </div>
             )}
+          </div>
           </div>
         </div>
       </section>

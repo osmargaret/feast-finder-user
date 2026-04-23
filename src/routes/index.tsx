@@ -78,6 +78,13 @@ function HomePage() {
         </div>
       </section>
 
+      {/* Delivery area picker */}
+      <section className="pt-8">
+        <div className="container-mm">
+          <DeliveryAreaPicker variant="block" />
+        </div>
+      </section>
+
       {/* Featured meals */}
       <section className="section">
         <div className="container-mm">
@@ -121,7 +128,7 @@ function HomePage() {
             <Link to="/vendors" className="hidden items-center gap-1 text-sm font-bold text-primary sm:inline-flex">Discover <ArrowRight className="h-4 w-4" /></Link>
           </div>
           <div className="scroll-row sm:grid sm:grid-cols-2 sm:gap-5 lg:grid-cols-4">
-            {vendors.slice(0, 4).map((v) => <KitchenCard key={v.id} vendor={v} />)}
+            {trendingVendors.map((v) => <KitchenCard key={v.id} vendor={v} />)}
           </div>
         </div>
       </section>
