@@ -187,6 +187,7 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
+            <div className="hidden md:block"><DeliveryAreaPicker /></div>
             <Link to="/wishlist" className="icon-btn hidden sm:inline-flex" aria-label="Wishlist">
               <Heart className="h-4 w-4" />
               {mounted && wish.ids.length > 0 && (
@@ -232,6 +233,9 @@ export function Header() {
                   className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold sm:inline-flex hover:bg-primary/10"
                 >
                   <UserIcon className="h-3.5 w-3.5" /> {auth.user.name}
+                  <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${role === "vendor" ? "bg-primary text-primary-foreground" : "bg-foreground/10 text-foreground"}`}>
+                    {role === "vendor" ? "Vendor" : "User"}
+                  </span>
                 </Link>
                 <Link
                   to="/settings"
