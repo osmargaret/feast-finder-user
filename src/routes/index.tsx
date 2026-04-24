@@ -58,11 +58,16 @@ function HomePage() {
           </p>
 
           <form
-            onSubmit={(e) => e.preventDefault()}
+            onSubmit={(e) => {
+              e.preventDefault();
+              const q = (e.currentTarget.elements.namedItem("q") as HTMLInputElement).value;
+              if (q.trim()) window.location.href = `/meals?q=${encodeURIComponent(q)}`;
+            }}
             className="mx-auto mt-8 flex max-w-xl items-center gap-2 rounded-full bg-white p-1.5 shadow-2xl"
           >
             <div className="ml-3 text-muted-foreground"><Search className="h-5 w-5" /></div>
             <input
+              name="q"
               type="search"
               placeholder="Search jollof, suya, kitchens…"
               className="flex-1 bg-transparent px-2 py-2.5 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none"
@@ -140,8 +145,17 @@ function HomePage() {
             </div>
             <Link to="/vendors" className="hidden items-center gap-1 text-sm font-bold text-primary sm:inline-flex">Discover <ArrowRight className="h-4 w-4" /></Link>
           </div>
-          <div className="scroll-row gap-5">
-            {trendingVendors.map((v) => <KitchenCard key={v.id} vendor={v} />)}
+          <div className="group flex overflow-hidden rounded-2xl">
+            <div className="flex shrink-0 animate-marquee items-center gap-5 pr-5">
+              {[...trendingVendors, ...trendingVendors, ...trendingVendors].map((v, i) => (
+                <KitchenCard key={`orig-${v.id}-${i}`} vendor={v} />
+              ))}
+            </div>
+            <div className="flex shrink-0 animate-marquee items-center gap-5 pr-5" aria-hidden="true">
+              {[...trendingVendors, ...trendingVendors, ...trendingVendors].map((v, i) => (
+                <KitchenCard key={`dup-${v.id}-${i}`} vendor={v} />
+              ))}
+            </div>
           </div>
         </div>
       </section>

@@ -27,21 +27,32 @@ function MessagesPage() {
   // Threads for the current user only
   const threads = useMemo(() => {
     if (!auth.user) return [];
-    const mine = messages.items.filter((m) => m.fromEmail === auth.user!.email);
-    const map = new Map<string, typeof mine>();
-    [...mine].sort((a, b) => a.ts - b.ts).forEach((m) => {
-      const list = map.get(m.vendorId) ?? [];
-      list.push(m);
-      map.set(m.vendorId, list);
-    });
-    return Array.from(map.entries())
-      .map(([vendorId, msgs]) => {
-        const v = vendors.find((x) => x.id === vendorId);
-        const last = msgs[msgs.length - 1];
-        const unread = msgs.some((m) => m.from === "vendor" && !m.read);
-        return { vendorId, vendor: v, msgs, last, unread };
+    const userEmail = auth.user.email;
+    // Collect all vendorIds the user has messaged
+    const userMsgVendorIds = new Set(
+      messages.items
+        .filter(m => m.from === "user" && m.fromEmail === userEmail)
+        .map(m => m.vendorId)
+    );
+    // For each vendor thread, include both user messages and vendor replies
+    return Array.from(userMsgVendorIds)
+      .map(vendorId => {
+        const threadMsgs = messages.items
+          .filter(m =>
+            m.vendorId === vendorId &&
+            (
+              (m.from === "user" && m.fromEmail === userEmail) ||
+              (m.from === "vendor" && m.fromEmail === userEmail)
+            )
+          )
+          .sort((a, b) => a.ts - b.ts);
+        const v = vendors.find(x => x.id === vendorId);
+        const last = threadMsgs[threadMsgs.length - 1];
+        const unread = threadMsgs.some(m => m.from === "vendor" && !m.read);
+        return { vendorId, vendor: v, msgs: threadMsgs, last, unread };
       })
-      .sort((a, b) => b.last.ts - a.last.ts);
+      .filter(t => t.last) // ensure thread has messages
+      .sort((a, b) => b.last!.ts - a.last!.ts);
   }, [messages.items, auth.user]);
 
   const active = threads.find((t) => t.vendorId === activeVendorId) ?? threads[0];
@@ -55,7 +66,7 @@ function MessagesPage() {
   // mark vendor messages as read on open
   useEffect(() => {
     if (!active) return;
-    active.msgs.forEach((m) => { if (m.from === "vendor" && !m.read) messages.markRead(m.id); });
+    active.msgs.forEach((m) => { if (m.from === "vendor" && !m.read) messages.markRead?.(m.id); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active?.vendorId]);
 
@@ -146,7 +157,7 @@ function MessagesPage() {
                       e.preventDefault();
                       const text = draft.trim();
                       if (!text || !auth.user) return;
-                      messages.sendAsUser(active.vendorId, text, auth.user.name, auth.user.email);
+                      messages.send(active.vendorId, auth.user.email, auth.user.name, text);
                       setDraft("");
                     }}
                     className="flex items-center gap-2 border-t border-border p-3"

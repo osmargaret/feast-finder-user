@@ -10,20 +10,24 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
+import { Route as ViewVendorRouteImport } from './routes/view-vendor'
 import { Route as VendorsRouteImport } from './routes/vendors'
 import { Route as VendorSignupRouteImport } from './routes/vendor-signup'
 import { Route as VendorDashboardRouteImport } from './routes/vendor-dashboard'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as SigninRouteImport } from './routes/signin'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PressRouteImport } from './routes/press'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as MessagesRouteImport } from './routes/messages'
 import { Route as MealsRouteImport } from './routes/meals'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CheckoutRouteImport } from './routes/checkout'
@@ -31,13 +35,20 @@ import { Route as CartRouteImport } from './routes/cart'
 import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ViewVendorVendorIdRouteImport } from './routes/view-vendor.$vendorId'
 import { Route as VendorsVendorIdRouteImport } from './routes/vendors.$vendorId'
 import { Route as OrderConfirmationOrderIdRouteImport } from './routes/order-confirmation.$orderId'
+import { Route as MessagesVendorIdRouteImport } from './routes/messages.$vendorId'
 import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 
 const WishlistRoute = WishlistRouteImport.update({
   id: '/wishlist',
   path: '/wishlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ViewVendorRoute = ViewVendorRouteImport.update({
+  id: '/view-vendor',
+  path: '/view-vendor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VendorsRoute = VendorsRouteImport.update({
@@ -53,6 +64,11 @@ const VendorSignupRoute = VendorSignupRouteImport.update({
 const VendorDashboardRoute = VendorDashboardRouteImport.update({
   id: '/vendor-dashboard',
   path: '/vendor-dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -85,6 +101,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PressRoute = PressRouteImport.update({
   id: '/press',
   path: '/press',
@@ -108,6 +129,11 @@ const MealsRoute = MealsRouteImport.update({
 const MaintenanceRoute = MaintenanceRouteImport.update({
   id: '/maintenance',
   path: '/maintenance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FaqRoute = FaqRouteImport.update({
@@ -145,6 +171,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ViewVendorVendorIdRoute = ViewVendorVendorIdRouteImport.update({
+  id: '/$vendorId',
+  path: '/$vendorId',
+  getParentRoute: () => ViewVendorRoute,
+} as any)
 const VendorsVendorIdRoute = VendorsVendorIdRouteImport.update({
   id: '/$vendorId',
   path: '/$vendorId',
@@ -156,6 +187,11 @@ const OrderConfirmationOrderIdRoute =
     path: '/order-confirmation/$orderId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const MessagesVendorIdRoute = MessagesVendorIdRouteImport.update({
+  id: '/$vendorId',
+  path: '/$vendorId',
+  getParentRoute: () => MessagesRoute,
+} as any)
 const BlogSlugRoute = BlogSlugRouteImport.update({
   id: '/$slug',
   path: '/$slug',
@@ -170,24 +206,30 @@ export interface FileRoutesByFullPath {
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
-  '/messages': typeof MessagesRoute
+  '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
+  '/view-vendor': typeof ViewVendorRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/messages/$vendorId': typeof MessagesVendorIdRoute
   '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
+  '/view-vendor/$vendorId': typeof ViewVendorVendorIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -197,24 +239,30 @@ export interface FileRoutesByTo {
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
-  '/messages': typeof MessagesRoute
+  '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
+  '/view-vendor': typeof ViewVendorRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/messages/$vendorId': typeof MessagesVendorIdRoute
   '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
+  '/view-vendor/$vendorId': typeof ViewVendorVendorIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -225,24 +273,30 @@ export interface FileRoutesById {
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
   '/faq': typeof FaqRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/maintenance': typeof MaintenanceRoute
   '/meals': typeof MealsRoute
-  '/messages': typeof MessagesRoute
+  '/messages': typeof MessagesRouteWithChildren
   '/notifications': typeof NotificationsRoute
   '/press': typeof PressRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/signin': typeof SigninRoute
   '/signup': typeof SignupRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
+  '/view-vendor': typeof ViewVendorRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/$slug': typeof BlogSlugRoute
+  '/messages/$vendorId': typeof MessagesVendorIdRoute
   '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
+  '/view-vendor/$vendorId': typeof ViewVendorVendorIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -254,24 +308,30 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contact'
     | '/faq'
+    | '/forgot-password'
     | '/maintenance'
     | '/meals'
     | '/messages'
     | '/notifications'
     | '/press'
+    | '/privacy'
     | '/profile'
     | '/search'
     | '/settings'
     | '/signin'
     | '/signup'
     | '/support'
+    | '/terms'
     | '/vendor-dashboard'
     | '/vendor-signup'
     | '/vendors'
+    | '/view-vendor'
     | '/wishlist'
     | '/blog/$slug'
+    | '/messages/$vendorId'
     | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
+    | '/view-vendor/$vendorId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -281,24 +341,30 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contact'
     | '/faq'
+    | '/forgot-password'
     | '/maintenance'
     | '/meals'
     | '/messages'
     | '/notifications'
     | '/press'
+    | '/privacy'
     | '/profile'
     | '/search'
     | '/settings'
     | '/signin'
     | '/signup'
     | '/support'
+    | '/terms'
     | '/vendor-dashboard'
     | '/vendor-signup'
     | '/vendors'
+    | '/view-vendor'
     | '/wishlist'
     | '/blog/$slug'
+    | '/messages/$vendorId'
     | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
+    | '/view-vendor/$vendorId'
   id:
     | '__root__'
     | '/'
@@ -308,24 +374,30 @@ export interface FileRouteTypes {
     | '/checkout'
     | '/contact'
     | '/faq'
+    | '/forgot-password'
     | '/maintenance'
     | '/meals'
     | '/messages'
     | '/notifications'
     | '/press'
+    | '/privacy'
     | '/profile'
     | '/search'
     | '/settings'
     | '/signin'
     | '/signup'
     | '/support'
+    | '/terms'
     | '/vendor-dashboard'
     | '/vendor-signup'
     | '/vendors'
+    | '/view-vendor'
     | '/wishlist'
     | '/blog/$slug'
+    | '/messages/$vendorId'
     | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
+    | '/view-vendor/$vendorId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -336,20 +408,24 @@ export interface RootRouteChildren {
   CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
   FaqRoute: typeof FaqRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   MaintenanceRoute: typeof MaintenanceRoute
   MealsRoute: typeof MealsRoute
-  MessagesRoute: typeof MessagesRoute
+  MessagesRoute: typeof MessagesRouteWithChildren
   NotificationsRoute: typeof NotificationsRoute
   PressRoute: typeof PressRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   SigninRoute: typeof SigninRoute
   SignupRoute: typeof SignupRoute
   SupportRoute: typeof SupportRoute
+  TermsRoute: typeof TermsRoute
   VendorDashboardRoute: typeof VendorDashboardRoute
   VendorSignupRoute: typeof VendorSignupRoute
   VendorsRoute: typeof VendorsRouteWithChildren
+  ViewVendorRoute: typeof ViewVendorRouteWithChildren
   WishlistRoute: typeof WishlistRoute
   OrderConfirmationOrderIdRoute: typeof OrderConfirmationOrderIdRoute
 }
@@ -361,6 +437,13 @@ declare module '@tanstack/react-router' {
       path: '/wishlist'
       fullPath: '/wishlist'
       preLoaderRoute: typeof WishlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/view-vendor': {
+      id: '/view-vendor'
+      path: '/view-vendor'
+      fullPath: '/view-vendor'
+      preLoaderRoute: typeof ViewVendorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vendors': {
@@ -382,6 +465,13 @@ declare module '@tanstack/react-router' {
       path: '/vendor-dashboard'
       fullPath: '/vendor-dashboard'
       preLoaderRoute: typeof VendorDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -426,6 +516,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/press': {
       id: '/press'
       path: '/press'
@@ -459,6 +556,13 @@ declare module '@tanstack/react-router' {
       path: '/maintenance'
       fullPath: '/maintenance'
       preLoaderRoute: typeof MaintenanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/faq': {
@@ -510,6 +614,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/view-vendor/$vendorId': {
+      id: '/view-vendor/$vendorId'
+      path: '/$vendorId'
+      fullPath: '/view-vendor/$vendorId'
+      preLoaderRoute: typeof ViewVendorVendorIdRouteImport
+      parentRoute: typeof ViewVendorRoute
+    }
     '/vendors/$vendorId': {
       id: '/vendors/$vendorId'
       path: '/$vendorId'
@@ -523,6 +634,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/order-confirmation/$orderId'
       preLoaderRoute: typeof OrderConfirmationOrderIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/messages/$vendorId': {
+      id: '/messages/$vendorId'
+      path: '/$vendorId'
+      fullPath: '/messages/$vendorId'
+      preLoaderRoute: typeof MessagesVendorIdRouteImport
+      parentRoute: typeof MessagesRoute
     }
     '/blog/$slug': {
       id: '/blog/$slug'
@@ -544,6 +662,18 @@ const BlogRouteChildren: BlogRouteChildren = {
 
 const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
 
+interface MessagesRouteChildren {
+  MessagesVendorIdRoute: typeof MessagesVendorIdRoute
+}
+
+const MessagesRouteChildren: MessagesRouteChildren = {
+  MessagesVendorIdRoute: MessagesVendorIdRoute,
+}
+
+const MessagesRouteWithChildren = MessagesRoute._addFileChildren(
+  MessagesRouteChildren,
+)
+
 interface VendorsRouteChildren {
   VendorsVendorIdRoute: typeof VendorsVendorIdRoute
 }
@@ -555,6 +685,18 @@ const VendorsRouteChildren: VendorsRouteChildren = {
 const VendorsRouteWithChildren =
   VendorsRoute._addFileChildren(VendorsRouteChildren)
 
+interface ViewVendorRouteChildren {
+  ViewVendorVendorIdRoute: typeof ViewVendorVendorIdRoute
+}
+
+const ViewVendorRouteChildren: ViewVendorRouteChildren = {
+  ViewVendorVendorIdRoute: ViewVendorVendorIdRoute,
+}
+
+const ViewVendorRouteWithChildren = ViewVendorRoute._addFileChildren(
+  ViewVendorRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
@@ -563,20 +705,24 @@ const rootRouteChildren: RootRouteChildren = {
   CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
   FaqRoute: FaqRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   MaintenanceRoute: MaintenanceRoute,
   MealsRoute: MealsRoute,
-  MessagesRoute: MessagesRoute,
+  MessagesRoute: MessagesRouteWithChildren,
   NotificationsRoute: NotificationsRoute,
   PressRoute: PressRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   SigninRoute: SigninRoute,
   SignupRoute: SignupRoute,
   SupportRoute: SupportRoute,
+  TermsRoute: TermsRoute,
   VendorDashboardRoute: VendorDashboardRoute,
   VendorSignupRoute: VendorSignupRoute,
   VendorsRoute: VendorsRouteWithChildren,
+  ViewVendorRoute: ViewVendorRouteWithChildren,
   WishlistRoute: WishlistRoute,
   OrderConfirmationOrderIdRoute: OrderConfirmationOrderIdRoute,
 }

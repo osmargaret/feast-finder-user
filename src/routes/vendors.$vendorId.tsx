@@ -1,22 +1,48 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Star, Plus, Check, MapPin, Clock, Share2, Mail, Phone, MessageSquare } from "lucide-react";
 import { vendors, vendorById } from "@/data/mock";
-import { useAuth, useFollow, useMessages, useVendorMenu, useReviews } from "@/store/AppProviders";
+import { useAuth, useFollow, useMessages, useVendorMenu, useReviews, useVendorProfile } from "@/store/AppProviders";
 import { MealCard } from "@/components/site/MealCard";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/vendors/$vendorId")({
   loader: ({ params }) => {
-    const vendor = vendorById(params.vendorId);
-    if (!vendor) throw notFound();
-    return { vendor };
+    const vendorId = params.vendorId;
+    let vendor = vendorById(vendorId);
+
+    if (!vendor && typeof window !== "undefined") {
+      try {
+        const raw = localStorage.getItem("mm:vendor-profile");
+        if (raw) {
+          const profile = JSON.parse(raw);
+          if (profile && profile.id === vendorId) {
+            vendor = {
+              id: profile.id,
+              name: profile.businessName,
+              avatar: profile.images[0] || "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=100",
+              cover: profile.bannerUrl || "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800",
+              followers: "0",
+              followerCount: 0,
+              rating: 5,
+              tagline: profile.tagline || "New kitchen",
+              type: profile.categories[0] || "Home Kitchen",
+              location: profile.address,
+              deliveryAreas: profile.deliveryAreas || [],
+              openHours: profile.openHours,
+            };
+          }
+        }
+      } catch {}
+    }
+
+    return { vendorId, vendor };
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.vendor.name ?? "Kitchen"} — MenuMenu` },
+      { title: `${loaderData?.vendor?.name ?? "Kitchen"} — MenuMenu` },
       { name: "description", content: loaderData?.vendor ? `${loaderData.vendor.name} on MenuMenu — ${loaderData.vendor.tagline}.` : "" },
-      { property: "og:title", content: `${loaderData?.vendor.name ?? "Kitchen"} — MenuMenu` },
+      { property: "og:title", content: `${loaderData?.vendor?.name ?? "Kitchen"} — MenuMenu` },
       { property: "og:description", content: loaderData?.vendor ? `${loaderData.vendor.name} on MenuMenu — ${loaderData.vendor.tagline}.` : "" },
       ...(loaderData?.vendor ? [{ property: "og:image", content: loaderData.vendor.cover }] : []),
     ],
@@ -26,18 +52,18 @@ export const Route = createFileRoute("/vendors/$vendorId")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "FoodEstablishment",
-          "name": loaderData.vendor.name,
-          "description": loaderData.vendor.tagline,
-          "image": loaderData.vendor.cover,
+          "name": loaderData?.vendor?.name,
+          "description": loaderData?.vendor?.tagline,
+          "image": loaderData?.vendor?.cover,
           "address": {
             "@type": "PostalAddress",
-            "addressLocality": loaderData.vendor.location,
+            "addressLocality": loaderData?.vendor?.location,
             "addressCountry": "NG"
           },
           "aggregateRating": {
             "@type": "AggregateRating",
-            "ratingValue": loaderData.vendor.rating,
-            "reviewCount": loaderData.vendor.followers
+            "ratingValue": loaderData?.vendor?.rating,
+            "reviewCount": loaderData?.vendor?.followers
           }
         })
       }
@@ -67,7 +93,44 @@ const SAMPLE_REVIEWS = [
 ];
 
 function VendorPage() {
-  const { vendor } = Route.useLoaderData();
+  const { vendorId, vendor: loaderVendor } = Route.useLoaderData();
+  const vendorCtx = useVendorProfile();
+  
+  const vendor = useMemo(() => {
+    // If this is our own vendor, prioritize the reactive context profile
+    if (vendorCtx.profile && vendorCtx.profile.id === vendorId) {
+      return {
+        id: vendorCtx.profile.id,
+        name: vendorCtx.profile.businessName,
+        avatar: vendorCtx.profile.images[0] || "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=100",
+        cover: vendorCtx.profile.bannerUrl || "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800",
+        followers: "0",
+        followerCount: 0,
+        rating: 5,
+        tagline: vendorCtx.profile.tagline || "New kitchen",
+        type: vendorCtx.profile.categories[0] || "Home Kitchen",
+        location: vendorCtx.profile.address,
+        deliveryAreas: vendorCtx.profile.deliveryAreas || [],
+        deliveryAvailable: vendorCtx.profile.deliveryAvailable,
+        pickupAvailable: vendorCtx.profile.pickupAvailable,
+        openHours: vendorCtx.profile.openHours,
+      };
+    }
+
+    if (loaderVendor) return loaderVendor;
+    return null;
+  }, [vendorId, loaderVendor, vendorCtx.profile]);
+
+  if (!vendor) {
+    return (
+      <div className="flex min-h-screen items-center justify-center px-4 pt-32">
+        <div className="text-center">
+          <h1 className="text-2xl font-extrabold">Vendor not found</h1>
+          <Link to="/vendors" className="btn-primary mt-6 inline-flex">Back to vendors</Link>
+        </div>
+      </div>
+    );
+  }
   const follow = useFollow();
   const messages = useMessages();
   const reviews = useReviews();
@@ -115,10 +178,27 @@ function VendorPage() {
               <span className="chip"><Star className="h-3 w-3 fill-primary text-primary" /> {vendor.rating} · {vendor.followers} followers</span>
               <h1 className="mt-2 text-3xl font-black sm:text-4xl">{vendor.name}</h1>
               <p className="mt-1 text-sm font-semibold text-muted-foreground">{vendor.type} · {vendor.tagline}</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {(vendor.deliveryAvailable ?? true) && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-[10px] font-bold text-green-700">
+                    <Check className="h-3 w-3" /> Delivery Available
+                  </span>
+                )}
+                {(vendor.pickupAvailable ?? true) && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-bold text-blue-700">
+                    <Check className="h-3 w-3" /> Pickup Available
+                  </span>
+                )}
+              </div>
             </div>
-            <button onClick={() => follow.toggle(vendor.id)} className={following ? "btn-ghost" : "btn-primary"}>
-              {following ? <><Check className="h-4 w-4" /> Following</> : <><Plus className="h-4 w-4" /> Follow</>}
-            </button>
+            <div className="flex flex-wrap items-center gap-3">
+              <button onClick={() => follow.toggle(vendor.id)} className={following ? "btn-ghost" : "btn-primary"}>
+                {following ? <><Check className="h-4 w-4" /> Following</> : <><Plus className="h-4 w-4" /> Follow</>}
+              </button>
+              <a href="#contact" className="btn-secondary">
+                <MessageSquare className="h-4 w-4" /> Message
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -182,23 +262,13 @@ function VendorPage() {
                           ))}
                         </div>
                       </div>
-                      <p className="mt-2 text-sm text-muted-foreground">{r.comment}</p>
-                    </div>
-                  ))
-                ) : (
-                  SAMPLE_REVIEWS.map((r, i) => (
-                    <div key={i} className="card-mm p-5 opacity-75">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-extrabold">{r.name}</p>
-                        <div className="flex items-center gap-0.5">
-                          {Array.from({ length: 5 }).map((_, j) => (
-                            <Star key={j} className={`h-3.5 w-3.5 ${j < r.rating ? "fill-primary text-primary" : "text-muted-foreground"}`} />
-                          ))}
-                        </div>
-                      </div>
                       <p className="mt-2 text-sm text-muted-foreground">{r.body}</p>
                     </div>
                   ))
+                ) : (
+                  <div className="card-mm p-8 text-center bg-secondary/20 border-dashed border-2">
+                    <p className="text-sm font-semibold text-muted-foreground">No reviews yet. Be the first to try their food!</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -216,7 +286,7 @@ function VendorPage() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    messages.send({ vendorId: vendor.id, fromName: form.name, fromEmail: form.email, body: form.message, from: "user" });
+                    messages.send(vendor.id, form.email, form.name, form.message);
                     setSent(true);
                     toast.success(`Message sent to ${vendor.name}`);
                     setForm({ name: form.name, email: form.email, message: "" });
@@ -227,7 +297,7 @@ function VendorPage() {
                     <input required placeholder="Your name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="input-mm" />
                     <input required type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-mm" />
                   </div>
-                  <textarea required placeholder="Your message…" rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="input-mm rounded-2xl py-3" />
+                  <textarea required placeholder="Your message…" rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} className="textarea-mm" />
                   <button type="submit" className="btn-primary justify-self-start">Send message</button>
                 </form>
               )}
@@ -239,12 +309,21 @@ function VendorPage() {
             <div className="card-mm p-5">
               <h3 className="text-base font-extrabold">Hours</h3>
               <ul className="mt-3 space-y-2 text-sm">
-                {HOURS.map((h) => (
-                  <li key={h.day} className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 font-bold"><Clock className="h-3.5 w-3.5 text-muted-foreground" /> {h.day}</span>
-                    <span className="font-semibold text-muted-foreground">{h.hours}</span>
+                {vendor.openHours ? (
+                  <li className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 font-bold"><Clock className="h-3.5 w-3.5 text-muted-foreground" /> Daily</span>
+                    <span className="font-semibold text-muted-foreground">
+                      {vendor.openHours.start} – {vendor.openHours.end}
+                    </span>
                   </li>
-                ))}
+                ) : (
+                  HOURS.map((h) => (
+                    <li key={h.day} className="flex items-center justify-between">
+                      <span className="flex items-center gap-2 font-bold"><Clock className="h-3.5 w-3.5 text-muted-foreground" /> {h.day}</span>
+                      <span className="font-semibold text-muted-foreground">{h.hours}</span>
+                    </li>
+                  ))
+                )}
               </ul>
             </div>
 
@@ -252,10 +331,10 @@ function VendorPage() {
               <h3 className="text-base font-extrabold">Location</h3>
               <div className="mt-3 flex items-start gap-2 text-sm">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <p className="font-semibold text-muted-foreground">12 Allen Avenue, Ikeja, Lagos</p>
+                <p className="font-semibold text-muted-foreground">{vendor.location || "12 Allen Avenue, Ikeja, Lagos"}</p>
               </div>
               <div
-                className="mt-3 grid h-32 place-items-center rounded-2xl text-xs font-bold text-muted-foreground"
+                className="mt-3 grid h-32 place-items-center rounded-2xl text-xs font-bold text-muted-foreground border-2 border-dashed border-primary/20"
                 style={{ background: "var(--gradient-soft), color-mix(in oklab, var(--primary) 6%, var(--background))" }}
               >
                 Map preview
@@ -265,8 +344,18 @@ function VendorPage() {
             <div className="card-mm p-5">
               <h3 className="text-base font-extrabold">Direct contact</h3>
               <ul className="mt-3 space-y-2 text-sm">
-                <li className="flex items-center gap-2"><Phone className="h-4 w-4 text-primary" /> <a href="tel:+2348012345678" className="font-bold hover:text-primary">+234 801 234 5678</a></li>
-                <li className="flex items-center gap-2"><Mail className="h-4 w-4 text-primary" /> <a href={`mailto:hello@${vendor.id}.menumenu.app`} className="font-bold hover:text-primary">hello@{vendor.id}.menumenu.app</a></li>
+                <li className="flex items-center gap-2">
+                  <Phone className="h-4 w-4 text-primary" /> 
+                  <a href={`tel:${vendorCtx.profile?.phone || "+2348012345678"}`} className="font-bold hover:text-primary">
+                    {vendorCtx.profile?.phone || "+234 801 234 5678"}
+                  </a>
+                </li>
+                <li className="flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-primary" /> 
+                  <a href={`mailto:${vendor.id}@menumenu.app`} className="font-bold hover:text-primary">
+                    {vendor.id}@menumenu.app
+                  </a>
+                </li>
               </ul>
             </div>
           </aside>

@@ -65,7 +65,7 @@ function ContactPage() {
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold text-muted-foreground">Message</span>
-                <textarea required rows={5} className="input-mm rounded-2xl py-3" placeholder="Tell us a bit more…" />
+                <textarea required rows={5} className="textarea-mm" placeholder="Tell us a bit more…" />
               </label>
               <button type="submit" className="btn-primary w-full sm:w-auto">
                 {sent ? <><Check className="h-4 w-4" /> Sent!</> : <><Send className="h-4 w-4" /> Send message</>}

@@ -5,7 +5,7 @@ import { PageHero } from "@/components/site/PageHero";
 import { KitchenCard } from "@/components/site/KitchenCard";
 import { vendors, categories, vendorAreas } from "@/data/mock";
 import { DeliveryAreaPicker } from "@/components/site/DeliveryAreaPicker";
-import { useDeliveryArea } from "@/store/AppProviders";
+import { useDeliveryArea, useVendorProfile } from "@/store/AppProviders";
 
 export const Route = createFileRoute("/vendors")({
   head: () => ({
@@ -30,9 +30,34 @@ function VendorsPage() {
   const [type, setType] = useState("All");
   const [price, setPrice] = useState("All");
   const { area } = useDeliveryArea();
+  const vendorCtx = useVendorProfile();
+
+  const allVendors = useMemo(() => {
+    const list = [...vendors];
+    if (vendorCtx.profile) {
+      const idx = list.findIndex(v => v.id === vendorCtx.profile?.id);
+      const myVendor = {
+        id: vendorCtx.profile.id,
+        name: vendorCtx.profile.businessName,
+        avatar: vendorCtx.profile.images[0] || "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=100",
+        cover: vendorCtx.profile.bannerUrl || "https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=800",
+        followers: "0",
+        followerCount: 0,
+        rating: 5,
+        tagline: vendorCtx.profile.tagline || "New kitchen",
+        type: vendorCtx.profile.categories[0] || "Home Kitchen",
+        location: vendorCtx.profile.address,
+        deliveryAreas: vendorCtx.profile.deliveryAreas || [],
+        priceRange: "$$" as const,
+      };
+      if (idx >= 0) list[idx] = myVendor;
+      else list.unshift(myVendor);
+    }
+    return list;
+  }, [vendorCtx.profile]);
 
   const filtered = useMemo(() => {
-    return vendors.filter((v) => {
+    return allVendors.filter((v) => {
       if (q && !v.name.toLowerCase().includes(q.toLowerCase())) return false;
       if (loc !== "All locations" && v.location !== loc) return false;
       if (type !== "All" && v.type !== type) return false;
@@ -41,7 +66,7 @@ function VendorsPage() {
       if (area && !vendorAreas(v.id, v.deliveryAreas).includes(area)) return false;
       return true;
     });
-  }, [q, cat, loc, type, price, area]);
+  }, [allVendors, q, cat, loc, type, price, area]);
 
   const reset = () => { setQ(""); setCat("All"); setLoc("All locations"); setType("All"); setPrice("All"); };
   const activeCount = (q ? 1 : 0) + (cat !== "All" ? 1 : 0) + (loc !== "All locations" ? 1 : 0) + (type !== "All" ? 1 : 0) + (price !== "All" ? 1 : 0);
@@ -108,7 +133,7 @@ function VendorsPage() {
           <div>
             <div className="mb-5 flex items-center justify-between">
               <p className="text-sm font-semibold text-muted-foreground">
-                Showing <span className="font-extrabold text-foreground">{filtered.length}</span> of {vendors.length} kitchens
+                Showing <span className="font-extrabold text-foreground">{filtered.length}</span> of {allVendors.length} kitchens
               </p>
             </div>
 

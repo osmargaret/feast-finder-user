@@ -10,7 +10,7 @@ export function KitchenCard({ vendor, showFollow = true }: { vendor: Vendor; sho
   const formatted = liveCount >= 1000 ? `${(liveCount / 1000).toFixed(1)}k` : String(liveCount);
   return (
     <article className="card-mm flex w-[260px] shrink-0 flex-col p-4">
-      <Link to="/vendors/$vendorId" params={{ vendorId: vendor.id }} className="block">
+      <Link to="/view-vendor/$vendorId" params={{ vendorId: vendor.id }} className="block">
         <div className="relative h-24 overflow-hidden rounded-2xl">
           <img src={vendor.cover} alt={vendor.name} loading="lazy" className="h-full w-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />

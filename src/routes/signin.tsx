@@ -64,12 +64,24 @@ function SignInPage() {
           <button type="submit" disabled={busy} className="btn-primary w-full">
             {busy ? "Signing in…" : "Sign in"}
           </button>
+          <Link
+            to="/forgot-password"
+            className="block text-center text-xs font-bold text-muted-foreground hover:text-primary transition-colors"
+          >
+            Forgot your password?
+          </Link>
         </form>
         <p className="mt-6 text-center text-sm font-semibold text-muted-foreground">
           Don't have an account? <Link to="/signup" className="font-bold text-primary hover:underline">Create one</Link>
         </p>
         <p className="mt-2 text-center text-sm font-semibold text-muted-foreground">
           Run a kitchen? <Link to="/vendor-signup" className="font-bold text-primary hover:underline">Create a vendor account</Link>
+        </p>
+        <p className="mt-4 text-center text-xs font-semibold text-muted-foreground">
+          By continuing you agree to our{" "}
+          <Link to="/terms" className="font-bold text-primary hover:underline">Terms</Link>
+          {" & "}
+          <Link to="/privacy" className="font-bold text-primary hover:underline">Privacy Policy</Link>.
         </p>
       </div>
     </section>

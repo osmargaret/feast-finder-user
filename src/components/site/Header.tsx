@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
   Menu,
-  ShoppingBag,
-  Heart,
-  Bell,
   UtensilsCrossed,
   X,
   LogOut,
   User as UserIcon,
-  MessageSquare,
   ChevronDown,
+  Store,
+  Search,
+  Heart,
+  Bell,
+  ShoppingBag,
 } from "lucide-react";
-import { useAuth, useCart, useMessages, useNotifications, useVendorProfile, useWishlist } from "@/store/AppProviders";
+import { useAuth, useCart, useNotifications, useVendorProfile, useWishlist } from "@/store/AppProviders";
 import { categories, type Category } from "@/data/mock";
 import { DeliveryAreaPicker } from "@/components/site/DeliveryAreaPicker";
 
@@ -33,10 +34,10 @@ export function Header() {
   const wish = useWishlist();
   const notif = useNotifications();
   const auth = useAuth();
-  const messages = useMessages();
   const vendor = useVendorProfile();
-  const unreadMsgs = mounted && auth.user ? messages.unreadFromVendors(auth.user.email) : 0;
-  const role: "vendor" | "user" | null = mounted ? (vendor.profile ? "vendor" : auth.user ? "user" : null) : null;
+  const role: "vendor" | "user" | null = mounted ? (vendor.profile && auth.user && vendor.profile.email === auth.user.email ? "vendor" : auth.user ? "user" : null) : null;
+  const routerState = useRouterState();
+  const isVendorView = routerState.location.pathname.startsWith('/vendor-dashboard') || routerState.location.pathname.startsWith('/settings');
 
   useEffect(() => {
     setMounted(true);
@@ -184,18 +185,20 @@ export function Header() {
             >
               Blog
             </Link>
+
           </nav>
 
           <div className="flex items-center gap-2">
-            <div className="hidden md:block"><DeliveryAreaPicker /></div>
-            <Link to="/wishlist" className="icon-btn hidden sm:inline-flex" aria-label="Wishlist">
-              <Heart className="h-4 w-4" />
-              {mounted && wish.ids.length > 0 && (
-                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
-                  {wish.ids.length}
-                </span>
-              )}
-            </Link>
+            {role !== "vendor" && auth.user && (
+              <Link to="/wishlist" className="icon-btn hidden sm:inline-flex" aria-label="Wishlist">
+                <Heart className="h-4 w-4" />
+                {mounted && wish.ids.length > 0 && (
+                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
+                    {wish.ids.length}
+                  </span>
+                )}
+              </Link>
+            )}
             <Link
               to="/notifications"
               className="icon-btn hidden sm:inline-flex"
@@ -208,49 +211,38 @@ export function Header() {
                 </span>
               )}
             </Link>
-            {mounted && auth.user && (
-              <Link to="/messages" className="icon-btn hidden sm:inline-flex" aria-label="Messages">
-                <MessageSquare className="h-4 w-4" />
-                {unreadMsgs > 0 && (
+
+            {role !== "vendor" && (
+              <Link to="/cart" className="icon-btn relative" aria-label="Cart">
+                <ShoppingBag className="h-4 w-4" />
+                {mounted && cart.count > 0 && (
                   <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
-                    {unreadMsgs}
+                    {cart.count}
                   </span>
                 )}
               </Link>
             )}
-            <Link to="/cart" className="icon-btn relative" aria-label="Cart">
-              <ShoppingBag className="h-4 w-4" />
-              {mounted && cart.count > 0 && (
-                <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
-                  {cart.count}
-                </span>
-              )}
-            </Link>
             {mounted && auth.user ? (
-              <>
+              <div className="flex items-center gap-2">
+                {role === "vendor" && (
+                  <Link
+                    to="/view-vendor/$vendorId"
+                    params={{ vendorId: vendor.profile?.id || "" }}
+                    className="hidden items-center gap-1 rounded-full bg-primary px-2 py-1 text-[10px] font-bold text-white sm:inline-flex hover:bg-primary/90"
+                  >
+                    <Store className="h-3 w-3" /> My Store
+                  </Link>
+                )}
                 <Link
-                  to="/profile"
-                  className="hidden items-center gap-1.5 rounded-full bg-secondary px-3 py-1.5 text-xs font-bold sm:inline-flex hover:bg-primary/10"
+                  to={role === "vendor" ? "/vendor-dashboard" : "/profile"}
+                  className={`hidden items-center gap-1.5 rounded-full bg-secondary ${role === "vendor" ? "px-2 py-1 text-[10px]" : "px-3 py-1.5 text-xs"} font-bold sm:inline-flex hover:bg-primary/10`}
                 >
-                  <UserIcon className="h-3.5 w-3.5" /> {auth.user.name}
+                  <UserIcon className={role === "vendor" ? "h-3 w-3" : "h-3.5 w-3.5"} /> {auth.user.name}
                   <span className={`ml-1 rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${role === "vendor" ? "bg-primary text-primary-foreground" : "bg-foreground/10 text-foreground"}`}>
                     {role === "vendor" ? "Vendor" : "User"}
                   </span>
                 </Link>
-                <Link
-                  to="/settings"
-                  className="hidden text-xs font-bold text-foreground/70 hover:text-foreground sm:inline-flex"
-                >
-                  Settings
-                </Link>
-                <button
-                  onClick={auth.signOut}
-                  className="icon-btn hidden sm:inline-flex"
-                  aria-label="Sign out"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </>
+              </div>
             ) : (
               <>
                 <Link
@@ -353,20 +345,24 @@ export function Header() {
               >
                 Blog
               </Link>
-              <Link
-                to="/cart"
-                onClick={() => setOpen(false)}
-                className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
-              >
-                Cart ({cart.count})
-              </Link>
-              <Link
-                to="/wishlist"
-                onClick={() => setOpen(false)}
-                className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
-              >
-                Wishlist ({wish.ids.length})
-              </Link>
+              {!isVendorView && (
+                <Link
+                  to="/cart"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
+                >
+                  Cart ({cart.count})
+                </Link>
+              )}
+              {!isVendorView && auth.user && (
+                <Link
+                  to="/wishlist"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
+                >
+                  Wishlist ({wish.ids.length})
+                </Link>
+              )}
               <Link
                 to="/notifications"
                 onClick={() => setOpen(false)}
@@ -374,36 +370,25 @@ export function Header() {
               >
                 Notifications ({notif.unread})
               </Link>
-              {mounted && auth.user && (
+
+              {auth.user && role !== "vendor" && (
                 <Link
-                  to="/messages"
+                  to="/profile"
                   onClick={() => setOpen(false)}
                   className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
                 >
-                  Messages{unreadMsgs > 0 ? ` (${unreadMsgs})` : ""}
+                  My Profile
                 </Link>
               )}
-              <Link
-                to="/profile"
-                onClick={() => setOpen(false)}
-                className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
-              >
-                My Profile
-              </Link>
-              <Link
-                to="/settings"
-                onClick={() => setOpen(false)}
-                className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
-              >
-                Settings
-              </Link>
-              <Link
-                to="/vendor-dashboard"
-                onClick={() => setOpen(false)}
-                className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
-              >
-                Vendor Dashboard
-              </Link>
+              {role === "vendor" && (
+                <Link
+                  to="/vendor-dashboard"
+                  onClick={() => setOpen(false)}
+                  className="rounded-xl px-4 py-3 text-base font-semibold text-foreground hover:bg-secondary"
+                >
+                  Vendor Dashboard
+                </Link>
+              )}
               <Link
                 to="/vendor-signup"
                 onClick={() => setOpen(false)}
@@ -427,17 +412,7 @@ export function Header() {
               </Link>
             </nav>
             <div className="mt-6 flex flex-col gap-2">
-              {auth.user ? (
-                <button
-                  onClick={() => {
-                    auth.signOut();
-                    setOpen(false);
-                  }}
-                  className="btn-ghost w-full"
-                >
-                  Sign out
-                </button>
-              ) : (
+              {!auth.user && (
                 <>
                   <Link to="/signin" onClick={() => setOpen(false)} className="btn-ghost w-full">
                     Sign in

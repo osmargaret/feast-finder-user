@@ -341,10 +341,9 @@ function ReviewModal({ orderId, onClose, onSuccess }: { orderId: string; onClose
     reviews.add({
       orderId,
       vendorId,
-      userEmail: auth.user!.email,
       userName: auth.user!.name,
       rating,
-      comment,
+      body: comment,
     });
     onSuccess();
   };
@@ -370,7 +369,7 @@ function ReviewModal({ orderId, onClose, onSuccess }: { orderId: string; onClose
             rows={4}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="input-mm rounded-2xl py-3"
+            className="textarea-mm"
           />
           <button type="submit" className="btn-primary w-full">Submit Review</button>
         </form>
@@ -420,7 +419,7 @@ function ReportModal({ orderId, onClose, onSuccess }: { orderId: string; onClose
             rows={4}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="input-mm rounded-2xl py-3"
+            className="textarea-mm"
           />
           <button type="submit" className="btn-primary w-full">Submit Ticket</button>
         </form>

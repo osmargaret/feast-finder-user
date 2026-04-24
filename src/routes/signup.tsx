@@ -62,6 +62,12 @@ function SignUpPage() {
         <p className="mt-2 text-center text-sm font-semibold text-muted-foreground">
           Want to sell on MenuMenu? <Link to="/vendor-signup" className="font-bold text-primary hover:underline">Create a vendor account</Link>
         </p>
+        <p className="mt-4 text-center text-xs font-semibold text-muted-foreground">
+          By signing up you agree to our{" "}
+          <Link to="/terms" className="font-bold text-primary hover:underline">Terms</Link>
+          {" & "}
+          <Link to="/privacy" className="font-bold text-primary hover:underline">Privacy Policy</Link>.
+        </p>
       </div>
     </section>
   );

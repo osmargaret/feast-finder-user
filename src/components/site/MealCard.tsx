@@ -45,7 +45,7 @@ export function MealCard({ meal, compact = false }: { meal: Meal; compact?: bool
 
         {vendor && (
           <Link
-            to="/vendors/$vendorId"
+            to="/view-vendor/$vendorId"
             params={{ vendorId: vendor.id }}
             className="mt-3 flex items-center gap-2.5 rounded-xl p-1 -m-1 transition hover:bg-secondary"
           >

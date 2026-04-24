@@ -119,6 +119,9 @@
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 rounded-full border border-border bg-background/80 px-5 py-2.5 text-sm font-bold text-foreground transition-all hover:-translate-y-0.5;
   }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-border bg-secondary px-5 py-2.5 text-sm font-bold text-foreground transition-all hover:-translate-y-0.5 hover:bg-secondary/80;
+  }
   .icon-btn {
     @apply relative inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-background/80 text-foreground transition-all hover:-translate-y-0.5;
     box-shadow: var(--shadow-sm);
@@ -143,7 +146,8 @@
     @apply rounded-3xl border border-border bg-card overflow-hidden transition-all;
     box-shadow: var(--shadow-md);
   }
-  .card-mm:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+  /* Only lift standalone cards, not sidebar/nav containers */
+  .card-mm:not(aside):hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
   .glass-nav {
     background: color-mix(in oklab, white 88%, transparent);
     backdrop-filter: blur(14px);
@@ -157,6 +161,11 @@
     @apply w-full rounded-full border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2;
     --tw-ring-color: color-mix(in oklab, var(--primary) 40%, transparent);
   }
+  /* Use textarea-mm for multiline inputs — same as input-mm but square corners */
+  .textarea-mm {
+    @apply w-full rounded-2xl border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 resize-none;
+    --tw-ring-color: color-mix(in oklab, var(--primary) 40%, transparent);
+  }
   .scroll-row {
     @apply flex gap-4 overflow-x-auto pb-2;
     scroll-snap-type: x mandatory;
@@ -166,5 +175,16 @@
   .scroll-row::-webkit-scrollbar-thumb {
     background: color-mix(in oklab, var(--ink) 18%, transparent);
     border-radius: 999px;
+  }
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+  .animate-marquee {
+    animation: marquee 30s linear infinite;
+  }
+  .group:hover .animate-marquee {
+    animation-play-state: paused;
   }
 }

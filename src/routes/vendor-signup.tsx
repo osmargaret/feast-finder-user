@@ -9,6 +9,7 @@ import {
   ChefHat,
   Upload,
   X,
+  Check,
 } from "lucide-react";
 import { useAuth, useVendorProfile } from "@/store/AppProviders";
 import { categories, LAGOS_AREAS } from "@/data/mock";
@@ -53,6 +54,10 @@ function VendorSignupPage() {
   const [bannerUrl, setBannerUrl] = useState("");
   const [about, setAbout] = useState("");
   const [deliveryAreas, setDeliveryAreas] = useState<string[]>([]);
+  const [deliveryAvailable, setDeliveryAvailable] = useState(true);
+  const [pickupAvailable, setPickupAvailable] = useState(true);
+  const [openTime, setOpenTime] = useState("08:00");
+  const [closeTime, setCloseTime] = useState("20:00");
   const [password, setPassword] = useState("");
 
   const toggleArea = (a: string) =>
@@ -128,9 +133,12 @@ function VendorSignupPage() {
               bannerUrl: bannerUrl || undefined,
               about: about || undefined,
               deliveryAreas: deliveryAreas.length ? deliveryAreas : undefined,
+              deliveryAvailable,
+              pickupAvailable,
+              openHours: { start: openTime, end: closeTime },
             });
             setBusy(false);
-            navigate({ to: "/vendor-dashboard" });
+            navigate({ to: "/vendor-dashboard", search: { tab: "launchpad" } });
           }}
           className="mt-8 grid gap-4 sm:grid-cols-2"
         >
@@ -181,10 +189,10 @@ function VendorSignupPage() {
           </Field>
           {/* Categories multi-select */}
           <div className="sm:col-span-2">
-            <label className="mb-2 block text-xs font-bold text-muted-foreground">
-              Select categories *
+            <label className="mb-3 block text-xs font-black uppercase tracking-wider text-muted-foreground">
+              What do you serve? (Select all that apply) *
             </label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="flex flex-wrap gap-2">
               {categories.map((c) => {
                 const checked = selectedCategories.includes(c.name);
                 return (
@@ -192,16 +200,17 @@ function VendorSignupPage() {
                     key={c.name}
                     type="button"
                     onClick={() => toggleCategory(c.name)}
-                    className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-colors ${
+                    className={`group flex items-center gap-2.5 rounded-2xl border-2 px-4 py-2.5 text-sm font-black transition-all ${
                       checked
-                        ? "border-primary bg-primary/10 text-primary"
-                        : "border-input bg-background hover:bg-secondary"
+                        ? "border-primary bg-primary/10 text-primary shadow-lg shadow-primary/10"
+                        : "border-border bg-white text-muted-foreground hover:border-primary/30 hover:bg-secondary/50"
                     }`}
                   >
-                    <Checkbox checked={checked} className="h-4 w-4" />
-                    <span>
-                      {c.icon} {c.name}
+                    <span className={`text-lg transition-transform group-hover:scale-125 ${checked ? "scale-110" : ""}`}>
+                      {c.icon}
                     </span>
+                    <span>{c.name}</span>
+                    {checked && <Check className="h-3.5 w-3.5 animate-in zoom-in duration-300" />}
                   </button>
                 );
               })}
@@ -241,6 +250,33 @@ function VendorSignupPage() {
               })}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">You can update this anytime in Settings → Delivery.</p>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="mb-2 block text-xs font-bold text-muted-foreground">Service options</label>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox checked={deliveryAvailable} onCheckedChange={(c) => setDeliveryAvailable(!!c)} />
+                <span className="text-sm font-semibold">Delivery available</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox checked={pickupAvailable} onCheckedChange={(c) => setPickupAvailable(!!c)} />
+                <span className="text-sm font-semibold">Pickup available</span>
+              </label>
+            </div>
+          </div>
+          <div className="sm:col-span-2">
+            <label className="mb-2 block text-xs font-bold text-muted-foreground">Opening hours</label>
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <span className="mb-1 block text-[10px] font-bold uppercase text-muted-foreground">Opens at</span>
+                <input type="time" value={openTime} onChange={(e) => setOpenTime(e.target.value)} className="input-mm" />
+              </div>
+              <div className="flex-1">
+                <span className="mb-1 block text-[10px] font-bold uppercase text-muted-foreground">Closes at</span>
+                <input type="time" value={closeTime} onChange={(e) => setCloseTime(e.target.value)} className="input-mm" />
+              </div>
+            </div>
           </div>
           <div className="sm:col-span-2">
             <label className="mb-1.5 block text-xs font-bold text-muted-foreground">
@@ -291,7 +327,7 @@ function VendorSignupPage() {
               onChange={(e) => setAbout(e.target.value)}
               rows={3}
               placeholder="Tell customers what makes your food special…"
-              className="input-mm rounded-2xl py-3"
+              className="textarea-mm"
             />
           </div>
           {!auth.user && (

@@ -2,11 +2,15 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { CreditCard, Wallet, Banknote, ShoppingBag } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
-import { useCart, useOrders, useAuth, useNotifications } from "@/store/AppProviders";
+import { useCart, useOrders, useAuth, useNotifications, useCoupons } from "@/store/AppProviders";
+
 import { meals as allMeals, formatPrice } from "@/data/mock";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/checkout")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    vendorId: search.vendorId as string | undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Checkout — MenuMenu" },
@@ -19,20 +23,22 @@ export const Route = createFileRoute("/checkout")({
 });
 
 function CheckoutPage() {
+  const { vendorId } = Route.useSearch();
   const cart = useCart();
   const orders = useOrders();
   const auth = useAuth();
   const notif = useNotifications();
+  const coupons = useCoupons();
   const navigate = useNavigate();
 
   const items = cart.items
     .map((it) => ({ it, meal: allMeals.find((m) => m.id === it.mealId) }))
-    .filter((x): x is { it: { mealId: string; qty: number }; meal: typeof allMeals[number] } => Boolean(x.meal));
+    .filter((x): x is { it: { mealId: string; qty: number }; meal: typeof allMeals[number] } => Boolean(x.meal))
+    .filter((x) => x.meal.vendorId === vendorId);
 
-  const vendorIds = Array.from(new Set(items.map((x) => x.meal.vendorId)));
-  const deliveryPerVendor = 800;
-  const delivery = vendorIds.length * deliveryPerVendor;
-  const totalBeforeDiscount = cart.subtotal + delivery;
+  const subtotal = items.reduce((acc, curr) => acc + (curr.meal.price * curr.it.qty), 0);
+  const delivery = 800;
+  const totalBeforeDiscount = subtotal + delivery;
 
   const [name, setName] = useState(auth.user?.name ?? "");
   const [phone, setPhone] = useState("");
@@ -53,7 +59,7 @@ function CheckoutPage() {
     await new Promise((r) => setTimeout(r, 600));
     const order = orders.place({
       items: items.map(({ it, meal }) => ({ mealId: meal.id, name: meal.name, price: meal.price, qty: it.qty, vendorId: meal.vendorId })),
-      subtotal: cart.subtotal,
+      subtotal,
       delivery,
       total,
       address: { name, phone, street, city, notes },
@@ -61,7 +67,7 @@ function CheckoutPage() {
       userEmail: auth.user?.email ?? null,
     });
     notif.push({ title: `Order ${order.id} placed`, body: `${formatPrice(order.total)} • ${items.length} item(s)` });
-    cart.clear();
+    // cart.clear() is called inside orders.place() in AppProviders
     navigate({ to: "/order-confirmation/$orderId", params: { orderId: order.id } });
   };
 
@@ -101,7 +107,7 @@ function CheckoutPage() {
                   <Field label="City" value={city} onChange={setCity} required />
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-muted-foreground">Delivery notes (optional)</label>
-                    <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="mt-1.5 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm" placeholder="Gate code, landmark, etc." />
+                    <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="textarea-mm" placeholder="Gate code, landmark, etc." />
                   </div>
                 </div>
               </div>
@@ -178,11 +184,20 @@ function CheckoutPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (promoCode === "TASTE10") {
-                        setDiscount(Math.floor(cart.subtotal * 0.1));
+                      if (!vendorId) return;
+                      const coupon = coupons.validate(promoCode, vendorId, subtotal);
+                      if (coupon) {
+                        const saving = coupon.discountType === "percent"
+                          ? Math.floor(subtotal * coupon.discountValue / 100)
+                          : coupon.discountValue;
+                        setDiscount(saving);
+                        toast.success(`Promo applied! You saved ${formatPrice(saving)}`);
+                      } else if (promoCode === "TASTE10") {
+                        // platform-level fallback promo
+                        setDiscount(Math.floor(subtotal * 0.1));
                         toast.success("Promo code applied!");
                       } else {
-                        toast.error("Invalid promo code");
+                        toast.error("Invalid or expired promo code");
                       }
                     }}
                     className="btn-ghost"
@@ -207,14 +222,11 @@ function CheckoutPage() {
                 ))}
               </ul>
               <dl className="mt-4 space-y-2 border-t border-border pt-4 text-sm font-semibold">
-                <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd>{formatPrice(cart.subtotal)}</dd></div>
+                <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd>{formatPrice(subtotal)}</dd></div>
                 <div className="flex justify-between">
-                  <dt className="text-muted-foreground">Delivery ({vendorIds.length} kitchen{vendorIds.length > 1 ? "s" : ""})</dt>
+                  <dt className="text-muted-foreground">Delivery</dt>
                   <dd>{formatPrice(delivery)}</dd>
                 </div>
-                {vendorIds.length > 1 && (
-                  <p className="text-[10px] text-muted-foreground text-right italic">₦{deliveryPerVendor} per kitchen</p>
-                )}
                 {discount > 0 && (
                   <div className="flex justify-between text-primary"><dt>Discount</dt><dd>-{formatPrice(discount)}</dd></div>
                 )}

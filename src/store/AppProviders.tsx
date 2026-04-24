@@ -4,15 +4,14 @@ import { meals as seedMeals, vendors as allVendors, type Meal } from "@/data/moc
 
 // ---------- helpers ----------
 function useLocalState<T>(key: string, initial: T) {
-  const [state, setState] = useState<T>(initial);
-  // Hydrate from localStorage AFTER mount to keep SSR/client output identical.
-  useEffect(() => {
+  const [state, setState] = useState<T>(() => {
+    if (typeof window === "undefined") return initial;
     try {
       const raw = localStorage.getItem(key);
-      if (raw) setState(JSON.parse(raw) as T);
+      if (raw) return JSON.parse(raw) as T;
     } catch {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return initial;
+  });
   useEffect(() => {
     try {
       localStorage.setItem(key, JSON.stringify(state));
@@ -117,10 +116,9 @@ export type Message = {
 };
 type MessagesCtx = {
   items: Message[];
-  send: (m: Omit<Message, "id" | "ts" | "read" | "from"> & { from?: "user" | "vendor" }) => void;
+  send: (vendorId: string, fromEmail: string, fromName: string, body: string) => void;
   markRead: (id: string) => void;
   reply: (vendorId: string, userEmail: string, text: string, vendorName: string) => void;
-  sendAsUser: (vendorId: string, text: string, fromName: string, fromEmail: string) => void;
   remove: (id: string) => void;
   /** count of vendor → user messages still unread */
   unreadFromVendors: (userEmail: string) => number;
@@ -129,7 +127,9 @@ const MessagesContext = createContext<MessagesCtx | null>(null);
 
 // ---------- Vendor profile ----------
 export type VendorProfile = {
+  id: string;
   businessName: string;
+  tagline?: string;
   ownerName: string;
   email: string;
   phone: string;
@@ -140,11 +140,17 @@ export type VendorProfile = {
   bannerUrl?: string;
   about?: string;
   deliveryAreas?: string[];
+  deliveryAvailable?: boolean;
+  pickupAvailable?: boolean;
+  openHours?: { start: string; end: string };
+  bankDetails?: { bankName: string; accountName: string; accountNumber: string };
+  isOpen: boolean;
   createdAt: number;
 };
 type VendorProfileCtx = {
   profile: VendorProfile | null;
-  save: (p: Omit<VendorProfile, "createdAt">) => void;
+  save: (p: Omit<VendorProfile, "id" | "createdAt" | "isOpen">) => void;
+  toggleStatus: () => void;
   clear: () => void;
 };
 const VendorProfileContext = createContext<VendorProfileCtx | null>(null);
@@ -179,15 +185,35 @@ type BlogCtx = {
 };
 const BlogContext = createContext<BlogCtx | null>(null);
 
-// ---------- Team (vendor admins) ----------
 export type TeamMember = {
   id: string;
   vendorId: string;
   name: string;
   email: string;
-  role: "manager" | "accountant" | "sales" | "blog-admin";
+  role: "admin" | "cook" | "dispatcher";
   ts: number;
 };
+
+// ---------- Coupons ----------
+export type Coupon = {
+  id: string;
+  vendorId: string;
+  code: string;
+  discountType: "percent" | "amount";
+  discountValue: number;
+  minOrder?: number;
+  expiry?: number;
+  usageCount: number;
+  active: boolean;
+};
+type CouponCtx = {
+  items: Coupon[];
+  create: (c: Omit<Coupon, "id" | "usageCount" | "active">) => void;
+  toggle: (id: string) => void;
+  remove: (id: string) => void;
+  validate: (code: string, vendorId: string, subtotal: number) => Coupon | null;
+};
+const CouponContext = createContext<CouponCtx | null>(null);
 type TeamCtx = {
   members: TeamMember[];
   add: (m: Omit<TeamMember, "id" | "ts">) => void;
@@ -198,18 +224,20 @@ const TeamContext = createContext<TeamCtx | null>(null);
 // ---------- Reviews ----------
 export type Review = {
   id: string;
-  orderId: string;
+  orderId?: string;
   vendorId: string;
-  userEmail: string;
   userName: string;
+  userAvatar?: string;
   rating: number;
-  comment: string;
+  body: string;
   ts: number;
+  reply?: string;
 };
 type ReviewCtx = {
   items: Review[];
   add: (r: Omit<Review, "id" | "ts">) => void;
-  forVendor: (vendorId: string) => Review[];
+  reply: (id: string, text: string) => void;
+  forVendor: (vid: string) => Review[];
 };
 const ReviewContext = createContext<ReviewCtx | null>(null);
 
@@ -253,8 +281,60 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [notifs, setNotifs] = useLocalState<Notif[]>("mm:notifs", []);
   const [user, setUser] = useLocalState<User | null>("mm:user", null);
   const [follows, setFollows] = useLocalState<string[]>("mm:follows", []);
+  const [coupons, setCoupons] = useLocalState<Coupon[]>("mm:coupons", []);
   const [orders, setOrders] = useLocalState<Order[]>("mm:orders", []);
-  const [messages, setMessages] = useLocalState<Message[]>("mm:messages", []);
+  const [messages, setMessages] = useLocalState<Message[]>("mm:messages", [
+    {
+      id: "msg-1",
+      vendorId: "v-1",
+      from: "user",
+      fromName: "Toyin",
+      fromEmail: "toyin@example.com",
+      body: "Hello Mama T! Do you have fresh jollof rice ready for pickup?",
+      ts: Date.now() - 3600000 * 2,
+      read: true,
+    },
+    {
+      id: "msg-2",
+      vendorId: "v-1",
+      from: "vendor",
+      fromName: "Mama T's Kitchen",
+      fromEmail: "toyin@example.com",
+      body: "Yes Toyin! Just finished a fresh batch. It's hot and spicy just the way you like it.",
+      ts: Date.now() - 3600000 * 1.5,
+      read: true,
+    },
+    {
+      id: "msg-3",
+      vendorId: "v-1",
+      from: "user",
+      fromName: "Toyin",
+      fromEmail: "toyin@example.com",
+      body: "Perfect! I'll be there in 15 minutes. Please pack two portions.",
+      ts: Date.now() - 3600000 * 1.2,
+      read: true,
+    },
+    {
+      id: "msg-4",
+      vendorId: "v-2",
+      from: "user",
+      fromName: "Toyin",
+      fromEmail: "toyin@example.com",
+      body: "Is your delivery still active for Ikeja area?",
+      ts: Date.now() - 3600000 * 5,
+      read: true,
+    },
+    {
+      id: "msg-5",
+      vendorId: "v-2",
+      from: "vendor",
+      fromName: "Burger King",
+      fromEmail: "toyin@example.com",
+      body: "Yes, we are delivering to Ikeja! Delivery time is currently 45 minutes.",
+      ts: Date.now() - 3600000 * 4.8,
+      read: true,
+    }
+  ]);
   const [vendorProfile, setVendorProfile] = useLocalState<VendorProfile | null>(
     "mm:vendor-profile",
     null,
@@ -396,11 +476,26 @@ export function AppProviders({ children }: { children: ReactNode }) {
       place: (o) => {
         const order: Order = {
           ...o,
-          id: "ORD-" + Math.random().toString(36).slice(2, 8).toUpperCase(),
+          id: "ord-" + Math.random().toString(36).slice(2, 8),
           ts: Date.now(),
           status: "pending",
         };
         setOrders((prev) => [order, ...prev]);
+        setCart([]);
+        toast.success("Order placed successfully!");
+        
+        // Push notification
+        setNotifs((prev) => [
+          {
+            id: "notif-" + Date.now(),
+            title: "Order Confirmed",
+            body: `Your order from ${o.items[0]?.vendorId} has been placed.`,
+            ts: Date.now(),
+            read: false,
+          },
+          ...prev,
+        ]);
+        
         return order;
       },
       setStatus: (id, status) => {
@@ -429,26 +524,37 @@ export function AppProviders({ children }: { children: ReactNode }) {
         });
       },
     }),
-    [orders, setOrders, setNotifs],
+    [orders, setOrders, setNotifs, setCart],
   );
 
   const messagesValue = useMemo<MessagesCtx>(
     () => ({
       items: messages,
-      send: (m) =>
-        setMessages((prev) => [
+      send: (vendorId, fromEmail, fromName, body) => {
+        const msg = {
+          id: "msg-" + Date.now(),
+          vendorId,
+          from: "user",
+          fromEmail,
+          fromName,
+          body,
+          ts: Date.now(),
+          read: false,
+        };
+        setMessages((prev) => [msg as any, ...prev]);
+        
+        // Push notification
+        setNotifs((prev) => [
           {
-            id: Math.random().toString(36).slice(2),
+            id: "notif-" + Date.now(),
+            title: "Message Sent",
+            body: `Your message to vendor ${vendorId} has been sent.`,
             ts: Date.now(),
             read: false,
-            from: m.from ?? "user",
-            vendorId: m.vendorId,
-            fromName: m.fromName,
-            fromEmail: m.fromEmail,
-            body: m.body,
           },
           ...prev,
-        ]),
+        ]);
+      },
       markRead: (id) =>
         setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, read: true } : m))),
       reply: (vendorId, userEmail, text, vendorName) => {
@@ -481,20 +587,6 @@ export function AppProviders({ children }: { children: ReactNode }) {
           ...p,
         ]);
       },
-      sendAsUser: (vendorId, text, fromName, fromEmail) =>
-        setMessages((prev) => [
-          {
-            id: Math.random().toString(36).slice(2),
-            ts: Date.now(),
-            read: false,
-            from: "user",
-            vendorId,
-            fromName,
-            fromEmail,
-            body: text,
-          },
-          ...prev,
-        ]),
       remove: (id) => setMessages((prev) => prev.filter((m) => m.id !== id)),
       unreadFromVendors: (userEmail) =>
         messages.filter((m) => m.from === "vendor" && !m.read && m.fromEmail === userEmail).length,
@@ -502,12 +594,50 @@ export function AppProviders({ children }: { children: ReactNode }) {
     [messages, setMessages, setNotifs],
   );
 
+  const couponValue = useMemo<CouponCtx>(
+    () => ({
+      items: coupons,
+      create: (c) => {
+        setCoupons((prev) => [
+          { ...c, id: "cp-" + Math.random().toString(36).slice(2, 8), usageCount: 0, active: true },
+          ...prev,
+        ]);
+        toast.success(`Coupon ${c.code} created!`);
+      },
+      toggle: (id) => setCoupons((prev) => prev.map((c) => c.id === id ? { ...c, active: !c.active } : c)),
+      remove: (id) => setCoupons((prev) => prev.filter((c) => c.id !== id)),
+      validate: (code, vendorId, subtotal) => {
+        const c = coupons.find((x) => x.code.toUpperCase() === code.toUpperCase() && x.vendorId === vendorId && x.active);
+        if (!c) return null;
+        if (c.minOrder && subtotal < c.minOrder) return null;
+        if (c.expiry && Date.now() > c.expiry) return null;
+        return c;
+      }
+    }),
+    [coupons, setCoupons]
+  );
+
   const vendorProfileValue = useMemo<VendorProfileCtx>(
     () => ({
       profile: vendorProfile,
-      save: (p) => {
-        setVendorProfile({ ...p, createdAt: vendorProfile?.createdAt ?? Date.now() });
+      save: (data) => {
+        if (vendorProfile) {
+          setVendorProfile({ ...vendorProfile, ...data });
+        } else {
+          setVendorProfile({
+            id: "v-" + Math.random().toString(36).slice(2, 8),
+            ...data,
+            isOpen: true,
+            createdAt: Date.now(),
+          });
+        }
         toast.success("Vendor account ready");
+      },
+      toggleStatus: () => {
+        if (!vendorProfile) return;
+        const next = !vendorProfile.isOpen;
+        setVendorProfile({ ...vendorProfile, isOpen: next });
+        toast.success(next ? "Kitchen is now open!" : "Kitchen is now closed");
       },
       clear: () => setVendorProfile(null),
     }),
@@ -575,11 +705,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
           { ...m, id: "tm-" + Math.random().toString(36).slice(2, 8), ts: Date.now() },
           ...prev,
         ]);
-        toast.success(`Added ${m.name} as ${m.role}`);
+        toast.success(`${m.name} added to team`);
       },
       remove: (id) => setTeam((prev) => prev.filter((m) => m.id !== id)),
     }),
-    [team, setTeam],
+    [team, setTeam]
   );
 
   const deliveryAreaValue = useMemo<DeliveryAreaCtx>(
@@ -600,6 +730,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
       add: (r) => {
         setReviews((prev) => [{ ...r, id: "rev-" + Math.random().toString(36).slice(2, 8), ts: Date.now() }, ...prev]);
         toast.success("Review submitted! Thank you.");
+      },
+      reply: (id, text) => {
+        setReviews((prev) => prev.map((r) => r.id === id ? { ...r, reply: text } : r));
+        toast.success("Response posted");
       },
       forVendor: (vid) => reviews.filter((r) => r.vendorId === vid),
     }),
@@ -691,23 +825,25 @@ export function AppProviders({ children }: { children: ReactNode }) {
             <FollowContext.Provider value={followValue}>
               <OrdersContext.Provider value={ordersValue}>
                 <MessagesContext.Provider value={messagesValue}>
-                  <VendorProfileContext.Provider value={vendorProfileValue}>
-                    <VendorMenuContext.Provider value={vendorMenuValue}>
-                      <BlogContext.Provider value={blogValue}>
-                        <TeamContext.Provider value={teamValue}>
-                          <DeliveryAreaContext.Provider value={deliveryAreaValue}>
-                            <ReviewContext.Provider value={reviewValue}>
-                              <SupportContext.Provider value={supportValue}>
+                  <CouponContext.Provider value={couponValue}>
+                    <TeamContext.Provider value={teamValue}>
+                      <ReviewContext.Provider value={reviewValue}>
+                        <SupportContext.Provider value={supportValue}>
+                          <VendorProfileContext.Provider value={vendorProfileValue}>
+                            <VendorMenuContext.Provider value={vendorMenuValue}>
+                              <BlogContext.Provider value={blogValue}>
                                 <LoyaltyContext.Provider value={loyaltyValue}>
-                                  {children}
+                                  <DeliveryAreaContext.Provider value={deliveryAreaValue}>
+                                    {children}
+                                  </DeliveryAreaContext.Provider>
                                 </LoyaltyContext.Provider>
-                              </SupportContext.Provider>
-                            </ReviewContext.Provider>
-                          </DeliveryAreaContext.Provider>
-                        </TeamContext.Provider>
-                      </BlogContext.Provider>
-                    </VendorMenuContext.Provider>
-                  </VendorProfileContext.Provider>
+                              </BlogContext.Provider>
+                            </VendorMenuContext.Provider>
+                          </VendorProfileContext.Provider>
+                        </SupportContext.Provider>
+                      </ReviewContext.Provider>
+                    </TeamContext.Provider>
+                  </CouponContext.Provider>
                 </MessagesContext.Provider>
               </OrdersContext.Provider>
             </FollowContext.Provider>
@@ -768,19 +904,24 @@ export function useBlog() {
   if (!c) throw new Error("BlogContext missing");
   return c;
 }
+export function useCoupons() {
+  const c = useContext(CouponContext);
+  if (!c) throw new Error("CouponContext missing");
+  return c;
+}
 export function useTeam() {
   const c = useContext(TeamContext);
   if (!c) throw new Error("TeamContext missing");
   return c;
 }
-export function useDeliveryArea() {
-  const c = useContext(DeliveryAreaContext);
-  if (!c) throw new Error("DeliveryAreaContext missing");
-  return c;
-}
 export function useReviews() {
   const c = useContext(ReviewContext);
   if (!c) throw new Error("ReviewContext missing");
+  return c;
+}
+export function useDeliveryArea() {
+  const c = useContext(DeliveryAreaContext);
+  if (!c) throw new Error("DeliveryAreaContext missing");
   return c;
 }
 export function useSupport() {

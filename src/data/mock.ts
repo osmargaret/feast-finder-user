@@ -54,6 +54,8 @@ export type Vendor = {
   location?: string;
   priceRange?: "$" | "$$" | "$$$";
   deliveryAreas?: string[];
+  deliveryAvailable?: boolean;
+  pickupAvailable?: boolean;
   openHours?: { start: string; end: string }; // 24h format, e.g. { start: "08:00", end: "22:00" }
 };
 
