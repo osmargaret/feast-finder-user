@@ -1,8 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
-import { Star, Plus, Check, MapPin, Clock, Share2, Mail, Phone } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  Star, Plus, Check, MapPin, Clock, Share2, Mail, Phone, Search,
+  Truck, ShieldCheck, Utensils, MessageCircle, Heart,
+} from "lucide-react";
 import { vendors, vendorById } from "@/data/mock";
-import { useAuth, useFollow, useMessages, useVendorMenu } from "@/store/AppProviders";
+import { useAuth, useCart, useFollow, useMessages, useVendorMenu, useWishlist } from "@/store/AppProviders";
 import { MealCard } from "@/components/site/MealCard";
 import { toast } from "sonner";
 
@@ -14,10 +17,10 @@ export const Route = createFileRoute("/vendors/$vendorId")({
   },
   head: ({ loaderData }) => ({
     meta: [
-      { title: `${loaderData?.vendor.name ?? "Kitchen"} — MenuMenu` },
-      { name: "description", content: loaderData?.vendor ? `${loaderData.vendor.name} on MenuMenu — ${loaderData.vendor.tagline}.` : "" },
-      { property: "og:title", content: `${loaderData?.vendor.name ?? "Kitchen"} — MenuMenu` },
-      { property: "og:description", content: loaderData?.vendor ? `${loaderData.vendor.name} on MenuMenu — ${loaderData.vendor.tagline}.` : "" },
+      { title: `${loaderData?.vendor.name ?? "Kitchen"} Storefront — MenuMenu` },
+      { name: "description", content: loaderData?.vendor ? `Shop ${loaderData.vendor.name} on MenuMenu — ${loaderData.vendor.tagline}.` : "" },
+      { property: "og:title", content: `${loaderData?.vendor.name ?? "Kitchen"} Storefront — MenuMenu` },
+      { property: "og:description", content: loaderData?.vendor ? `Shop ${loaderData.vendor.name} on MenuMenu — ${loaderData.vendor.tagline}.` : "" },
       ...(loaderData?.vendor ? [{ property: "og:image", content: loaderData.vendor.cover }] : []),
     ],
   }),
@@ -49,12 +52,37 @@ function VendorPage() {
   const follow = useFollow();
   const messages = useMessages();
   const auth = useAuth();
+  const cart = useCart();
+  const wish = useWishlist();
   const { meals: allMeals } = useVendorMenu();
   const following = follow.has(vendor.id);
-  const vendorMeals = allMeals.filter((m) => m.vendorId === vendor.id);
+
+  const vendorMeals = useMemo(() => allMeals.filter((m) => m.vendorId === vendor.id), [allMeals, vendor.id]);
   const otherVendors = vendors.filter((v) => v.id !== vendor.id).slice(0, 4);
 
-  // contact form — prefill from auth if available
+  // Featured = first meal with badge, else first meal
+  const featured = vendorMeals.find((m) => m.badge) ?? vendorMeals[0];
+
+  // Categories from this vendor's menu
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    vendorMeals.forEach((m) => m.category && set.add(m.category));
+    return ["All", ...Array.from(set)];
+  }, [vendorMeals]);
+
+  const [activeCat, setActiveCat] = useState("All");
+  const [query, setQuery] = useState("");
+
+  const filteredMeals = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return vendorMeals.filter((m) => {
+      const matchCat = activeCat === "All" || m.category === activeCat;
+      const matchQ = !q || m.name.toLowerCase().includes(q) || m.blurb.toLowerCase().includes(q);
+      return matchCat && matchQ;
+    });
+  }, [vendorMeals, activeCat, query]);
+
+  // contact form
   const [form, setForm] = useState({
     name: auth.user?.name ?? "",
     email: auth.user?.email ?? "",
@@ -62,69 +90,174 @@ function VendorPage() {
   });
   const [sent, setSent] = useState(false);
 
+  const onShare = () => {
+    if (typeof navigator !== "undefined" && navigator.share) {
+      navigator.share({ title: vendor.name, url: typeof window !== "undefined" ? window.location.href : "" }).catch(() => {});
+    } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Storefront link copied");
+    }
+  };
+
   return (
     <>
-      {/* Cover */}
+      {/* ==================== HERO / STOREFRONT BANNER ==================== */}
       <section className="relative isolate overflow-hidden pt-24">
         <div className="container-mm">
-          <div className="relative h-56 overflow-hidden rounded-3xl sm:h-72 lg:h-80">
+          <div className="relative h-64 overflow-hidden rounded-3xl sm:h-80 lg:h-96">
             <img src={vendor.cover} alt={vendor.name} className="h-full w-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-            <button
-              onClick={() => {
-                if (typeof navigator !== "undefined" && navigator.share) {
-                  navigator.share({ title: vendor.name, url: typeof window !== "undefined" ? window.location.href : "" }).catch(() => {});
-                } else if (typeof navigator !== "undefined" && navigator.clipboard) {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success("Link copied");
-                }
-              }}
-              className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-xs font-bold text-foreground backdrop-blur transition hover:bg-white"
-            >
-              <Share2 className="h-4 w-4" /> Share
-            </button>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+
+            {/* Top-right action chips */}
+            <div className="absolute right-4 top-4 flex flex-wrap gap-2">
+              <button onClick={onShare} className="inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-xs font-bold text-foreground backdrop-blur transition hover:bg-white">
+                <Share2 className="h-4 w-4" /> Share store
+              </button>
+            </div>
+
+            {/* Bottom hero copy */}
+            <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
+              <div className="flex flex-wrap items-end gap-2">
+                <span className="chip bg-white/90 text-foreground"><ShieldCheck className="h-3 w-3 text-primary" /> Verified storefront</span>
+                <span className="chip bg-white/90 text-foreground"><Star className="h-3 w-3 fill-primary text-primary" /> {vendor.rating}</span>
+                <span className="chip bg-white/90 text-foreground"><Utensils className="h-3 w-3 text-primary" /> {vendor.type}</span>
+              </div>
+              <h1 className="mt-3 text-3xl font-black text-white drop-shadow sm:text-5xl">{vendor.name}</h1>
+              <p className="mt-1 max-w-xl text-sm font-semibold text-white/90 sm:text-base">{vendor.tagline}</p>
+            </div>
           </div>
 
-          <div className="-mt-12 grid items-end gap-6 px-2 sm:grid-cols-[auto_1fr_auto]">
+          {/* Profile strip */}
+          <div className="-mt-10 grid items-end gap-4 px-2 sm:grid-cols-[auto_1fr_auto]">
             <img src={vendor.avatar} alt={vendor.name} className="h-24 w-24 rounded-3xl object-cover ring-4 ring-background sm:h-28 sm:w-28" />
-            <div>
-              <span className="chip"><Star className="h-3 w-3 fill-primary text-primary" /> {vendor.rating} · {vendor.followers} followers</span>
-              <h1 className="mt-2 text-3xl font-black sm:text-4xl">{vendor.name}</h1>
-              <p className="mt-1 text-sm font-semibold text-muted-foreground">{vendor.type} · {vendor.tagline}</p>
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-muted-foreground">{vendor.followers} followers · {vendorMeals.length} meals on the menu</p>
             </div>
-            <button onClick={() => follow.toggle(vendor.id)} className={following ? "btn-ghost" : "btn-primary"}>
-              {following ? <><Check className="h-4 w-4" /> Following</> : <><Plus className="h-4 w-4" /> Follow</>}
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <a href="#contact" className="btn-ghost"><MessageCircle className="h-4 w-4" /> Message</a>
+              <button onClick={() => follow.toggle(vendor.id)} className={following ? "btn-ghost" : "btn-primary"}>
+                {following ? <><Check className="h-4 w-4" /> Following</> : <><Plus className="h-4 w-4" /> Follow store</>}
+              </button>
+            </div>
+          </div>
+
+          {/* Stats / trust bar */}
+          <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {[
+              { icon: Star, label: "Rating", value: `${vendor.rating} / 5` },
+              { icon: Truck, label: "Delivery areas", value: `${vendor.deliveryAreas?.length ?? 0} zones` },
+              { icon: Utensils, label: "Menu items", value: `${vendorMeals.length}` },
+              { icon: ShieldCheck, label: "Followers", value: vendor.followers },
+            ].map((s) => (
+              <div key={s.label} className="card-mm flex items-center gap-3 p-4">
+                <div className="grid h-10 w-10 place-items-center rounded-2xl bg-primary/10 text-primary">
+                  <s.icon className="h-5 w-5" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">{s.label}</p>
+                  <p className="truncate text-sm font-extrabold">{s.value}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
+      {/* ==================== STOREFRONT BODY ==================== */}
       <section className="section pt-12">
         <div className="container-mm grid gap-10 lg:grid-cols-[1fr_320px]">
           <div className="space-y-12">
+            {/* Featured / Today's special */}
+            {featured && (
+              <div>
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-extrabold">Today's special</h2>
+                    <p className="text-sm font-semibold text-muted-foreground">Hand-picked from {vendor.name}'s kitchen</p>
+                  </div>
+                </div>
+                <div className="card-mm mt-4 grid gap-0 overflow-hidden sm:grid-cols-[280px_1fr]">
+                  <div className="relative h-56 sm:h-auto">
+                    <img src={featured.image} alt={featured.name} className="h-full w-full object-cover" />
+                    {featured.badge && <span className="badge-orange absolute left-3 top-3">{featured.badge}</span>}
+                  </div>
+                  <div className="flex flex-col justify-between gap-4 p-5">
+                    <div>
+                      <h3 className="text-xl font-black">{featured.name}</h3>
+                      <p className="mt-1 text-sm font-semibold text-muted-foreground">{featured.blurb}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-2xl font-black tracking-tight">₦{featured.price.toLocaleString()}</p>
+                      <div className="flex gap-2">
+                        <button onClick={() => wish.toggle(featured.id)} className="btn-ghost">
+                          <Heart className={`h-4 w-4 ${wish.has(featured.id) ? "fill-primary text-primary" : ""}`} />
+                        </button>
+                        <button onClick={() => { cart.add(featured.id); toast.success(`${featured.name} added to cart`); }} className="btn-primary">
+                          <Plus className="h-4 w-4" /> Add to cart
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* About */}
             <div>
-              <h2 className="text-2xl font-extrabold">About this kitchen</h2>
+              <h2 className="text-2xl font-extrabold">About this store</h2>
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-relaxed text-muted-foreground">
-                {vendor.name} is a verified MenuMenu kitchen serving {vendor.tagline.toLowerCase()}. Every order is freshly cooked,
-                carefully packed, and delivered hot. Follow them to get notified the moment new specials drop.
+                {vendor.name} is a verified MenuMenu storefront serving {vendor.tagline.toLowerCase()}. Every order is freshly cooked,
+                carefully packed, and delivered hot across {vendor.deliveryAreas?.slice(0, 3).join(", ") || "Lagos"}
+                {vendor.deliveryAreas && vendor.deliveryAreas.length > 3 ? ` and ${vendor.deliveryAreas.length - 3} more areas` : ""}. Follow them to get notified the moment new specials drop.
               </p>
             </div>
 
-            {/* Menu */}
-            <div>
-              <div className="flex items-end justify-between gap-4">
+            {/* Menu with search + category filters */}
+            <div id="menu">
+              <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-extrabold">Menu</h2>
-                  <p className="text-sm font-semibold text-muted-foreground">{vendorMeals.length} items available</p>
+                  <h2 className="text-2xl font-extrabold">Shop the menu</h2>
+                  <p className="text-sm font-semibold text-muted-foreground">{filteredMeals.length} of {vendorMeals.length} items</p>
+                </div>
+                <div className="relative w-full sm:w-72">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search meals…"
+                    className="input-mm pl-9"
+                  />
                 </div>
               </div>
-              {vendorMeals.length > 0 ? (
+
+              {/* Category pills */}
+              {categories.length > 1 && (
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {categories.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setActiveCat(c)}
+                      className={`rounded-full px-4 py-1.5 text-xs font-bold transition ${
+                        activeCat === c
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-foreground hover:bg-secondary/70"
+                      }`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {filteredMeals.length > 0 ? (
                 <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                  {vendorMeals.map((m) => <MealCard key={m.id} meal={m} />)}
+                  {filteredMeals.map((m) => <MealCard key={m.id} meal={m} />)}
                 </div>
               ) : (
-                <p className="mt-6 text-sm text-muted-foreground">No meals yet. Check back soon.</p>
+                <div className="card-mm mt-6 p-10 text-center">
+                  <p className="text-sm font-semibold text-muted-foreground">No meals match your search.</p>
+                  <button onClick={() => { setQuery(""); setActiveCat("All"); }} className="btn-ghost mt-4">Clear filters</button>
+                </div>
               )}
             </div>
 
@@ -142,8 +275,8 @@ function VendorPage() {
 
             {/* Reviews */}
             <div>
-              <h2 className="text-2xl font-extrabold">Reviews</h2>
-              <div className="mt-4 space-y-3">
+              <h2 className="text-2xl font-extrabold">What customers say</h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 {SAMPLE_REVIEWS.map((r, i) => (
                   <div key={i} className="card-mm p-5">
                     <div className="flex items-center justify-between">
@@ -206,6 +339,19 @@ function VendorPage() {
             </div>
 
             <div className="card-mm p-5">
+              <h3 className="text-base font-extrabold">Delivery zones</h3>
+              {vendor.deliveryAreas && vendor.deliveryAreas.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {vendor.deliveryAreas.map((a) => (
+                    <span key={a} className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-bold">{a}</span>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-sm text-muted-foreground">Delivery info coming soon.</p>
+              )}
+            </div>
+
+            <div className="card-mm p-5">
               <h3 className="text-base font-extrabold">Location</h3>
               <div className="mt-3 flex items-start gap-2 text-sm">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -233,7 +379,7 @@ function VendorPage() {
       {/* Other kitchens */}
       <section className="section pt-0">
         <div className="container-mm">
-          <h2 className="text-2xl font-extrabold">Discover other kitchens</h2>
+          <h2 className="text-2xl font-extrabold">Discover other stores</h2>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {otherVendors.map((v) => (
               <Link key={v.id} to="/vendors/$vendorId" params={{ vendorId: v.id }} className="card-mm flex items-center gap-3 p-4 hover:bg-secondary">
