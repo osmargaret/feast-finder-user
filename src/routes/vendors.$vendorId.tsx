@@ -1,8 +1,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState, useMemo } from "react";
-import { Star, Plus, Check, MapPin, Clock, Share2, Mail, Phone, MessageSquare } from "lucide-react";
+import { Star, Plus, Check, MapPin, Clock, Share2, Mail, Phone, MessageSquare, ShieldCheck, Utensils, Search, Heart } from "lucide-react";
 import { vendors, vendorById } from "@/data/mock";
-import { useAuth, useFollow, useMessages, useVendorMenu, useReviews, useVendorProfile } from "@/store/AppProviders";
+import { useAuth, useFollow, useMessages, useVendorMenu, useReviews, useVendorProfile, useCart, useWishlist } from "@/store/AppProviders";
 import { MealCard } from "@/components/site/MealCard";
 import { toast } from "sonner";
 
