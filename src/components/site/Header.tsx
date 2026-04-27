@@ -189,10 +189,10 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-2">
-            {role !== "vendor" && auth.user && (
+            {mounted && role !== "vendor" && auth.user && (
               <Link to="/wishlist" className="icon-btn hidden sm:inline-flex" aria-label="Wishlist">
                 <Heart className="h-4 w-4" />
-                {mounted && wish.ids.length > 0 && (
+                {wish.ids.length > 0 && (
                   <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
                     {wish.ids.length}
                   </span>
@@ -212,10 +212,10 @@ export function Header() {
               )}
             </Link>
 
-            {role !== "vendor" && (
+            {mounted && role !== "vendor" && (
               <Link to="/cart" className="icon-btn relative" aria-label="Cart">
                 <ShoppingBag className="h-4 w-4" />
-                {mounted && cart.count > 0 && (
+                {cart.count > 0 && (
                   <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-black text-primary-foreground ring-2 ring-white">
                     {cart.count}
                   </span>
