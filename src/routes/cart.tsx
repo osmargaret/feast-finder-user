@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Minus, Plus, Trash2, ShoppingBag, ChevronDown } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
-import { useCart } from "@/store/AppProviders";
-import { meals as allMeals, vendorById, formatPrice } from "@/data/mock";
+import { useCart, useCoupons } from "@/store/AppProviders";
+import { meals as allMeals, vendorById, formatPrice, vendorAreas } from "@/data/mock";
+import { toast } from "sonner";
 
 
 export const Route = createFileRoute("/cart")({
@@ -70,11 +71,33 @@ function CartPage() {
 function VendorCartSection({ vid, groupItems, cart }: { vid: string, groupItems: any[], cart: any }) {
   const vendor = vendorById(vid);
   const vendorSubtotal = groupItems.reduce((sum, { meal, it }) => sum + meal.price * it.qty, 0);
-  const vendorDelivery = 800;
-  const vendorTotal = vendorSubtotal + vendorDelivery;
+  
+  const areas = vendorAreas(vid, vendor?.deliveryAreas);
+  const minDelivery = areas.length > 0 ? Math.min(...areas.map(a => a.fee)) : 500;
   
   const [isOpen, setIsOpen] = useState(false);
+  const [promoCode, setPromoCode] = useState("");
+  const [discount, setDiscount] = useState(0);
+  const coupons = useCoupons();
 
+  const handleApplyPromo = () => {
+    const coupon = coupons.validate(promoCode, vid, vendorSubtotal);
+    if (coupon) {
+      const saving = coupon.discountType === "percent"
+        ? Math.floor(vendorSubtotal * coupon.discountValue / 100)
+        : coupon.discountValue;
+      setDiscount(saving);
+      toast.success(`Promo applied! You saved ${formatPrice(saving)}`);
+    } else if (promoCode === "TASTE10") {
+      setDiscount(Math.floor(vendorSubtotal * 0.1));
+      toast.success("Promo code applied!");
+    } else {
+      toast.error("Invalid or expired promo code");
+    }
+  };
+
+  const vendorTotal = vendorSubtotal + minDelivery - discount;
+  
   return (
     <div className="card-mm overflow-hidden">
       <button 
@@ -123,13 +146,28 @@ function VendorCartSection({ vid, groupItems, cart }: { vid: string, groupItems:
             ))}
           </div>
 
-          <div className="mt-6 pt-6 border-t border-border/50">
-            <div className="max-w-xs ml-auto">
+          <div className="mt-6 pt-6 border-t border-border/50 grid gap-6 md:grid-cols-2">
+            <div>
+              <label className="block text-xs font-bold text-muted-foreground mb-2">Have a promo code?</label>
+              <div className="flex gap-2 max-w-xs">
+                <input
+                  placeholder="Enter code"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                  className="input-mm flex-1"
+                />
+                <button type="button" onClick={handleApplyPromo} className="btn-ghost">Apply</button>
+              </div>
+              {discount > 0 && <p className="mt-2 text-xs font-bold text-primary">✓ Discount applied: -{formatPrice(discount)}</p>}
+            </div>
+
+            <div className="max-w-xs md:ml-auto w-full">
               <dl className="space-y-2 text-sm font-semibold mb-6">
                 <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd>{formatPrice(vendorSubtotal)}</dd></div>
-                <div className="flex justify-between"><dt className="text-muted-foreground">Delivery</dt><dd>{formatPrice(vendorDelivery)}</dd></div>
+                <div className="flex justify-between"><dt className="text-muted-foreground">Est. Delivery</dt><dd>from {formatPrice(minDelivery)}</dd></div>
+                {discount > 0 && <div className="flex justify-between text-primary"><dt>Discount</dt><dd>-{formatPrice(discount)}</dd></div>}
                 <div className="my-2 border-t border-border" />
-                <div className="flex justify-between text-base font-black"><dt>Total</dt><dd>{formatPrice(vendorTotal)}</dd></div>
+                <div className="flex justify-between text-base font-black"><dt>Est. Total</dt><dd>{formatPrice(vendorTotal)}</dd></div>
               </dl>
               <Link to="/checkout" search={{ vendorId: vid }} className="btn-primary w-full justify-center">
                 Checkout {vendor?.name}

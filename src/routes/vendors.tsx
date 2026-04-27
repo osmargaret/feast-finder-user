@@ -63,7 +63,7 @@ function VendorsPage() {
       if (type !== "All" && v.type !== type) return false;
       if (price !== "All" && v.priceRange !== price) return false;
       if (cat !== "All" && !v.tagline.toLowerCase().includes(cat.toLowerCase()) && v.type !== cat) return false;
-      if (area && !vendorAreas(v.id, v.deliveryAreas).includes(area)) return false;
+      if (area && !vendorAreas(v.id, v.deliveryAreas).some(a => a.name === area)) return false;
       return true;
     });
   }, [allVendors, q, cat, loc, type, price, area]);
@@ -76,7 +76,7 @@ function VendorsPage() {
       <PageHero eyebrow="Marketplace" title="Kitchens & Vendors" subtitle="Discover the people cooking your favourite meals." />
       <section className="section">
         <div className="container-mm space-y-6">
-          <DeliveryAreaPicker variant="block" />
+
           <div className="grid gap-8 lg:grid-cols-[280px_1fr]">
           <aside className="card-mm h-fit p-5 lg:sticky lg:top-28">
             <div className="mb-4 flex items-center justify-between">

@@ -286,7 +286,7 @@ function VendorPage() {
               <h2 className="text-2xl font-extrabold">About this store</h2>
               <p className="mt-3 max-w-2xl text-sm font-semibold leading-relaxed text-muted-foreground">
                 {vendor.name} is a verified MenuMenu storefront serving {vendor.tagline.toLowerCase()}. Every order is freshly cooked,
-                carefully packed, and delivered hot across {vendor.deliveryAreas?.slice(0, 3).join(", ") || "Lagos"}
+                carefully packed, and delivered hot across {vendor.deliveryAreas?.map(a => a.name).slice(0, 3).join(", ") || "Lagos"}
                 {vendor.deliveryAreas && vendor.deliveryAreas.length > 3 ? ` and ${vendor.deliveryAreas.length - 3} more areas` : ""}. Follow them to get notified the moment new specials drop.
               </p>
             </div>
@@ -440,7 +440,7 @@ function VendorPage() {
               {vendor.deliveryAreas && vendor.deliveryAreas.length > 0 ? (
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {vendor.deliveryAreas.map((a) => (
-                    <span key={a} className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-bold">{a}</span>
+                    <span key={a.name} className="rounded-full bg-secondary px-2.5 py-1 text-[11px] font-bold">{a.name}</span>
                   ))}
                 </div>
               ) : (

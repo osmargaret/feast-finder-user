@@ -44,11 +44,23 @@ type WishCtx = {
 const WishContext = createContext<WishCtx | null>(null);
 
 // ---------- Notifications ----------
-export type Notif = { id: string; title: string; body: string; ts: number; read: boolean };
+export type Notif = { 
+  id: string; 
+  title: string; 
+  body: string; 
+  ts: number; 
+  read: boolean;
+  type?: 'message' | 'review' | 'like' | 'order' | 'system';
+  link?: string;
+  search?: any;
+  params?: any;
+  data?: any;
+};
 type NotifCtx = {
   items: Notif[];
   unread: number;
   push: (n: Omit<Notif, "id" | "ts" | "read">) => void;
+  markRead: (id: string) => void;
   markAllRead: () => void;
   remove: (id: string) => void;
   clear: () => void;
@@ -56,7 +68,7 @@ type NotifCtx = {
 const NotifContext = createContext<NotifCtx | null>(null);
 
 // ---------- Auth (mock) ----------
-export type User = { name: string; email: string };
+export type User = { name: string; email: string; avatar?: string };
 type AuthCtx = {
   user: User | null;
   signIn: (email: string, password: string) => Promise<void>;
@@ -139,7 +151,7 @@ export type VendorProfile = {
   images: string[];
   bannerUrl?: string;
   about?: string;
-  deliveryAreas?: string[];
+  deliveryAreas?: { name: string; fee: number }[];
   deliveryAvailable?: boolean;
   pickupAvailable?: boolean;
   openHours?: { start: string; end: string };
@@ -165,6 +177,14 @@ type VendorMenuCtx = {
 const VendorMenuContext = createContext<VendorMenuCtx | null>(null);
 
 // ---------- Blog (vendor-authored) ----------
+export type BlogComment = {
+  id: string;
+  userName: string;
+  userAvatar?: string;
+  body: string;
+  ts: number;
+};
+
 export type BlogDraft = {
   id: string;
   vendorId: string;
@@ -175,13 +195,17 @@ export type BlogDraft = {
   ts: number;
   views: number;
   authorEmail: string;
+  likes: number;
+  comments: BlogComment[];
 };
 type BlogCtx = {
   posts: BlogDraft[];
-  create: (p: Omit<BlogDraft, "id" | "ts" | "views">) => BlogDraft;
+  create: (p: Omit<BlogDraft, "id" | "ts" | "views" | "likes" | "comments">) => BlogDraft;
   update: (id: string, patch: Partial<BlogDraft>) => void;
   remove: (id: string) => void;
   view: (id: string) => void;
+  like: (id: string) => void;
+  addComment: (id: string, userName: string, body: string, userAvatar?: string) => void;
 };
 const BlogContext = createContext<BlogCtx | null>(null);
 
@@ -190,7 +214,8 @@ export type TeamMember = {
   vendorId: string;
   name: string;
   email: string;
-  role: "admin" | "cook" | "dispatcher";
+  role: string;
+  status: "active" | "suspended";
   ts: number;
 };
 
@@ -216,8 +241,9 @@ type CouponCtx = {
 const CouponContext = createContext<CouponCtx | null>(null);
 type TeamCtx = {
   members: TeamMember[];
-  add: (m: Omit<TeamMember, "id" | "ts">) => void;
+  add: (m: Omit<TeamMember, "id" | "ts" | "status">) => void;
   remove: (id: string) => void;
+  toggleStatus: (id: string) => void;
 };
 const TeamContext = createContext<TeamCtx | null>(null);
 
@@ -281,7 +307,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [notifs, setNotifs] = useLocalState<Notif[]>("mm:notifs", []);
   const [user, setUser] = useLocalState<User | null>("mm:user", null);
   const [follows, setFollows] = useLocalState<string[]>("mm:follows", []);
-  const [coupons, setCoupons] = useLocalState<Coupon[]>("mm:coupons", []);
+  const [coupons, setCoupons] = useLocalState<Coupon[]>("mm:coupons", [
+    { id: "cp-1", vendorId: "mama-t", code: "WELCOME10", discountType: "percent", discountValue: 10, usageCount: 5, active: true },
+    { id: "cp-2", vendorId: "oven-fresh", code: "FRESH20", discountType: "percent", discountValue: 20, usageCount: 2, active: true },
+    { id: "cp-3", vendorId: "suya-republic", code: "HOT500", discountType: "amount", discountValue: 500, usageCount: 12, active: true },
+  ]);
   const [orders, setOrders] = useLocalState<Order[]>("mm:orders", []);
   const [messages, setMessages] = useLocalState<Message[]>("mm:messages", [
     {
@@ -348,7 +378,33 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [blogPosts, setBlogPosts] = useLocalState<BlogDraft[]>("mm:blog-posts", []);
   const [team, setTeam] = useLocalState<TeamMember[]>("mm:team", []);
   const [deliveryArea, setDeliveryAreaState] = useLocalState<string | null>("mm:delivery-area", null);
-  const [reviews, setReviews] = useLocalState<Review[]>("mm:reviews", []);
+  const [reviews, setReviews] = useLocalState<Review[]>("mm:reviews", [
+    {
+      id: "rev-1",
+      vendorId: "mama-t",
+      userName: "Clement",
+      rating: 5,
+      body: "The jollof rice was incredibly fresh and spicy! Best I've had in a while.",
+      ts: Date.now() - 3600000 * 48,
+    },
+    {
+      id: "rev-2",
+      vendorId: "mama-t",
+      userName: "Sarah M.",
+      rating: 4,
+      body: "Good food, but delivery took a bit longer than expected.",
+      ts: Date.now() - 3600000 * 24,
+      reply: "Hi Sarah, sorry about the delay! We'll make sure it's faster next time.",
+    },
+    {
+      id: "rev-3",
+      vendorId: "v-1",
+      userName: "David O.",
+      rating: 5,
+      body: "Amazing customer service and the portions are huge!",
+      ts: Date.now() - 3600000 * 12,
+    }
+  ]);
   const [tickets, setTickets] = useLocalState<SupportTicket[]>("mm:tickets", []);
   const [loyalty, setLoyalty] = useLocalState<{ points: number; history: { ts: number; amount: number; reason: string }[] }>("mm:loyalty", { points: 0, history: [] });
   const [lastVendorMsgId, setLastVendorMsgId] = useState<string | null>(null);
@@ -421,6 +477,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           { id: Math.random().toString(36).slice(2), ts: Date.now(), read: false, ...n },
           ...prev,
         ]),
+      markRead: (id) => setNotifs((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n))),
       markAllRead: () => setNotifs((prev) => prev.map((n) => ({ ...n, read: true }))),
       remove: (id) => setNotifs((prev) => prev.filter((n) => n.id !== id)),
       clear: () => setNotifs([]),
@@ -484,17 +541,37 @@ export function AppProviders({ children }: { children: ReactNode }) {
         setCart([]);
         toast.success("Order placed successfully!");
         
-        // Push notification
+        // Push notification for user
         setNotifs((prev) => [
           {
             id: "notif-" + Date.now(),
-            title: "Order Confirmed",
-            body: `Your order from ${o.items[0]?.vendorId} has been placed.`,
             ts: Date.now(),
             read: false,
+            type: 'order',
+            title: "Order Placed 🚀",
+            body: `Your order from ${o.items[0]?.name || 'Kitchen'} has been placed.`,
+            link: "/profile"
           },
           ...prev,
         ]);
+
+        // Notify vendor
+        const vId = o.items[0]?.vendorId;
+        if (vId) {
+          setNotifs((prev) => [
+            {
+              id: "notif-v-" + Date.now(),
+              ts: Date.now(),
+              read: false,
+              type: 'order',
+              title: "New Order! 🥡",
+              body: `${o.address.name} placed a new order of ₦${o.total.toLocaleString()}`,
+              link: "/vendor-dashboard",
+              search: { tab: 'orders' }
+            },
+            ...prev,
+          ]);
+        }
         
         return order;
       },
@@ -512,7 +589,15 @@ export function AppProviders({ children }: { children: ReactNode }) {
             const title = `Order ${target.id} ${labels[status]}`;
             const body = `${target.items.length} item(s) · ₦${target.total.toLocaleString()}`;
             setNotifs((p) => [
-              { id: Math.random().toString(36).slice(2), ts: Date.now(), read: false, title, body },
+              { 
+                id: Math.random().toString(36).slice(2), 
+                ts: Date.now(), 
+                read: false, 
+                type: 'order',
+                title, 
+                body,
+                link: "/profile"
+              },
               ...p,
             ]);
             // Live toast for the customer
@@ -543,14 +628,18 @@ export function AppProviders({ children }: { children: ReactNode }) {
         };
         setMessages((prev) => [msg as any, ...prev]);
         
-        // Push notification
+        // Push notification to vendor
         setNotifs((prev) => [
           {
             id: "notif-" + Date.now(),
-            title: "Message Sent",
-            body: `Your message to vendor ${vendorId} has been sent.`,
             ts: Date.now(),
             read: false,
+            type: 'message',
+            title: `Message from ${fromName}`,
+            body: body.length > 60 ? body.slice(0, 57) + "..." : body,
+            link: "/vendor-dashboard",
+            search: { tab: 'messages' },
+            data: { fromEmail, fromName }
           },
           ...prev,
         ]);
@@ -581,8 +670,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
             id: Math.random().toString(36).slice(2),
             ts: Date.now(),
             read: false,
+            type: 'message',
             title: `${vendorName} replied`,
             body: text.length > 80 ? text.slice(0, 77) + "…" : text,
+            link: "/messages"
           },
           ...p,
         ]);
@@ -619,7 +710,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
 
   const vendorProfileValue = useMemo<VendorProfileCtx>(
     () => ({
-      profile: vendorProfile,
+      profile: vendorProfile ? {
+        ...vendorProfile,
+        deliveryAreas: (vendorProfile.deliveryAreas || []).map(a => 
+          typeof a === 'string' ? { name: a, fee: 800 } : a
+        )
+      } : null,
       save: (data) => {
         if (vendorProfile) {
           setVendorProfile({ ...vendorProfile, ...data });
@@ -683,6 +779,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
           id: "bp-" + Math.random().toString(36).slice(2, 8),
           ts: Date.now(),
           views: 0,
+          likes: 0,
+          comments: [],
         };
         setBlogPosts((prev) => [post, ...prev]);
         toast.success("Blog post published");
@@ -693,6 +791,64 @@ export function AppProviders({ children }: { children: ReactNode }) {
       remove: (id) => setBlogPosts((prev) => prev.filter((p) => p.id !== id)),
       view: (id) =>
         setBlogPosts((prev) => prev.map((p) => (p.id === id ? { ...p, views: p.views + 1 } : p))),
+      like: (id) => {
+        setBlogPosts((prev) => {
+          const p = prev.find((x) => x.id === id);
+          if (p) {
+            setNotifs((nPrev) => [
+              {
+                id: "notif-" + Date.now(),
+                ts: Date.now(),
+                read: false,
+                type: 'like',
+                title: "New Like! ❤️",
+                body: `Someone liked your post "${p.title}"`,
+                link: "/blog/$slug",
+                params: { slug: id },
+                data: { postId: id }
+              },
+              ...nPrev,
+            ]);
+          }
+          return prev.map((p) => (p.id === id ? { ...p, likes: (p.likes || 0) + 1 } : p));
+        });
+      },
+      addComment: (id, userName, body, userAvatar) =>
+        setBlogPosts((prev) => {
+          const p = prev.find((x) => x.id === id);
+          if (p) {
+            setNotifs((nPrev) => [
+              {
+                id: "notif-c-" + Date.now(),
+                ts: Date.now(),
+                read: false,
+                type: 'message',
+                title: `New Comment from ${userName}`,
+                body: body.length > 60 ? body.slice(0, 57) + "..." : body,
+                link: "/blog/$slug",
+                params: { slug: id },
+              },
+              ...nPrev,
+            ]);
+          }
+          return prev.map((p) =>
+            p.id === id
+              ? {
+                  ...p,
+                  comments: [
+                    ...(p.comments || []),
+                    {
+                      id: "bc-" + Date.now(),
+                      userName,
+                      body,
+                      userAvatar,
+                      ts: Date.now(),
+                    },
+                  ],
+                }
+              : p
+          );
+        }),
     }),
     [blogPosts, setBlogPosts],
   );
@@ -702,12 +858,16 @@ export function AppProviders({ children }: { children: ReactNode }) {
       members: team,
       add: (m) => {
         setTeam((prev) => [
-          { ...m, id: "tm-" + Math.random().toString(36).slice(2, 8), ts: Date.now() },
+          { ...m, id: "tm-" + Math.random().toString(36).slice(2, 8), ts: Date.now(), status: "active" },
           ...prev,
         ]);
         toast.success(`${m.name} added to team`);
       },
       remove: (id) => setTeam((prev) => prev.filter((m) => m.id !== id)),
+      toggleStatus: (id) =>
+        setTeam((prev) =>
+          prev.map((m) => (m.id === id ? { ...m, status: m.status === "active" ? "suspended" : "active" } : m))
+        ),
     }),
     [team, setTeam]
   );
@@ -728,8 +888,24 @@ export function AppProviders({ children }: { children: ReactNode }) {
     () => ({
       items: reviews,
       add: (r) => {
-        setReviews((prev) => [{ ...r, id: "rev-" + Math.random().toString(36).slice(2, 8), ts: Date.now() }, ...prev]);
+        const id = "rev-" + Math.random().toString(36).slice(2, 8);
+        setReviews((prev) => [{ ...r, id, ts: Date.now() }, ...prev]);
         toast.success("Review submitted! Thank you.");
+        
+        // Notify vendor
+        setNotifs((prev) => [
+          {
+            id: "notif-" + Date.now(),
+            ts: Date.now(),
+            read: false,
+            type: 'review',
+            title: `New Review for ${r.userName}`,
+            body: `Rated ${r.rating} stars: "${r.body.slice(0, 40)}${r.body.length > 40 ? "..." : ""}"`,
+            link: "/vendor-dashboard",
+            search: { tab: 'reviews' }
+          },
+          ...prev,
+        ]);
       },
       reply: (id, text) => {
         setReviews((prev) => prev.map((r) => r.id === id ? { ...r, reply: text } : r));
@@ -797,6 +973,47 @@ export function AppProviders({ children }: { children: ReactNode }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // seed demo messages for the logged-in vendor if they have none
+  useEffect(() => {
+    if (!vendorProfile) return;
+    setMessages((prev) => {
+      if (prev.some((m) => m.vendorId === vendorProfile.id)) return prev;
+      return [
+        ...prev,
+        {
+          id: `demo-msg-1-${vendorProfile.id}`,
+          vendorId: vendorProfile.id,
+          from: "user",
+          fromName: "Sarah M.",
+          fromEmail: "sarah.m@example.com",
+          body: "Hi there! Do you cater for small events? I have a birthday party coming up next week.",
+          ts: Date.now() - 3600000 * 24,
+          read: false,
+        },
+        {
+          id: `demo-msg-2-${vendorProfile.id}`,
+          vendorId: vendorProfile.id,
+          from: "user",
+          fromName: "David O.",
+          fromEmail: "david@example.com",
+          body: "Just wanted to say the food yesterday was amazing. My kids loved it!",
+          ts: Date.now() - 3600000 * 5,
+          read: true,
+        },
+        {
+          id: `demo-msg-3-${vendorProfile.id}`,
+          vendorId: vendorProfile.id,
+          from: "user",
+          fromName: "Grace T.",
+          fromEmail: "grace@example.com",
+          body: "Is the spicy chicken wings meal available for pickup today by 4pm?",
+          ts: Date.now() - 3600000 * 1,
+          read: false,
+        }
+      ];
+    });
+  }, [vendorProfile?.id, setMessages]);
 
   // Browser push notifications when a vendor reply arrives for the current user
   useEffect(() => {

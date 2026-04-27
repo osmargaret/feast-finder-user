@@ -132,7 +132,7 @@ function VendorSignupPage() {
               images: imagePreviews,
               bannerUrl: bannerUrl || undefined,
               about: about || undefined,
-              deliveryAreas: deliveryAreas.length ? deliveryAreas : undefined,
+              deliveryAreas: deliveryAreas.length ? deliveryAreas.map(a => ({ name: a, fee: 500 })) : undefined,
               deliveryAvailable,
               pickupAvailable,
               openHours: { start: openTime, end: closeTime },

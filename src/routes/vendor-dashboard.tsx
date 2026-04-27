@@ -17,14 +17,11 @@ import {
   Share2,
   TrendingUp,
   Settings,
-  UtensilsCrossed,
   CreditCard,
   Store,
   Star as StarIcon,
   Tag,
   Gift,
-  ArrowRight,
-  TrendingDown,
 } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
 import { ImageUpload } from "@/components/site/ImageUpload";
@@ -33,24 +30,24 @@ import {
   useBlog,
   useMessages,
   useOrders,
-  useTeam,
   useVendorMenu,
   useVendorProfile,
   useCoupons,
   useReviews,
-  type TeamMember,
+  useTeam,
 } from "@/store/AppProviders";
 import { vendors, categories, formatPrice, type Meal } from "@/data/mock";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/vendor-dashboard")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    tab: (search.tab as SectionKey | undefined),
+  validateSearch: (search: Record<string, unknown>): { tab?: SectionKey; email?: string } => ({
+    tab: search.tab as SectionKey | undefined,
+    email: search.email as string | undefined,
   }),
   head: () => ({
     meta: [
       { title: "Vendor Dashboard — MenuMenu" },
-      { name: "description", content: "Manage your menu, orders, blog, team and analytics." },
+      { name: "description", content: "Manage your menu, orders, blog and analytics." },
       { property: "og:title", content: "Vendor Dashboard — MenuMenu" },
       { property: "og:description", content: "Manage your kitchen end-to-end." },
     ],
@@ -66,7 +63,6 @@ const sections = [
   { key: "messages", label: "Messages", icon: MessageSquare },
   { key: "analytics", label: "Analytics", icon: TrendingUp },
   { key: "income", label: "Income", icon: DollarSign },
-  { key: "wallet", label: "Wallet & Payout", icon: CreditCard },
   { key: "blog", label: "Blog Manager", icon: Newspaper },
   { key: "promotions", label: "Promotions", icon: Gift },
   { key: "reviews", label: "Reviews", icon: StarIcon },
@@ -112,9 +108,8 @@ function VendorDashboardPage() {
     if (vendorCtx.profile) return vendorCtx.profile.id;
     return vendors[0].id;
   });
-  const { tab } = Route.useSearch();
+  const { tab, email: selectedEmail } = Route.useSearch();
   const [active, setActive] = useState<SectionKey>(() => {
-    // If coming from vendor signup, honour the tab param
     if (tab && sections.some(s => s.key === tab)) return tab;
     return "dashboard";
   });
@@ -133,8 +128,6 @@ function VendorDashboardPage() {
   const myPosts = useMemo(() => blog.posts.filter((p) => p.vendorId === vendorId), [blog.posts, vendorId]);
 
   useEffect(() => {
-    // If the vendor has meals and the active tab is launchpad, they might have already completed setup
-    // But let's just default to launchpad if they have no meals
     if (myMeals.length > 0 && active === "launchpad") {
       setActive("menu");
     }
@@ -251,12 +244,11 @@ function VendorDashboardPage() {
               {active === "launchpad" && <LaunchpadTab vendor={vendor} meals={myMeals} onAction={(tab) => setActive(tab)} />}
               {active === "menu" && <MenuTab vendorId={vendorId} meals={myMeals} />}
               {active === "orders" && <OrdersTab vendorId={vendorId} orders={myOrders} />}
-              {active === "messages" && <MessagesTab messages={myMessages} vendorName={vendor.name} />}
+              {active === "messages" && <MessagesTab messages={myMessages} vendorName={vendor.name} selectedEmail={selectedEmail} />}
               {active === "analytics" && (
                 <AnalyticsTab meals={myMeals} orders={myOrders} posts={myPosts} messages={myMessages} vendorId={vendorId} />
               )}
               {active === "income" && <IncomeTab orders={myOrders} vendorId={vendorId} />}
-              {active === "wallet" && <WalletTab orders={myOrders} vendorId={vendorId} />}
               {active === "blog" && <BlogTab vendorId={vendorId} authorEmail={auth.user.email} posts={myPosts} />}
               {active === "promotions" && <PromotionsTab vendorId={vendorId} />}
               {active === "reviews" && <ReviewsTab vendorId={vendorId} />}
@@ -266,6 +258,43 @@ function VendorDashboardPage() {
         </div>
       </section>
     </>
+  );
+}
+
+function TeamTab({ vendorId }: { vendorId: string }) {
+  const team = useTeam();
+  const filtered = team.members.filter((m) => m.vendorId === vendorId);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-black italic">Team Management</h2>
+        <span className="badge-primary">{filtered.length} Staff</span>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((m) => (
+          <div key={m.id} className="card-mm p-5 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-secondary grid place-items-center font-black">
+                {m.name[0]}
+              </div>
+              <div>
+                <p className="font-extrabold text-sm">{m.name}</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">{m.role}</p>
+              </div>
+            </div>
+            <button onClick={() => team.remove(m.id)} className="text-muted-foreground hover:text-destructive">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        ))}
+        <button className="card-mm p-5 border-dashed border-2 flex flex-col items-center justify-center gap-2 hover:bg-secondary/40 transition-colors">
+           <Plus className="h-5 w-5 text-primary" />
+           <span className="text-xs font-black uppercase tracking-widest">Add Member</span>
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -399,7 +428,7 @@ function Input({ label, value, onChange, type = "text" }: { label: string; value
   );
 }
 
-function OrdersTab({ vendorId, orders }: { vendorId: string; orders: ReturnType<typeof useOrders>["items"] }) {
+function OrdersTab({ vendorId, orders }: { vendorId: string; orders: any[] }) {
   const ordersCtx = useOrders();
   if (orders.length === 0) {
     return <div className="card-mm p-10 text-center"><p className="text-sm text-muted-foreground">No incoming orders yet.</p></div>;
@@ -407,8 +436,8 @@ function OrdersTab({ vendorId, orders }: { vendorId: string; orders: ReturnType<
   return (
     <ul className="space-y-4">
       {orders.map((o) => {
-        const myItems = o.items.filter((i) => i.vendorId === vendorId);
-        const myTotal = myItems.reduce((s, i) => s + i.price * i.qty, 0);
+        const myItems = o.items.filter((i: any) => i.vendorId === vendorId);
+        const myTotal = myItems.reduce((s: number, i: any) => s + i.price * i.qty, 0);
         return (
           <li key={o.id} className="card-mm p-5">
             <div className="flex flex-wrap items-start justify-between gap-3">
@@ -419,7 +448,7 @@ function OrdersTab({ vendorId, orders }: { vendorId: string; orders: ReturnType<
               </div>
               <select
                 value={o.status}
-                onChange={(e) => ordersCtx.setStatus(o.id, e.target.value as typeof o.status)}
+                onChange={(e) => ordersCtx.setStatus(o.id, e.target.value as any)}
                 className="rounded-full border border-border bg-background px-3 py-1.5 text-xs font-bold capitalize"
               >
                 <option value="pending">pending</option>
@@ -430,7 +459,7 @@ function OrdersTab({ vendorId, orders }: { vendorId: string; orders: ReturnType<
               </select>
             </div>
             <ul className="mt-3 space-y-1 text-sm">
-              {myItems.map((i) => (
+              {myItems.map((i: any) => (
                 <li key={i.mealId} className="flex justify-between"><span>{i.qty}× {i.name}</span><span className="font-bold">{formatPrice(i.price * i.qty)}</span></li>
               ))}
             </ul>
@@ -445,12 +474,12 @@ function OrdersTab({ vendorId, orders }: { vendorId: string; orders: ReturnType<
   );
 }
 
-function MessagesTab({ messages, vendorName }: { messages: ReturnType<typeof useMessages>["items"]; vendorName: string }) {
+function MessagesTab({ messages, vendorName, selectedEmail }: { messages: any[]; vendorName: string; selectedEmail?: string }) {
   const ctx = useMessages();
   const [draft, setDraft] = useState<Record<string, string>>({});
 
   const threads = useMemo(() => {
-    const map = new Map<string, typeof messages>();
+    const map = new Map<string, any[]>();
     [...messages]
       .sort((a, b) => a.ts - b.ts)
       .forEach((m) => {
@@ -473,7 +502,7 @@ function MessagesTab({ messages, vendorName }: { messages: ReturnType<typeof use
       {threads.map((t) => {
         const unread = t.msgs.some((m) => m.from === "user" && !m.read);
         return (
-          <li key={t.email} className={`card-mm p-4 ${unread ? "border-primary/40 bg-primary/5" : ""}`}>
+          <li key={t.email} id={`thread-${t.email}`} className={`card-mm p-4 ${unread ? "border-primary/40 bg-primary/5" : ""} ${selectedEmail === t.email ? "ring-2 ring-primary ring-offset-2" : ""}`}>
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-sm font-extrabold">{t.customerName} <span className="text-xs font-normal text-muted-foreground">· {t.email}</span></p>
@@ -481,7 +510,7 @@ function MessagesTab({ messages, vendorName }: { messages: ReturnType<typeof use
               </div>
             </div>
             <div className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-1">
-              {t.msgs.map((m) => (
+              {t.msgs.map((m: any) => (
                 <div key={m.id} className={`flex ${m.from === "vendor" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${m.from === "vendor" ? "bg-primary text-primary-foreground" : "bg-secondary"}`}>
                     <p>{m.body}</p>
@@ -526,13 +555,13 @@ function AnalyticsTab({
   vendorId,
 }: {
   meals: Meal[];
-  orders: ReturnType<typeof useOrders>["items"];
-  posts: ReturnType<typeof useBlog>["posts"];
-  messages: ReturnType<typeof useMessages>["items"];
+  orders: any[];
+  posts: any[];
+  messages: any[];
   vendorId: string;
 }) {
   const revenue = orders.reduce(
-    (s, o) => s + o.items.filter((i) => i.vendorId === vendorId).reduce((a, i) => a + i.price * i.qty, 0),
+    (s, o) => s + o.items.filter((i: any) => i.vendorId === vendorId).reduce((a: number, i: any) => a + i.price * i.qty, 0),
     0,
   );
   const blogViews = posts.reduce((s, p) => s + p.views, 0);
@@ -543,7 +572,7 @@ function AnalyticsTab({
     .map((m) => ({
       meal: m,
       sold: orders.reduce(
-        (s, o) => s + o.items.filter((i) => i.mealId === m.id).reduce((a, i) => a + i.qty, 0),
+        (s, o) => s + o.items.filter((i: any) => i.mealId === m.id).reduce((a: number, i: any) => a + i.qty, 0),
         0,
       ),
     }))
@@ -589,9 +618,9 @@ function AnalyticsTab({
   );
 }
 
-function IncomeTab({ orders, vendorId }: { orders: ReturnType<typeof useOrders>["items"]; vendorId: string }) {
+function IncomeTab({ orders, vendorId }: { orders: any[]; vendorId: string }) {
   const rows = orders.map((o) => {
-    const sub = o.items.filter((i) => i.vendorId === vendorId).reduce((s, i) => s + i.price * i.qty, 0);
+    const sub = o.items.filter((i: any) => i.vendorId === vendorId).reduce((s: number, i: any) => s + i.price * i.qty, 0);
     const commission = Math.floor(sub * 0.1);
     const net = sub - commission;
     return { id: o.id, ts: o.ts, status: o.status, sub, commission, net };
@@ -641,97 +670,9 @@ function IncomeTab({ orders, vendorId }: { orders: ReturnType<typeof useOrders>[
   );
 }
 
-function WalletTab({ orders, vendorId }: { orders: ReturnType<typeof useOrders>["items"]; vendorId: string }) {
-  const [payouts, setPayouts] = useState<{ id: string; amount: number; ts: number; status: string }[]>([]);
-  const rows = orders.filter(o => o.status === "delivered").map((o) => {
-    const sub = o.items.filter((i) => i.vendorId === vendorId).reduce((s, i) => s + i.price * i.qty, 0);
-    const net = sub - Math.floor(sub * 0.1);
-    return net;
-  });
-  
-  const totalEarned = rows.reduce((s, r) => s + r, 0);
-  const totalPaidOut = payouts.filter(p => p.status === "Completed").reduce((s, p) => s + p.amount, 0);
-  const balance = totalEarned - totalPaidOut;
-
-  const requestPayout = () => {
-    if (balance < 5000) return toast.error("Minimum withdrawal is ₦5,000");
-    const p = { id: "WTH-" + Math.random().toString(36).slice(2, 8).toUpperCase(), amount: balance, ts: Date.now(), status: "Processing" };
-    setPayouts([p, ...payouts]);
-    toast.success("Withdrawal request sent!");
-    setTimeout(() => {
-      setPayouts(prev => prev.map(x => x.id === p.id ? { ...x, status: "Completed" } : x));
-      toast.success(`₦${p.amount.toLocaleString()} has been settled to your bank account`);
-    }, 5000);
-  };
-
-  return (
-    <>
-      <h2 className="mb-4 text-2xl font-black">Wallet</h2>
-      <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-6">
-          <div className="card-mm bg-primary p-10 text-center text-primary-foreground shadow-xl shadow-primary/20">
-            <p className="text-xs font-bold uppercase tracking-widest opacity-80">Available Balance</p>
-            <h3 className="mt-2 text-4xl font-black">{formatPrice(balance)}</h3>
-            <button
-              onClick={requestPayout}
-              disabled={balance < 5000}
-              className="mt-6 rounded-full bg-white px-8 py-3 text-sm font-black text-primary shadow-lg transition hover:scale-105 disabled:opacity-50"
-            >Withdraw to Bank</button>
-            <p className="mt-4 text-[11px] font-bold opacity-60">Minimum withdrawal: ₦5,000</p>
-          </div>
-
-          <div className="card-mm p-6">
-            <h3 className="text-lg font-extrabold">Payout History</h3>
-            {payouts.length === 0 ? (
-              <p className="mt-4 text-sm text-muted-foreground">No withdrawals yet.</p>
-            ) : (
-              <ul className="mt-4 divide-y divide-border">
-                {payouts.map((p) => (
-                  <li key={p.id} className="flex items-center justify-between py-4">
-                    <div>
-                      <p className="text-sm font-extrabold">{p.id}</p>
-                      <p className="text-[11px] font-bold text-muted-foreground uppercase">{new Date(p.ts).toLocaleString()}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-black">{formatPrice(p.amount)}</p>
-                      <span className={`text-[10px] font-bold ${p.status === "Completed" ? "text-primary" : "text-orange-500 animate-pulse"}`}>{p.status}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
-
-        <aside className="space-y-5">
-          <div className="card-mm p-5 bg-secondary/30 border-dashed border-2 border-border">
-            <h4 className="text-sm font-extrabold uppercase text-muted-foreground">Settlement Info</h4>
-            <div className="mt-4 space-y-3">
-              <div>
-                <p className="text-[10px] font-bold uppercase text-muted-foreground">Bank</p>
-                <p className="text-sm font-extrabold">Access Bank</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase text-muted-foreground">Account Number</p>
-                <p className="text-sm font-extrabold">0123****89</p>
-              </div>
-              <Link to="/settings" className="btn-ghost w-full mt-2 text-xs">Update Bank Details</Link>
-            </div>
-          </div>
-          <div className="card-mm p-5">
-             <h4 className="text-sm font-extrabold">Auto-Settlement</h4>
-             <p className="mt-2 text-xs text-muted-foreground">Enable auto-withdrawals every Monday at 8:00 AM.</p>
-             <button className="mt-4 w-full rounded-xl border border-primary/40 px-4 py-2 text-xs font-bold text-primary hover:bg-primary/5">Enable Auto-Pay</button>
-          </div>
-        </aside>
-      </div>
-    </>
-  );
-}
-
-function BlogTab({ vendorId, authorEmail, posts }: { vendorId: string; authorEmail: string; posts: ReturnType<typeof useBlog>["posts"] }) {
+function BlogTab({ vendorId, authorEmail, posts }: { vendorId: string; authorEmail: string; posts: any[] }) {
   const blog = useBlog();
-  const [editing, setEditing] = useState<typeof posts[number] | "new" | null>(null);
+  const [editing, setEditing] = useState<any | "new" | null>(null);
 
   const share = (id: string, title: string) => {
     const url = `${typeof window !== "undefined" ? window.location.origin : ""}/blog/${id}`;
@@ -795,7 +736,7 @@ function BlogEditor({
 }: {
   vendorId: string;
   authorEmail: string;
-  post: ReturnType<typeof useBlog>["posts"][number] | null;
+  post: any | null;
   onClose: () => void;
 }) {
   const blog = useBlog();
@@ -847,54 +788,6 @@ function BlogEditor({
   );
 }
 
-function TeamTab({ vendorId }: { vendorId: string }) {
-  const team = useTeam();
-  const myTeam = team.members.filter((m) => m.vendorId === vendorId);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [role, setRole] = useState<TeamMember["role"]>("admin");
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name.trim() || !email.trim()) return toast.error("Name and email required");
-    team.add({ vendorId, name, email, role });
-    setName(""); setEmail("");
-  };
-
-  return (
-    <>
-      <h2 className="mb-4 text-2xl font-black">Team & Admins</h2>
-      <form onSubmit={submit} className="card-mm mb-6 grid gap-3 p-5 sm:grid-cols-[1fr_1fr_auto_auto]">
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" className="rounded-2xl border border-border bg-background px-4 py-3 text-sm" />
-        <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email" className="rounded-2xl border border-border bg-background px-4 py-3 text-sm" />
-        <select value={role} onChange={(e) => setRole(e.target.value as TeamMember["role"])} className="rounded-2xl border border-border bg-background px-4 py-3 text-sm">
-          <option value="admin">Admin</option>
-          <option value="cook">Cook / Chef</option>
-          <option value="dispatcher">Dispatcher</option>
-        </select>
-        <button type="submit" className="btn-primary"><Plus className="h-4 w-4" /> Invite</button>
-      </form>
-
-      {myTeam.length === 0 ? (
-        <div className="card-mm p-10 text-center"><p className="text-sm text-muted-foreground">No team members yet. Invite a cook, dispatcher, or admin.</p></div>
-      ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {myTeam.map((m) => (
-            <li key={m.id} className="card-mm flex items-center gap-3 p-4">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary/10 text-primary font-black">{m.name[0]?.toUpperCase()}</span>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-extrabold">{m.name}</p>
-                <p className="truncate text-xs text-muted-foreground">{m.email} · <span className="capitalize">{m.role.replace("-", " ")}</span></p>
-              </div>
-              <button onClick={() => { team.remove(m.id); toast("Removed"); }} className="icon-btn" aria-label="Remove"><Trash2 className="h-4 w-4 text-destructive" /></button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </>
-  );
-}
-
 function DashboardTab({
   vendor,
   meals,
@@ -910,7 +803,7 @@ function DashboardTab({
 }) {
   const pendingOrders = orders.filter((o) => o.status === "pending" || o.status === "preparing");
   const unreadMessages = messages.filter((m) => m.from === "user" && !m.read);
-  const revenue = orders.reduce((s, o) => s + (o.status !== "cancelled" ? o.subtotal : 0), 0);
+  const revenue = orders.reduce((s, o) => s + (o.status !== "cancelled" ? (o.subtotal || 0) : 0), 0);
 
   return (
     <div className="space-y-6">
@@ -952,7 +845,6 @@ function DashboardTab({
           </div>
         </div>
         
-        {/* Simple SVG Chart */}
         <div className="relative w-full group pb-2">
           <svg className="h-48 w-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 400 100">
             <defs>
@@ -961,15 +853,12 @@ function DashboardTab({
                 <stop offset="100%" stopColor="var(--color-primary)" stopOpacity="0" />
               </linearGradient>
             </defs>
-            {/* Grid lines */}
             <line x1="0" y1="0" x2="400" y2="0" stroke="var(--color-border)" strokeWidth="0.5" strokeDasharray="4 4" />
             <line x1="0" y1="50" x2="400" y2="50" stroke="var(--color-border)" strokeWidth="0.5" strokeDasharray="4 4" />
             <line x1="0" y1="100" x2="400" y2="100" stroke="var(--color-border)" strokeWidth="0.5" />
             
-            {/* Area */}
             <path d="M0,80 L66.6,60 L133.3,75 L200,40 L266.6,55 L333.3,20 L400,35 V100 H0 Z" fill="url(#grad)" className="transition-all duration-1000 group-hover:opacity-60" />
             
-            {/* Line */}
             <path 
               d="M0,80 L66.6,60 L133.3,75 L200,40 L266.6,55 L333.3,20 L400,35"
               fill="none" 
@@ -980,7 +869,6 @@ function DashboardTab({
               className="drop-shadow-[0_0_8px_var(--color-primary)]"
             />
             
-            {/* Points */}
             {[80, 60, 75, 40, 55, 20, 35].map((y, i) => (
               <circle key={i} cx={i * (400 / 6)} cy={y} r="4" fill="white" stroke="var(--color-primary)" strokeWidth="2" className="transition-transform hover:scale-150 cursor-pointer" />
             ))}
@@ -994,7 +882,6 @@ function DashboardTab({
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
         <div className="space-y-6">
-          {/* Live Orders Feed */}
           <div className="card-mm p-6">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-lg font-black italic">Live Orders Feed</h3>
@@ -1026,7 +913,6 @@ function DashboardTab({
             )}
           </div>
 
-          {/* Quick Actions */}
           <div className="grid gap-4 sm:grid-cols-2">
             <button 
               onClick={() => onAction("menu")}
@@ -1056,7 +942,6 @@ function DashboardTab({
         </div>
 
         <div className="space-y-6">
-          {/* Recent Messages */}
           <div className="card-mm p-6 h-fit">
             <h3 className="mb-4 text-lg font-black italic">Recent Chats</h3>
             {unreadMessages.length === 0 ? (
@@ -1079,7 +964,6 @@ function DashboardTab({
             <button onClick={() => onAction("messages")} className="btn-ghost w-full mt-4 text-xs">Open Messages</button>
           </div>
 
-          {/* Performance Hint */}
           <div className="card-mm p-6 bg-gradient-to-br from-primary/5 to-secondary/50 border border-primary/10">
             <div className="flex items-center gap-2 mb-3">
               <TrendingUp className="h-4 w-4 text-primary" />
@@ -1098,14 +982,13 @@ function DashboardTab({
 
 function LaunchpadTab({ vendor, meals, onAction }: { vendor: any; meals: Meal[]; onAction: (tab: SectionKey) => void }) {
   const hasMeals = meals.length > 0;
-  // This is a simplified check. In a real app we'd check if they've setup their bank info and delivery areas in the backend.
-  const hasBankDetails = false; // Mocked for now, or check vendorProfile
+  const hasBankDetails = false; 
   const hasDeliveryAreas = vendor.deliveryAreas && vendor.deliveryAreas.length > 0;
 
   const steps = [
     { label: "Business Profile Created", done: true },
     { label: "Add your first menu items", done: hasMeals, action: () => onAction("menu") },
-    { label: "Setup Payout Account", done: hasBankDetails, action: () => onAction("wallet") },
+    { label: "Setup Payout Account", done: hasBankDetails, action: () => onAction("income") },
   ];
 
   const progress = Math.round((steps.filter((s) => s.done).length / steps.length) * 100);
@@ -1169,6 +1052,7 @@ function LaunchpadTab({ vendor, meals, onAction }: { vendor: any; meals: Meal[];
     </div>
   );
 }
+
 function PromotionsTab({ vendorId }: { vendorId: string }) {
   const coupons = useCoupons();
   const myCoupons = coupons.items.filter((c) => c.vendorId === vendorId);

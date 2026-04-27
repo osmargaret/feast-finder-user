@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Mail, Lock } from "lucide-react";
-import { useAuth } from "@/store/AppProviders";
+import { useAuth, useVendorProfile } from "@/store/AppProviders";
 
 export const Route = createFileRoute("/signin")({
   head: () => ({
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/signin")({
 
 function SignInPage() {
   const auth = useAuth();
+  const vendor = useVendorProfile();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +36,13 @@ function SignInPage() {
             setBusy(true);
             await auth.signIn(email, password);
             setBusy(false);
-            navigate({ to: "/" });
+            
+            // Check if user is a vendor
+            if (vendor.profile) {
+              navigate({ to: "/vendor-dashboard" });
+            } else {
+              navigate({ to: "/" });
+            }
           }}
           className="mt-8 space-y-4"
         >

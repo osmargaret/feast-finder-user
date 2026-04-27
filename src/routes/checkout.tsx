@@ -4,11 +4,11 @@ import { CreditCard, Wallet, Banknote, ShoppingBag } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
 import { useCart, useOrders, useAuth, useNotifications, useCoupons } from "@/store/AppProviders";
 
-import { meals as allMeals, formatPrice } from "@/data/mock";
+import { meals as allMeals, formatPrice, vendorById, vendorAreas } from "@/data/mock";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/checkout")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { vendorId?: string } => ({
     vendorId: search.vendorId as string | undefined,
   }),
   head: () => ({
@@ -36,19 +36,23 @@ function CheckoutPage() {
     .filter((x): x is { it: { mealId: string; qty: number }; meal: typeof allMeals[number] } => Boolean(x.meal))
     .filter((x) => x.meal.vendorId === vendorId);
 
-  const subtotal = items.reduce((acc, curr) => acc + (curr.meal.price * curr.it.qty), 0);
-  const delivery = 800;
-  const totalBeforeDiscount = subtotal + delivery;
+  const vendor = vendorId ? vendorById(vendorId) : null;
+  const availableAreas = vendorId ? vendorAreas(vendorId, vendor?.deliveryAreas) : [];
 
   const [name, setName] = useState(auth.user?.name ?? "");
   const [phone, setPhone] = useState("");
   const [street, setStreet] = useState("");
-  const [city, setCity] = useState("Lagos");
+  const [city, setCity] = useState(availableAreas.length > 0 ? availableAreas[0].name : "Lagos");
   const [notes, setNotes] = useState("");
   const [payment, setPayment] = useState<"card" | "transfer" | "cash">("card");
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+
+  const subtotal = items.reduce((acc, curr) => acc + (curr.meal.price * curr.it.qty), 0);
+  const selectedArea = availableAreas.find(a => a.name === city);
+  const delivery = selectedArea ? selectedArea.fee : 800;
+  const totalBeforeDiscount = subtotal + delivery;
 
   const total = totalBeforeDiscount - discount;
 
@@ -104,7 +108,18 @@ function CheckoutPage() {
                   <div className="sm:col-span-2">
                     <Field label="Street address" value={street} onChange={setStreet} required />
                   </div>
-                  <Field label="City" value={city} onChange={setCity} required />
+                  {availableAreas.length > 0 ? (
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-muted-foreground">City</label>
+                      <select value={city} onChange={(e) => setCity(e.target.value)} required className="input-mm">
+                        {availableAreas.map(a => (
+                          <option key={a.name} value={a.name}>{a.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <Field label="City" value={city} onChange={setCity} required />
+                  )}
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-muted-foreground">Delivery notes (optional)</label>
                     <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="textarea-mm" placeholder="Gate code, landmark, etc." />

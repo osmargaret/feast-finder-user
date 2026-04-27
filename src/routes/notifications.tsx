@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Bell, Check, X } from "lucide-react";
+import { useState } from "react";
+import { Bell, Check, X, MessageSquare, Star, Heart, Package, Info } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
-import { useNotifications } from "@/store/AppProviders";
+import { useNotifications, type Notif } from "@/store/AppProviders";
+import { NotificationModal } from "@/components/site/NotificationModal";
 
 export const Route = createFileRoute("/notifications")({
   head: () => ({
@@ -25,6 +27,35 @@ function timeAgo(ts: number) {
 
 function NotificationsPage() {
   const notif = useNotifications();
+  const [selectedNotif, setSelectedNotif] = useState<Notif | null>(null);
+
+  const getIcon = (type?: Notif['type']) => {
+    switch (type) {
+      case 'message': return MessageSquare;
+      case 'review': return Star;
+      case 'like': return Heart;
+      case 'order': return Package;
+      case 'system': return Bell;
+      default: return Info;
+    }
+  };
+
+  const getColor = (type?: Notif['type']) => {
+    switch (type) {
+      case 'message': return "bg-blue-500";
+      case 'review': return "bg-orange-500";
+      case 'like': return "bg-red-500";
+      case 'order': return "bg-green-500";
+      case 'system': return "bg-primary";
+      default: return "bg-secondary";
+    }
+  };
+
+  const handleNotifClick = (n: Notif) => {
+    setSelectedNotif(n);
+    notif.markRead(n.id);
+  };
+
   return (
     <>
       <PageHero eyebrow="Stay in the loop" title="Notifications" subtitle="New drops, order updates, and offers from kitchens you follow." />
@@ -53,28 +84,50 @@ function NotificationsPage() {
                 </div>
               </div>
               <ul className="space-y-3">
-                {notif.items.map((n) => (
-                  <li key={n.id} className={`card-mm flex items-start gap-3 p-4 ${!n.read ? "border-primary/40 bg-primary/5" : ""}`}>
-                    <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl" style={{ background: "var(--gradient-primary)" }}>
-                      <Bell className="h-4 w-4 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="text-sm font-extrabold">{n.title}</h3>
-                        <span className="text-[11px] font-bold text-muted-foreground">{timeAgo(n.ts)}</span>
+                {notif.items.map((n) => {
+                  const Icon = getIcon(n.type);
+                  const color = getColor(n.type);
+                  return (
+                    <li 
+                      key={n.id} 
+                      onClick={() => handleNotifClick(n)}
+                      className={`card-mm group flex cursor-pointer items-start gap-3 p-4 transition-all hover:scale-[1.02] hover:shadow-lg ${!n.read ? "border-primary/40 bg-primary/5 ring-1 ring-primary/10" : ""}`}
+                    >
+                      <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl ${color} text-white shadow-lg shadow-black/5`}>
+                        <Icon className="h-4 w-4" />
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{n.body}</p>
-                    </div>
-                    <button onClick={() => notif.remove(n.id)} className="grid h-8 w-8 place-items-center rounded-full hover:bg-secondary" aria-label="Dismiss">
-                      <X className="h-4 w-4" />
-                    </button>
-                  </li>
-                ))}
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <h3 className={`text-sm ${!n.read ? "font-black" : "font-extrabold"}`}>{n.title}</h3>
+                          <span className="text-[11px] font-bold text-muted-foreground">{timeAgo(n.ts)}</span>
+                        </div>
+                        <p className="mt-1 text-sm text-muted-foreground line-clamp-1">{n.body}</p>
+                      </div>
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          notif.remove(n.id);
+                        }} 
+                        className="grid h-8 w-8 place-items-center rounded-full bg-secondary/0 hover:bg-secondary transition-colors" 
+                        aria-label="Dismiss"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             </>
           )}
         </div>
       </section>
+
+      {selectedNotif && (
+        <NotificationModal 
+          notif={selectedNotif} 
+          onClose={() => setSelectedNotif(null)} 
+        />
+      )}
     </>
   );
 }

@@ -6,6 +6,9 @@ import { useAuth, useMessages } from "@/store/AppProviders";
 import { vendors } from "@/data/mock";
 
 export const Route = createFileRoute("/messages")({
+  validateSearch: (search: Record<string, unknown>): { vendorId?: string } => ({
+    vendorId: search.vendorId as string | undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Your Messages — MenuMenu" },
@@ -20,7 +23,8 @@ export const Route = createFileRoute("/messages")({
 function MessagesPage() {
   const auth = useAuth();
   const messages = useMessages();
-  const [activeVendorId, setActiveVendorId] = useState<string | null>(null);
+  const { vendorId } = Route.useSearch();
+  const [activeVendorId, setActiveVendorId] = useState<string | null>(vendorId || null);
   const [draft, setDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 

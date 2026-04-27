@@ -345,7 +345,7 @@ export function Header() {
               >
                 Blog
               </Link>
-              {!isVendorView && (
+              {role !== "vendor" && (
                 <Link
                   to="/cart"
                   onClick={() => setOpen(false)}
@@ -354,7 +354,7 @@ export function Header() {
                   Cart ({cart.count})
                 </Link>
               )}
-              {!isVendorView && auth.user && (
+              {role !== "vendor" && auth.user && (
                 <Link
                   to="/wishlist"
                   onClick={() => setOpen(false)}

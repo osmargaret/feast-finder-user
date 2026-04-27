@@ -51,7 +51,7 @@ function ViewVendorPage() {
   const wish = useWishlist();
   const follow = useFollow();
   const auth = useAuth();
-  
+  const reviews = useReviews();
   const [q, setQ] = useState("");
   
   // Resolve the vendor
@@ -153,31 +153,35 @@ function ViewVendorPage() {
 
               {/* Pill Buttons Action Bar */}
               <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar lg:pb-0 lg:flex-nowrap">
-                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-green-500/20 px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-green-400 border border-green-500/30">
+                <span className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-green-500/20 px-2.5 py-1 text-[10px] font-black uppercase tracking-widest text-green-400 border border-green-500/30">
                   <span className="h-1.5 w-1.5 rounded-full bg-green-400 animate-pulse" />
                   {vendorCtx.profile?.isOpen !== false ? "Open" : "Closed"}
                 </span>
-                <a href="#menu" className="pill-btn shrink-0 bg-primary text-white shadow-lg shadow-primary/25 px-4 py-2">
+                <a href="#menu" className="pill-btn shrink-0 bg-primary text-white shadow-lg shadow-primary/25">
                   Order
                 </a>
                 <Link 
                   to="/messages/$vendorId" 
                   params={{ vendorId: vendor.id }}
-                  className="pill-btn shrink-0 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 px-4 py-2"
+                  className="pill-btn shrink-0 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
                 >
-                  <MessageSquare className="h-3.5 w-3.5" /> Chat
+                  <MessageSquare className="h-3 w-3" /> Chat
                 </Link>
-                <button className="pill-btn shrink-0 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 px-4 py-2">
-                  <Newspaper className="h-3.5 w-3.5" /> Blog
-                </button>
-                <button className="pill-btn shrink-0 bg-white/10 text-white backdrop-blur-md hover:bg-white/20 px-4 py-2">
-                  <Star className="h-3.5 w-3.5" /> Reviews
+                <Link 
+                  to="/blog" 
+                  search={{ vendor: vendor.id }}
+                  className="pill-btn shrink-0 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
+                >
+                  <Newspaper className="h-3 w-3" /> Blog
+                </Link>
+                <button className="pill-btn shrink-0 bg-white/10 text-white backdrop-blur-md hover:bg-white/20">
+                  <Star className="h-3 w-3" /> {reviews.forVendor(vendor.id).length} Reviews
                 </button>
                 <button 
                   onClick={() => follow.toggle(vendor.id)}
-                  className={`pill-btn shrink-0 backdrop-blur-md transition px-4 py-2 ${isFollowing ? "bg-primary text-white" : "bg-white/10 text-white hover:bg-white/20"}`}
+                  className={`pill-btn shrink-0 backdrop-blur-md transition ${isFollowing ? "bg-primary text-white" : "bg-white/10 text-white hover:bg-white/20"}`}
                 >
-                  {isFollowing ? <Check className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />} 
+                  {isFollowing ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />} 
                   {isFollowing ? "Following" : "Follow"}
                 </button>
               </div>
@@ -343,10 +347,10 @@ function ViewVendorPage() {
         .pill-btn {
           display: inline-flex;
           align-items: center;
-          gap: 0.6rem;
-          padding: 0.6rem 1.5rem;
+          gap: 0.4rem;
+          padding: 0.4rem 1rem;
           border-radius: 9999px;
-          font-size: 0.75rem;
+          font-size: 0.65rem;
           font-weight: 900;
           text-transform: uppercase;
           letter-spacing: 0.08em;

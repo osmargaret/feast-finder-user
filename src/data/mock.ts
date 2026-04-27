@@ -53,14 +53,14 @@ export type Vendor = {
   type: string;
   location?: string;
   priceRange?: "$" | "$$" | "$$$";
-  deliveryAreas?: string[];
+  deliveryAreas?: { name: string; fee: number }[];
   deliveryAvailable?: boolean;
   pickupAvailable?: boolean;
   openHours?: { start: string; end: string }; // 24h format, e.g. { start: "08:00", end: "22:00" }
 };
 
 /** Default delivery-area map for seed vendors (frontend-only mock) */
-const seedAreas: Record<string, string[]> = {
+const seedAreasStrings: Record<string, string[]> = {
   "mama-t": ["Ikeja", "Maryland", "Magodo", "Ojota", "Yaba"],
   "oven-fresh": ["Ikeja", "Surulere", "Yaba", "Mushin", "Agege"],
   "spice-palace": ["Lekki", "Ajah", "Victoria Island", "Ikoyi"],
@@ -74,6 +74,11 @@ const seedAreas: Record<string, string[]> = {
   "bites-and-bakes": ["Ikeja", "Magodo", "Ojota", "Festac"],
   "village-pot": ["Ikorodu", "Elepe", "Mushin", "Agege", "Oshodi"],
 };
+
+const seedAreas: Record<string, { name: string; fee: number }[]> = {};
+Object.entries(seedAreasStrings).forEach(([key, areas]) => {
+  seedAreas[key] = areas.map((name) => ({ name, fee: 800 }));
+});
 
 const baseVendors = [
   {
@@ -251,7 +256,7 @@ export const vendors: Vendor[] = baseVendors.map((v) => ({
 }));
 
 /** Returns the effective delivery areas for a vendor (override > seed > empty) */
-export function vendorAreas(vendorId: string, override?: string[]): string[] {
+export function vendorAreas(vendorId: string, override?: { name: string; fee: number }[]): { name: string; fee: number }[] {
   if (override && override.length) return override;
   return seedAreas[vendorId] ?? [];
 }

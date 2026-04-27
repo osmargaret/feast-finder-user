@@ -6,6 +6,9 @@ import { posts, vendorById } from "@/data/mock";
 import { useBlog } from "@/store/AppProviders";
 
 export const Route = createFileRoute("/blog")({
+  validateSearch: (search: Record<string, unknown>): { vendor?: string } => ({
+    vendor: search.vendor as string | undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Blog — MenuMenu" },
@@ -19,19 +22,24 @@ export const Route = createFileRoute("/blog")({
 
 function BlogPage() {
   const blog = useBlog();
+  const search = Route.useSearch();
   const [query, setQuery] = useState("");
 
   const q = query.trim().toLowerCase();
   const matches = (text: string) => !q || text.toLowerCase().includes(q);
 
-  const filteredVendor = useMemo(
-    () => blog.posts.filter((p) => matches(p.title) || matches(p.excerpt) || matches(p.body ?? "")),
-    [blog.posts, q],
-  );
-  const filteredEditorial = useMemo(
-    () => posts.filter((p) => matches(p.title) || matches(p.excerpt) || matches(p.category) || matches(p.author)),
-    [q],
-  );
+  const filteredVendor = useMemo(() => {
+    let list = blog.posts;
+    if (search.vendor) {
+      list = list.filter((p) => p.vendorId === search.vendor);
+    }
+    return list.filter((p) => matches(p.title) || matches(p.excerpt) || matches(p.body ?? ""));
+  }, [blog.posts, q, search.vendor]);
+
+  const filteredEditorial = useMemo(() => {
+    if (search.vendor) return []; // Don't show editorial if strictly filtering by vendor
+    return posts.filter((p) => matches(p.title) || matches(p.excerpt) || matches(p.category) || matches(p.author));
+  }, [q, search.vendor]);
 
   const totalResults = filteredVendor.length + filteredEditorial.length;
 

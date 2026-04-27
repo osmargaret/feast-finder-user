@@ -24,7 +24,7 @@ const heroCategories = ["Soups", "Swallow", "Pastries", "Confectioneries", "Gril
 function HomePage() {
   const { area } = useDeliveryArea();
   const matchesArea = (vendorId: string) =>
-    !area || vendorAreas(vendorId, vendors.find((v) => v.id === vendorId)?.deliveryAreas).includes(area);
+    !area || vendorAreas(vendorId, vendors.find((v) => v.id === vendorId)?.deliveryAreas).some(a => a.name === area);
   const featured = meals.filter((m) => matchesArea(m.vendorId)).slice(0, 6);
   const explore = meals.filter((m) => matchesArea(m.vendorId)).slice(6, 16);
   const trendingVendors = vendors.filter((v) => matchesArea(v.id)).slice(0, 4);
@@ -96,12 +96,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Delivery area picker */}
-      <section className="pt-8">
-        <div className="container-mm">
-          <DeliveryAreaPicker variant="block" />
-        </div>
-      </section>
+
 
       {/* Featured meals */}
       <section className="section">

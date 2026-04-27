@@ -1,9 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
 import { PageHero } from "@/components/site/PageHero";
 import { OrderTimeline } from "@/components/site/OrderTimeline";
 import { Star, AlertCircle, X, Settings, HelpCircle, Heart, Bell, ShoppingBag, Receipt, MessageSquare, User as UserIcon, LogOut } from "lucide-react";
-import { useAuth, useNotifications, useOrders, useWishlist, useFollow, useMessages, useVendorMenu, useReviews, useSupport, useLoyalty } from "@/store/AppProviders";
+import { useAuth, useNotifications, useOrders, useWishlist, useFollow, useMessages, useVendorMenu, useReviews, useSupport, useLoyalty, useVendorProfile } from "@/store/AppProviders";
 import { vendors, formatPrice } from "@/data/mock";
 import { toast } from "sonner";
 
@@ -24,6 +24,8 @@ type Tab = (typeof tabs)[number];
 
 function ProfilePage() {
   const auth = useAuth();
+  const vendor = useVendorProfile();
+  const navigate = useNavigate();
   const orders = useOrders();
   const wish = useWishlist();
   const notif = useNotifications();
@@ -36,6 +38,12 @@ function ProfilePage() {
   const [tab, setTab] = useState<Tab>("Overview");
   const [reviewingOrderId, setReviewingOrderId] = useState<string | null>(null);
   const [reportingOrderId, setReportingOrderId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (auth.user && vendor.profile && vendor.profile.email === auth.user.email) {
+      navigate({ to: "/vendor-dashboard" });
+    }
+  }, [auth.user, vendor.profile, navigate]);
 
   if (!auth.user) {
     return (
