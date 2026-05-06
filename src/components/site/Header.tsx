@@ -16,6 +16,7 @@ import {
 import { useAuth, useCart, useNotifications, useVendorProfile, useWishlist } from "@/store/AppProviders";
 import { categories, type Category } from "@/data/mock";
 import { DeliveryAreaPicker } from "@/components/site/DeliveryAreaPicker";
+import { ThemeToggle } from "@/components/site/ThemeToggle";
 
 const nav = [
   { to: "/" as const, label: "Home" },
@@ -211,6 +212,10 @@ export function Header() {
                 </span>
               )}
             </Link>
+
+            <div className="hidden sm:inline-flex">
+              <ThemeToggle />
+            </div>
 
             {mounted && role !== "vendor" && (
               <Link to="/cart" className="icon-btn relative" aria-label="Cart">

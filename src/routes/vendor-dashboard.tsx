@@ -154,8 +154,8 @@ function VendorDashboardPage() {
       <section className="section">
         <div className="container-mm">
           <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-            {/* Sidebar */}
-            <aside className="card-mm h-fit p-4 lg:sticky lg:top-28 bg-white/40 backdrop-blur-md border border-white/20">
+             {/* Sidebar */}
+             <aside className="card-mm h-fit p-4 lg:sticky lg:top-28 bg-background/90 backdrop-blur-md border border-border/50">
               <div className="mb-4 flex flex-col gap-4">
                 {/* Profile Switcher */}
                 <div className="flex items-center gap-3 rounded-2xl bg-secondary/50 p-3 ring-1 ring-border">
