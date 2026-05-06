@@ -368,7 +368,7 @@ function ViewVendorPage() {
 
 function ContactForm({ vendorId }: { vendorId: string }) {
   const auth = useAuth();
-  const messages = useMessages();
+  const { sendMessage } = useApiMessages();
   const [body, setBody] = useState("");
   const [name, setName] = useState(auth.user?.name || "");
   const [email, setEmail] = useState(auth.user?.email || "");
@@ -376,11 +376,23 @@ function ContactForm({ vendorId }: { vendorId: string }) {
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!body.trim()) return toast.error("Please enter a message");
-    if (!email.trim() || !name.trim()) return toast.error("Please provide your name and email");
     
-    messages.send(vendorId, email, name, body);
-    setBody("");
-    toast.success("Message sent to vendor!");
+    // If not authenticated, we'd normally redirect to login or handle guest message
+    // For now, we assume auth.user.id is available if we want to send a real message
+    if (!auth.user) return toast.error("Please sign in to send a message");
+
+    sendMessage.mutate({
+      vendor_id: vendorId,
+      body: body,
+    }, {
+      onSuccess: () => {
+        setBody("");
+        toast.success("Message sent to vendor!");
+      },
+      onError: (err: any) => {
+        toast.error(err.message || "Failed to send message");
+      }
+    });
   };
 
   return (
@@ -394,6 +406,7 @@ function ContactForm({ vendorId }: { vendorId: string }) {
             onChange={(e) => setName(e.target.value)}
             className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold" 
             placeholder="John Doe"
+            disabled={!!auth.user}
           />
         </div>
         <div>
@@ -404,6 +417,7 @@ function ContactForm({ vendorId }: { vendorId: string }) {
             onChange={(e) => setEmail(e.target.value)}
             className="mt-2 w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold" 
             placeholder="john@example.com"
+            disabled={!!auth.user}
           />
         </div>
       </div>
@@ -415,10 +429,15 @@ function ContactForm({ vendorId }: { vendorId: string }) {
           onChange={(e) => setBody(e.target.value)}
           className="textarea-mm" 
           placeholder="How can we help you?"
+          disabled={sendMessage.isPending}
         />
       </div>
-      <button type="submit" className="btn-primary w-full py-4 text-sm font-black uppercase tracking-widest shadow-xl shadow-primary/20">
-        Send Message
+      <button 
+        type="submit" 
+        className="btn-primary w-full py-4 text-sm font-black uppercase tracking-widest shadow-xl shadow-primary/20 disabled:opacity-50"
+        disabled={sendMessage.isPending}
+      >
+        {sendMessage.isPending ? "Sending..." : "Send Message"}
       </button>
     </form>
   );

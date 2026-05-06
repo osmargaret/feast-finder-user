@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { meals as seedMeals, vendors as allVendors, type Meal } from "@/data/mock";
+import api from "@/lib/api";
 
 // ---------- helpers ----------
 function useLocalState<T>(key: string, initial: T) {
@@ -68,7 +69,7 @@ type NotifCtx = {
 const NotifContext = createContext<NotifCtx | null>(null);
 
 // ---------- Auth (mock) ----------
-export type User = { name: string; email: string; avatar?: string };
+export type User = { id: string | number; name: string; email: string; avatar?: string };
 type AuthCtx = {
   user: User | null;
   signIn: (email: string, password: string) => Promise<void>;
@@ -488,18 +489,30 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const authValue = useMemo<AuthCtx>(
     () => ({
       user,
-      signIn: async (email) => {
-        await new Promise((r) => setTimeout(r, 300));
-        const name = email.split("@")[0] || "Friend";
-        setUser({ name, email });
-        toast.success(`Welcome back, ${name}`);
+      signIn: async (email, password) => {
+        try {
+          const res = await api.post<{ user: User; token: string }>("/customer-login", { email, password });
+          localStorage.setItem("mm:token", res.token);
+          setUser(res.user);
+          toast.success(`Welcome back, ${res.user.name}`);
+        } catch (err: any) {
+          toast.error(err.message || "Login failed");
+          throw err;
+        }
       },
-      signUp: async (name, email) => {
-        await new Promise((r) => setTimeout(r, 300));
-        setUser({ name, email });
-        toast.success(`Welcome, ${name}!`);
+      signUp: async (name, email, password) => {
+        try {
+          const res = await api.post<{ user: User; token: string }>("/customer-register", { name, email, password });
+          localStorage.setItem("mm:token", res.token);
+          setUser(res.user);
+          toast.success(`Welcome, ${res.user.name}!`);
+        } catch (err: any) {
+          toast.error(err.message || "Registration failed");
+          throw err;
+        }
       },
       signOut: () => {
+        localStorage.removeItem("mm:token");
         setUser(null);
         toast("Signed out");
       },

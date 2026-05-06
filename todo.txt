@@ -1,1 +1,38 @@
-This file will contain everything i want to do
+# Feast Finder - Production Readiness Todo List
+
+## Backend (Laravel)
+- [ ] **Expose Missing API Routes**: Create controllers and routes for:
+    - [ ] Messaging/Chat System
+    - [ ] Blog/CMS (Vendor & Editorial)
+    - [ ] Reviews & Ratings
+    - [ ] Coupons & Promotions
+    - [ ] Notifications System (Database/Push)
+    - [ ] Follow/Wishlist System
+    - [ ] Loyalty Points Management
+    - [ ] Support Ticket System
+- [ ] **Authentication**: Finalize Sanctum/Fortify setup for both Customer and Admin apps.
+- [ ] **Media Management**: Integrate Spatie Media Library or Cloudinary for image uploads.
+- [ ] **Payment Webhooks**: Implement Paystack/Flutterwave webhook handlers for secure transactions.
+- [ ] **Real-time Updates**: Set up Laravel Reverb or Pusher for live order tracking and chat.
+
+## Frontend (Customer App - feast-finder)
+- [ ] **API Integration**: Swap `localStorage` mock stores for TanStack Query + Axios/Fetch.
+- [ ] **Auth Flow**: Implement real login/register/logout with the backend.
+- [ ] **Checkout**: Connect the checkout form to a real payment gateway.
+- [ ] **Media Uploads**: Update `ImageUpload` components to perform real multipart/form-data uploads.
+- [ ] **Profile Features**: Connect Wishlist, Orders, Loyalty, and Support to backend endpoints.
+
+## Frontend (Admin Panel - feast-finder-admin)
+- [ ] **API Integration**: Connect all dashboard cards, tables, and charts to real backend metrics.
+- [ ] **Detail Pages**: Build out the detail views for:
+    - [ ] Individual Order details (tracking, item breakdown)
+    - [ ] Vendor profiles (verification documents, menu review)
+    - [ ] User profiles (history, flags)
+- [ ] **Super Admin Tools**: Fully implement logic for Financials, CMS, and Health monitoring.
+- [ ] **Audit Logs**: Connect the audit log table to the backend `audit-logs` endpoint.
+
+## General / Infrastructure
+- [ ] **Environment Variables**: Set up `.env` files for all three environments (Backend, Frontend, Admin).
+- [ ] **Deployment**: Configure Netlify/Vercel for frontends and Render/Forge for the backend.
+- [ ] **Testing**: Add unit and E2E tests (Vitest/Playwright).
+- [ ] **SEO**: Finalize Meta tags and OpenGraph images for the customer app.
