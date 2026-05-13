@@ -119,7 +119,7 @@ function VendorSignupPage() {
             if (selectedCategories.length === 0) return toast.error("Select at least one category");
             setBusy(true);
             if (!auth.user) {
-              await auth.signUp(ownerName || businessName, email, password || "vendor123");
+              await auth.signUp(ownerName || businessName, email, password || "vendor123", "vendor");
             }
             vendor.save({
               businessName,

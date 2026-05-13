@@ -1,4 +1,5 @@
-const API_URL = "http://localhost:8000/api";
+const rawApiUrl = (import.meta.env.VITE_API_URL as string) || "http://localhost:8000/api";
+const API_URL = rawApiUrl.replace(/\/+$/, "");
 
 export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem("mm:token");
@@ -10,14 +11,29 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
     ...(options.headers || {}),
   };
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
+  const path = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers,
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: "An error occurred" }));
-    throw new Error(error.message || "Request failed");
+    if (response.status === 401) {
+      localStorage.removeItem("mm:token");
+      if (typeof window !== "undefined") {
+        window.location.href = "/signin";
+      }
+    }
+    const errorData = await response.json().catch(() => ({ message: "An error occurred" }));
+    
+    // Flatten Laravel validation errors if they exist
+    let errorMessage = errorData.message || "Request failed";
+    if (errorData.errors) {
+      const messages = Object.values(errorData.errors).flat();
+      if (messages.length > 0) errorMessage = messages[0] as string;
+    }
+    
+    throw new Error(errorMessage);
   }
 
   if (response.status === 204) {

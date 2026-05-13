@@ -69,12 +69,15 @@ type NotifCtx = {
 const NotifContext = createContext<NotifCtx | null>(null);
 
 // ---------- Auth (mock) ----------
-export type User = { id: string | number; name: string; email: string; avatar?: string };
+export type User = { id: string | number; name: string; email: string; avatar?: string; emailVerified?: boolean };
 type AuthCtx = {
   user: User | null;
-  signIn: (email: string, password: string) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, role?: 'customer' | 'vendor') => Promise<void>;
+  signUp: (name: string, email: string, password: string, role?: 'customer' | 'vendor', state_id?: number) => Promise<void>;
   signOut: () => void;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (password: string, otp: string) => Promise<void>;
+  verifyEmail: (token: string) => Promise<void>;
 };
 const AuthContext = createContext<AuthCtx | null>(null);
 
@@ -489,9 +492,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const authValue = useMemo<AuthCtx>(
     () => ({
       user,
-      signIn: async (email, password) => {
+      signIn: async (email, password, role = 'customer') => {
         try {
-          const res = await api.post<{ user: User; token: string }>("/customer-login", { email, password });
+          const endpoint = role === 'vendor' ? "/vendor-login" : "/customer-login";
+          const res = await api.post<{ user: User; token: string }>(endpoint, { email, password });
           localStorage.setItem("mm:token", res.token);
           setUser(res.user);
           toast.success(`Welcome back, ${res.user.name}`);
@@ -500,9 +504,11 @@ export function AppProviders({ children }: { children: ReactNode }) {
           throw err;
         }
       },
-      signUp: async (name, email, password) => {
+      signUp: async (name, email, password, role = 'customer', state_id = 1) => {
         try {
-          const res = await api.post<{ user: User; token: string }>("/customer-register", { name, email, password });
+          const endpoint = role === 'vendor' ? "/vendor-register" : "/customer-register";
+          console.log(`[Frontend] Sending to ${endpoint} with payload:`, { name, email, password, state_id });
+          const res = await api.post<{ user: User; token: string }>(endpoint, { name, email, password, state_id });
           localStorage.setItem("mm:token", res.token);
           setUser(res.user);
           toast.success(`Welcome, ${res.user.name}!`);
@@ -515,6 +521,34 @@ export function AppProviders({ children }: { children: ReactNode }) {
         localStorage.removeItem("mm:token");
         setUser(null);
         toast("Signed out");
+      },
+      forgotPassword: async (email) => {
+        try {
+          await api.post("/forgot-password", { email });
+          toast.success("Reset link sent!", { description: `Check ${email} for instructions.` });
+        } catch (err: any) {
+          toast.error(err.message || "Request failed");
+          throw err;
+        }
+      },
+      resetPassword: async (password, otp) => {
+        try {
+          await api.post("/reset-password", { password, otp });
+          toast.success("Password reset successful!", { description: "You can now sign in with your new password." });
+        } catch (err: any) {
+          toast.error(err.message || "Reset failed");
+          throw err;
+        }
+      },
+      verifyEmail: async (token) => {
+        try {
+          const res = await api.post<{ user: User }>("/verify-email", { token });
+          setUser(res.user);
+          toast.success("Email verified!", { description: "Your account is now fully active." });
+        } catch (err: any) {
+          toast.error(err.message || "Verification failed");
+          throw err;
+        }
       },
     }),
     [user, setUser],

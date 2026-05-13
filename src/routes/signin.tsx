@@ -23,35 +23,64 @@ function SignInPage() {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const [isVendor, setIsVendor] = useState(false);
+
   return (
     <section className="flex min-h-screen items-center justify-center px-4 pb-16 pt-32">
       <div className="card-mm w-full max-w-md p-8">
-        <div className="text-center">
+        <div className="text-center mb-6">
           <h1 className="text-3xl font-black">Welcome back</h1>
-          <p className="mt-2 text-sm font-semibold text-muted-foreground">Sign in to continue ordering.</p>
+          <p className="mt-2 text-sm font-semibold text-muted-foreground">Sign in to continue.</p>
         </div>
+        
+        {/* Role Toggle */}
+        <div className="flex rounded-2xl bg-secondary/50 p-1 mb-6">
+          <button
+            type="button"
+            onClick={() => setIsVendor(false)}
+            className={`flex-1 rounded-xl py-2.5 text-xs font-black uppercase tracking-wider transition-all ${
+              !isVendor ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Customer
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsVendor(true)}
+            className={`flex-1 rounded-xl py-2.5 text-xs font-black uppercase tracking-wider transition-all ${
+              isVendor ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Vendor
+          </button>
+        </div>
+
         <form
           onSubmit={async (e) => {
             e.preventDefault();
             setBusy(true);
-            await auth.signIn(email, password);
-            setBusy(false);
-            
-            // Check if user is a vendor
-            if (vendor.profile) {
-              navigate({ to: "/vendor-dashboard" });
-            } else {
-              navigate({ to: "/" });
+            try {
+              await auth.signIn(email, password, isVendor ? "vendor" : "customer");
+              
+              if (isVendor || vendor.profile) {
+                navigate({ to: "/vendor-dashboard" });
+              } else {
+                navigate({ to: "/" });
+              }
+            } catch (err) {
+              // error handled in AuthContext
+            } finally {
+              setBusy(false);
             }
           }}
-          className="mt-8 space-y-4"
+          className="space-y-4"
         >
           <div className="relative">
             <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="email"
               required
-              placeholder="you@example.com"
+              placeholder={isVendor ? "vendor@kitchen.com" : "you@example.com"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input-mm pl-11"
@@ -69,7 +98,7 @@ function SignInPage() {
             />
           </div>
           <button type="submit" disabled={busy} className="btn-primary w-full">
-            {busy ? "Signing in…" : "Sign in"}
+            {busy ? "Signing in…" : `Sign in as ${isVendor ? "Vendor" : "Customer"}`}
           </button>
           <Link
             to="/forgot-password"
@@ -78,12 +107,15 @@ function SignInPage() {
             Forgot your password?
           </Link>
         </form>
-        <p className="mt-6 text-center text-sm font-semibold text-muted-foreground">
-          Don't have an account? <Link to="/signup" className="font-bold text-primary hover:underline">Create one</Link>
-        </p>
-        <p className="mt-2 text-center text-sm font-semibold text-muted-foreground">
-          Run a kitchen? <Link to="/vendor-signup" className="font-bold text-primary hover:underline">Create a vendor account</Link>
-        </p>
+        {!isVendor ? (
+          <p className="mt-6 text-center text-sm font-semibold text-muted-foreground">
+            Don't have an account? <Link to="/signup" className="font-bold text-primary hover:underline">Create one</Link>
+          </p>
+        ) : (
+          <p className="mt-6 text-center text-sm font-semibold text-muted-foreground">
+            Want to sell on MenuMenu? <Link to="/vendor-signup" className="font-bold text-primary hover:underline">Create a vendor account</Link>
+          </p>
+        )}
         <p className="mt-4 text-center text-xs font-semibold text-muted-foreground">
           By continuing you agree to our{" "}
           <Link to="/terms" className="font-bold text-primary hover:underline">Terms</Link>

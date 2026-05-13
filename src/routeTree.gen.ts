@@ -36,6 +36,7 @@ import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ViewVendorVendorIdRouteImport } from './routes/view-vendor.$vendorId'
+import { Route as VerifyEmailTokenRouteImport } from './routes/verify-email.$token'
 import { Route as VendorsVendorIdRouteImport } from './routes/vendors.$vendorId'
 import { Route as OrderConfirmationOrderIdRouteImport } from './routes/order-confirmation.$orderId'
 import { Route as MessagesVendorIdRouteImport } from './routes/messages.$vendorId'
@@ -176,6 +177,11 @@ const ViewVendorVendorIdRoute = ViewVendorVendorIdRouteImport.update({
   path: '/$vendorId',
   getParentRoute: () => ViewVendorRoute,
 } as any)
+const VerifyEmailTokenRoute = VerifyEmailTokenRouteImport.update({
+  id: '/verify-email/$token',
+  path: '/verify-email/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VendorsVendorIdRoute = VendorsVendorIdRouteImport.update({
   id: '/$vendorId',
   path: '/$vendorId',
@@ -229,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/messages/$vendorId': typeof MessagesVendorIdRoute
   '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
+  '/verify-email/$token': typeof VerifyEmailTokenRoute
   '/view-vendor/$vendorId': typeof ViewVendorVendorIdRoute
 }
 export interface FileRoutesByTo {
@@ -262,6 +269,7 @@ export interface FileRoutesByTo {
   '/messages/$vendorId': typeof MessagesVendorIdRoute
   '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
+  '/verify-email/$token': typeof VerifyEmailTokenRoute
   '/view-vendor/$vendorId': typeof ViewVendorVendorIdRoute
 }
 export interface FileRoutesById {
@@ -296,6 +304,7 @@ export interface FileRoutesById {
   '/messages/$vendorId': typeof MessagesVendorIdRoute
   '/order-confirmation/$orderId': typeof OrderConfirmationOrderIdRoute
   '/vendors/$vendorId': typeof VendorsVendorIdRoute
+  '/verify-email/$token': typeof VerifyEmailTokenRoute
   '/view-vendor/$vendorId': typeof ViewVendorVendorIdRoute
 }
 export interface FileRouteTypes {
@@ -331,6 +340,7 @@ export interface FileRouteTypes {
     | '/messages/$vendorId'
     | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
+    | '/verify-email/$token'
     | '/view-vendor/$vendorId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -364,6 +374,7 @@ export interface FileRouteTypes {
     | '/messages/$vendorId'
     | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
+    | '/verify-email/$token'
     | '/view-vendor/$vendorId'
   id:
     | '__root__'
@@ -397,6 +408,7 @@ export interface FileRouteTypes {
     | '/messages/$vendorId'
     | '/order-confirmation/$orderId'
     | '/vendors/$vendorId'
+    | '/verify-email/$token'
     | '/view-vendor/$vendorId'
   fileRoutesById: FileRoutesById
 }
@@ -428,6 +440,7 @@ export interface RootRouteChildren {
   ViewVendorRoute: typeof ViewVendorRouteWithChildren
   WishlistRoute: typeof WishlistRoute
   OrderConfirmationOrderIdRoute: typeof OrderConfirmationOrderIdRoute
+  VerifyEmailTokenRoute: typeof VerifyEmailTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -621,6 +634,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ViewVendorVendorIdRouteImport
       parentRoute: typeof ViewVendorRoute
     }
+    '/verify-email/$token': {
+      id: '/verify-email/$token'
+      path: '/verify-email/$token'
+      fullPath: '/verify-email/$token'
+      preLoaderRoute: typeof VerifyEmailTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/vendors/$vendorId': {
       id: '/vendors/$vendorId'
       path: '/$vendorId'
@@ -725,6 +745,7 @@ const rootRouteChildren: RootRouteChildren = {
   ViewVendorRoute: ViewVendorRouteWithChildren,
   WishlistRoute: WishlistRoute,
   OrderConfirmationOrderIdRoute: OrderConfirmationOrderIdRoute,
+  VerifyEmailTokenRoute: VerifyEmailTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

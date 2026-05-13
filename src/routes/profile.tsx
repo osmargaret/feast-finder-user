@@ -100,6 +100,26 @@ function ProfilePage() {
           </aside>
 
           <div>
+            {auth.user && !auth.user.emailVerified && (
+              <div className="mb-6 flex items-center justify-between gap-4 rounded-2xl bg-amber-50 p-4 border border-amber-200 ring-1 ring-amber-500/10">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-600">
+                    <Mail className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black text-amber-900">Verify your email</h4>
+                    <p className="text-xs font-semibold text-amber-700/80">Please verify your email address to unlock all features.</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => auth.forgotPassword(auth.user!.email)}
+                  className="rounded-lg bg-amber-600 px-4 py-2 text-xs font-black text-white hover:bg-amber-700 transition-colors shadow-sm"
+                >
+                  Resend Link
+                </button>
+              </div>
+            )}
+
             {tab === "Overview" && (
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <Stat icon={<ShoppingBag className="h-4 w-4" />} label="Orders" value={orders.items.length} />
