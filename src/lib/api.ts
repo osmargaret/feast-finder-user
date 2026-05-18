@@ -1,3 +1,5 @@
+import { NIGERIAN_STATES, type NigerianState } from "@/data/nigeria";
+
 const rawApiUrl = (import.meta.env.VITE_API_URL as string) || "http://localhost:8000/api";
 const API_URL = rawApiUrl.replace(/\/+$/, "");
 
@@ -43,12 +45,33 @@ export async function apiFetch<T>(endpoint: string, options: RequestInit = {}): 
   return response.json();
 }
 
+export type StateResponse = {
+  id: number;
+  name: string;
+  capital: string;
+};
+
+/** Normalise any backend shape ({id,name} only or {id,name,capital}) to a flat list */
+function toStateItems(raw: NigerianState[] | StateResponse[]): { id: number; name: string }[] {
+  return raw.map((s: any) => ({ id: s.id as number, name: s.name as string }));
+}
+
 export const api = {
   get: <T>(url: string) => apiFetch<T>(url, { method: "GET" }),
   post: <T>(url: string, data: any) => apiFetch<T>(url, { method: "POST", body: JSON.stringify(data) }),
   put: <T>(url: string, data: any) => apiFetch<T>(url, { method: "PUT", body: JSON.stringify(data) }),
   patch: <T>(url: string, data: any) => apiFetch<T>(url, { method: "PATCH", body: JSON.stringify(data) }),
   delete: <T>(url: string) => apiFetch<T>(url, { method: "DELETE" }),
+  /** Fetch states from the backend; falls back to the bundled mock data if the endpoint is unavailable. */
+  getStates: async (): Promise<{ id: number; name: string }[]> => {
+    try {
+      const data = await apiFetch<StateResponse[]>("/states");
+      return toStateItems(data ?? []);
+    } catch {
+      // Backend endpoint not yet available — use bundled mock data
+      return toStateItems(NIGERIAN_STATES);
+    }
+  },
 };
 
 export default api;
