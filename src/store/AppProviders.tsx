@@ -45,13 +45,13 @@ type WishCtx = {
 const WishContext = createContext<WishCtx | null>(null);
 
 // ---------- Notifications ----------
-export type Notif = { 
-  id: string; 
-  title: string; 
-  body: string; 
-  ts: number; 
+export type Notif = {
+  id: string;
+  title: string;
+  body: string;
+  ts: number;
   read: boolean;
-  type?: 'message' | 'review' | 'like' | 'order' | 'system';
+  type?: "message" | "review" | "like" | "order" | "system";
   link?: string;
   search?: any;
   params?: any;
@@ -69,15 +69,31 @@ type NotifCtx = {
 const NotifContext = createContext<NotifCtx | null>(null);
 
 // ---------- Auth (mock) ----------
-export type User = { id: string | number; name: string; email: string; avatar?: string; emailVerified?: boolean };
+export type User = {
+  id: string | number;
+  name: string;
+  email: string;
+  avatar?: string;
+  emailVerified?: boolean;
+  role?: "customer" | "vendor";
+};
 type AuthCtx = {
   user: User | null;
-  signIn: (email: string, password: string, role?: 'customer' | 'vendor') => Promise<void>;
-  signUp: (name: string, email: string, password: string, role?: 'customer' | 'vendor', state_id?: number) => Promise<void>;
+  signIn: (email: string, password: string, role?: "customer" | "vendor") => Promise<User>;
+  signUp: (
+    name: string,
+    email: string,
+    password: string,
+    role?: "customer" | "vendor",
+    state_id?: number,
+  ) => Promise<User>;
   signOut: () => void;
   forgotPassword: (email: string) => Promise<void>;
   resetPassword: (password: string, otp: string) => Promise<void>;
   verifyEmail: (token: string) => Promise<void>;
+  pendingVerification: { email: string; role: "customer" | "vendor" } | null;
+  verifyOtp: (otp: string) => Promise<User>;
+  resendOtp: () => Promise<void>;
 };
 const AuthContext = createContext<AuthCtx | null>(null);
 
@@ -153,6 +169,8 @@ export type VendorProfile = {
   categories: string[];
   address: string;
   images: string[];
+  stateId?: number;
+  logoUrl?: string;
   bannerUrl?: string;
   about?: string;
   deliveryAreas?: { name: string; fee: number }[];
@@ -310,11 +328,39 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [wish, setWish] = useLocalState<string[]>("mm:wishlist", []);
   const [notifs, setNotifs] = useLocalState<Notif[]>("mm:notifs", []);
   const [user, setUser] = useLocalState<User | null>("mm:user", null);
+  const [pendingVerification, setPendingVerification] = useLocalState<{
+    email: string;
+    role: "customer" | "vendor";
+  } | null>("mm:pending-otp", null);
   const [follows, setFollows] = useLocalState<string[]>("mm:follows", []);
   const [coupons, setCoupons] = useLocalState<Coupon[]>("mm:coupons", [
-    { id: "cp-1", vendorId: "mama-t", code: "WELCOME10", discountType: "percent", discountValue: 10, usageCount: 5, active: true },
-    { id: "cp-2", vendorId: "oven-fresh", code: "FRESH20", discountType: "percent", discountValue: 20, usageCount: 2, active: true },
-    { id: "cp-3", vendorId: "suya-republic", code: "HOT500", discountType: "amount", discountValue: 500, usageCount: 12, active: true },
+    {
+      id: "cp-1",
+      vendorId: "mama-t",
+      code: "WELCOME10",
+      discountType: "percent",
+      discountValue: 10,
+      usageCount: 5,
+      active: true,
+    },
+    {
+      id: "cp-2",
+      vendorId: "oven-fresh",
+      code: "FRESH20",
+      discountType: "percent",
+      discountValue: 20,
+      usageCount: 2,
+      active: true,
+    },
+    {
+      id: "cp-3",
+      vendorId: "suya-republic",
+      code: "HOT500",
+      discountType: "amount",
+      discountValue: 500,
+      usageCount: 12,
+      active: true,
+    },
   ]);
   const [orders, setOrders] = useLocalState<Order[]>("mm:orders", []);
   const [messages, setMessages] = useLocalState<Message[]>("mm:messages", [
@@ -367,7 +413,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       body: "Yes, we are delivering to Ikeja! Delivery time is currently 45 minutes.",
       ts: Date.now() - 3600000 * 4.8,
       read: true,
-    }
+    },
   ]);
   const [vendorProfile, setVendorProfile] = useLocalState<VendorProfile | null>(
     "mm:vendor-profile",
@@ -381,7 +427,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const [removedMealIds, setRemovedMealIds] = useLocalState<string[]>("mm:meal-removed", []);
   const [blogPosts, setBlogPosts] = useLocalState<BlogDraft[]>("mm:blog-posts", []);
   const [team, setTeam] = useLocalState<TeamMember[]>("mm:team", []);
-  const [deliveryArea, setDeliveryAreaState] = useLocalState<string | null>("mm:delivery-area", null);
+  const [deliveryArea, setDeliveryAreaState] = useLocalState<string | null>(
+    "mm:delivery-area",
+    null,
+  );
   const [reviews, setReviews] = useLocalState<Review[]>("mm:reviews", [
     {
       id: "rev-1",
@@ -407,10 +456,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
       rating: 5,
       body: "Amazing customer service and the portions are huge!",
       ts: Date.now() - 3600000 * 12,
-    }
+    },
   ]);
   const [tickets, setTickets] = useLocalState<SupportTicket[]>("mm:tickets", []);
-  const [loyalty, setLoyalty] = useLocalState<{ points: number; history: { ts: number; amount: number; reason: string }[] }>("mm:loyalty", { points: 0, history: [] });
+  const [loyalty, setLoyalty] = useLocalState<{
+    points: number;
+    history: { ts: number; amount: number; reason: string }[];
+  }>("mm:loyalty", { points: 0, history: [] });
   const [lastVendorMsgId, setLastVendorMsgId] = useState<string | null>(null);
 
   const allMeals = useMemo<Meal[]>(() => {
@@ -481,7 +533,8 @@ export function AppProviders({ children }: { children: ReactNode }) {
           { id: Math.random().toString(36).slice(2), ts: Date.now(), read: false, ...n },
           ...prev,
         ]),
-      markRead: (id) => setNotifs((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n))),
+      markRead: (id) =>
+        setNotifs((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n))),
       markAllRead: () => setNotifs((prev) => prev.map((n) => ({ ...n, read: true }))),
       remove: (id) => setNotifs((prev) => prev.filter((n) => n.id !== id)),
       clear: () => setNotifs([]),
@@ -492,26 +545,43 @@ export function AppProviders({ children }: { children: ReactNode }) {
   const authValue = useMemo<AuthCtx>(
     () => ({
       user,
-      signIn: async (email, password, role = 'customer') => {
+      signIn: async (email, password, role = "customer") => {
         try {
-          const endpoint = role === 'vendor' ? "/vendor-login" : "/customer-login";
+          const endpoint = role === "vendor" ? "/vendor-login" : "/customer-login";
           const res = await api.post<{ user: User; token: string }>(endpoint, { email, password });
           localStorage.setItem("mm:token", res.token);
           setUser(res.user);
+          // Strictly check for false — if the field is absent (undefined) we assume verified
+          if (res.user.emailVerified === false) {
+            setPendingVerification({
+              email,
+              role: (res.user.role ?? role) as "customer" | "vendor",
+            });
+          }
           toast.success(`Welcome back, ${res.user.name}`);
+          return res.user;
         } catch (err: any) {
           toast.error(err.message || "Login failed");
           throw err;
         }
       },
-      signUp: async (name, email, password, role = 'customer', state_id = 1) => {
+      signUp: async (name, email, password, role = "customer", state_id = 1, password_confirmation) => {
         try {
-          const endpoint = role === 'vendor' ? "/vendor-register" : "/customer-register";
-          console.log(`[Frontend] Sending to ${endpoint} with payload:`, { name, email, password, state_id });
-          const res = await api.post<{ user: User; token: string }>(endpoint, { name, email, password, state_id });
+          // Vendors register via /vendor-register; customers via /customer-register.
+          const endpoint = role === "vendor" ? "/vendor-register" : "/customer-register";
+          const res = await api.post<{ user: User; token: string }>(endpoint, {
+            name,
+            email,
+            password,
+            ...(password_confirmation ? { password_confirmation } : {}),
+            role,
+            state_id,
+          });
           localStorage.setItem("mm:token", res.token);
           setUser(res.user);
-          toast.success(`Welcome, ${res.user.name}!`);
+          setPendingVerification({ email, role: (role ?? "customer") as "customer" | "vendor" });
+          toast.success(`Welcome, ${res.user.name}! Check your email for a verification code.`);
+          return res.user;
         } catch (err: any) {
           toast.error(err.message || "Registration failed");
           throw err;
@@ -520,6 +590,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       signOut: () => {
         localStorage.removeItem("mm:token");
         setUser(null);
+        setPendingVerification(null);
         toast("Signed out");
       },
       forgotPassword: async (email) => {
@@ -534,7 +605,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
       resetPassword: async (password, otp) => {
         try {
           await api.post("/reset-password", { password, otp });
-          toast.success("Password reset successful!", { description: "You can now sign in with your new password." });
+          toast.success("Password reset successful!", {
+            description: "You can now sign in with your new password.",
+          });
         } catch (err: any) {
           toast.error(err.message || "Reset failed");
           throw err;
@@ -550,8 +623,36 @@ export function AppProviders({ children }: { children: ReactNode }) {
           throw err;
         }
       },
+      pendingVerification,
+      verifyOtp: async (otp) => {
+        try {
+          const res = await api.post<{ user: User; token: string }>("/verify-otp", {
+            email: pendingVerification!.email,
+            otp,
+          });
+          localStorage.setItem("mm:token", res.token);
+          setUser(res.user);
+          setPendingVerification(null);
+          toast.success("Email verified! Welcome aboard 🎉");
+          return res.user;
+        } catch (err: any) {
+          toast.error(err.message || "Invalid or expired OTP. Please try again.");
+          throw err;
+        }
+      },
+      resendOtp: async () => {
+        try {
+          await api.post("/resend-otp", { email: pendingVerification!.email });
+          toast.success("New code sent!", {
+            description: `Check ${pendingVerification!.email} for your verification code.`,
+          });
+        } catch (err: any) {
+          toast.error(err.message || "Failed to resend code");
+          throw err;
+        }
+      },
     }),
-    [user, setUser],
+    [user, setUser, pendingVerification, setPendingVerification],
   );
 
   const followValue = useMemo<FollowCtx>(
@@ -587,17 +688,17 @@ export function AppProviders({ children }: { children: ReactNode }) {
         setOrders((prev) => [order, ...prev]);
         setCart([]);
         toast.success("Order placed successfully!");
-        
+
         // Push notification for user
         setNotifs((prev) => [
           {
             id: "notif-" + Date.now(),
             ts: Date.now(),
             read: false,
-            type: 'order',
+            type: "order",
             title: "Order Placed 🚀",
-            body: `Your order from ${o.items[0]?.name || 'Kitchen'} has been placed.`,
-            link: "/profile"
+            body: `Your order from ${o.items[0]?.name || "Kitchen"} has been placed.`,
+            link: "/profile",
           },
           ...prev,
         ]);
@@ -610,16 +711,16 @@ export function AppProviders({ children }: { children: ReactNode }) {
               id: "notif-v-" + Date.now(),
               ts: Date.now(),
               read: false,
-              type: 'order',
+              type: "order",
               title: "New Order! 🥡",
               body: `${o.address.name} placed a new order of ₦${o.total.toLocaleString()}`,
               link: "/vendor-dashboard",
-              search: { tab: 'orders' }
+              search: { tab: "orders" },
             },
             ...prev,
           ]);
         }
-        
+
         return order;
       },
       setStatus: (id, status) => {
@@ -636,14 +737,14 @@ export function AppProviders({ children }: { children: ReactNode }) {
             const title = `Order ${target.id} ${labels[status]}`;
             const body = `${target.items.length} item(s) · ₦${target.total.toLocaleString()}`;
             setNotifs((p) => [
-              { 
-                id: Math.random().toString(36).slice(2), 
-                ts: Date.now(), 
-                read: false, 
-                type: 'order',
-                title, 
+              {
+                id: Math.random().toString(36).slice(2),
+                ts: Date.now(),
+                read: false,
+                type: "order",
+                title,
                 body,
-                link: "/profile"
+                link: "/profile",
               },
               ...p,
             ]);
@@ -674,19 +775,19 @@ export function AppProviders({ children }: { children: ReactNode }) {
           read: false,
         };
         setMessages((prev) => [msg as any, ...prev]);
-        
+
         // Push notification to vendor
         setNotifs((prev) => [
           {
             id: "notif-" + Date.now(),
             ts: Date.now(),
             read: false,
-            type: 'message',
+            type: "message",
             title: `Message from ${fromName}`,
             body: body.length > 60 ? body.slice(0, 57) + "..." : body,
             link: "/vendor-dashboard",
-            search: { tab: 'messages' },
-            data: { fromEmail, fromName }
+            search: { tab: "messages" },
+            data: { fromEmail, fromName },
           },
           ...prev,
         ]);
@@ -717,10 +818,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
             id: Math.random().toString(36).slice(2),
             ts: Date.now(),
             read: false,
-            type: 'message',
+            type: "message",
             title: `${vendorName} replied`,
             body: text.length > 80 ? text.slice(0, 77) + "…" : text,
-            link: "/messages"
+            link: "/messages",
           },
           ...p,
         ]);
@@ -742,27 +843,32 @@ export function AppProviders({ children }: { children: ReactNode }) {
         ]);
         toast.success(`Coupon ${c.code} created!`);
       },
-      toggle: (id) => setCoupons((prev) => prev.map((c) => c.id === id ? { ...c, active: !c.active } : c)),
+      toggle: (id) =>
+        setCoupons((prev) => prev.map((c) => (c.id === id ? { ...c, active: !c.active } : c))),
       remove: (id) => setCoupons((prev) => prev.filter((c) => c.id !== id)),
       validate: (code, vendorId, subtotal) => {
-        const c = coupons.find((x) => x.code.toUpperCase() === code.toUpperCase() && x.vendorId === vendorId && x.active);
+        const c = coupons.find(
+          (x) => x.code.toUpperCase() === code.toUpperCase() && x.vendorId === vendorId && x.active,
+        );
         if (!c) return null;
         if (c.minOrder && subtotal < c.minOrder) return null;
         if (c.expiry && Date.now() > c.expiry) return null;
         return c;
-      }
+      },
     }),
-    [coupons, setCoupons]
+    [coupons, setCoupons],
   );
 
   const vendorProfileValue = useMemo<VendorProfileCtx>(
     () => ({
-      profile: vendorProfile ? {
-        ...vendorProfile,
-        deliveryAreas: (vendorProfile.deliveryAreas || []).map(a => 
-          typeof a === 'string' ? { name: a, fee: 800 } : a
-        )
-      } : null,
+      profile: vendorProfile
+        ? {
+            ...vendorProfile,
+            deliveryAreas: (vendorProfile.deliveryAreas || []).map((a) =>
+              typeof a === "string" ? { name: a, fee: 800 } : a,
+            ),
+          }
+        : null,
       save: (data) => {
         if (vendorProfile) {
           setVendorProfile({ ...vendorProfile, ...data });
@@ -847,12 +953,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
                 id: "notif-" + Date.now(),
                 ts: Date.now(),
                 read: false,
-                type: 'like',
+                type: "like",
                 title: "New Like! ❤️",
                 body: `Someone liked your post "${p.title}"`,
                 link: "/blog/$slug",
                 params: { slug: id },
-                data: { postId: id }
+                data: { postId: id },
               },
               ...nPrev,
             ]);
@@ -869,7 +975,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
                 id: "notif-c-" + Date.now(),
                 ts: Date.now(),
                 read: false,
-                type: 'message',
+                type: "message",
                 title: `New Comment from ${userName}`,
                 body: body.length > 60 ? body.slice(0, 57) + "..." : body,
                 link: "/blog/$slug",
@@ -893,7 +999,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
                     },
                   ],
                 }
-              : p
+              : p,
           );
         }),
     }),
@@ -905,7 +1011,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
       members: team,
       add: (m) => {
         setTeam((prev) => [
-          { ...m, id: "tm-" + Math.random().toString(36).slice(2, 8), ts: Date.now(), status: "active" },
+          {
+            ...m,
+            id: "tm-" + Math.random().toString(36).slice(2, 8),
+            ts: Date.now(),
+            status: "active",
+          },
           ...prev,
         ]);
         toast.success(`${m.name} added to team`);
@@ -913,10 +1024,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
       remove: (id) => setTeam((prev) => prev.filter((m) => m.id !== id)),
       toggleStatus: (id) =>
         setTeam((prev) =>
-          prev.map((m) => (m.id === id ? { ...m, status: m.status === "active" ? "suspended" : "active" } : m))
+          prev.map((m) =>
+            m.id === id ? { ...m, status: m.status === "active" ? "suspended" : "active" } : m,
+          ),
         ),
     }),
-    [team, setTeam]
+    [team, setTeam],
   );
 
   const deliveryAreaValue = useMemo<DeliveryAreaCtx>(
@@ -938,24 +1051,24 @@ export function AppProviders({ children }: { children: ReactNode }) {
         const id = "rev-" + Math.random().toString(36).slice(2, 8);
         setReviews((prev) => [{ ...r, id, ts: Date.now() }, ...prev]);
         toast.success("Review submitted! Thank you.");
-        
+
         // Notify vendor
         setNotifs((prev) => [
           {
             id: "notif-" + Date.now(),
             ts: Date.now(),
             read: false,
-            type: 'review',
+            type: "review",
             title: `New Review for ${r.userName}`,
             body: `Rated ${r.rating} stars: "${r.body.slice(0, 40)}${r.body.length > 40 ? "..." : ""}"`,
             link: "/vendor-dashboard",
-            search: { tab: 'reviews' }
+            search: { tab: "reviews" },
           },
           ...prev,
         ]);
       },
       reply: (id, text) => {
-        setReviews((prev) => prev.map((r) => r.id === id ? { ...r, reply: text } : r));
+        setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, reply: text } : r)));
         toast.success("Response posted");
       },
       forVendor: (vid) => reviews.filter((r) => r.vendorId === vid),
@@ -967,10 +1080,19 @@ export function AppProviders({ children }: { children: ReactNode }) {
     () => ({
       tickets,
       create: (t) => {
-        setTickets((prev) => [{ ...t, id: "tk-" + Math.random().toString(36).slice(2, 8), ts: Date.now(), status: "open" }, ...prev]);
+        setTickets((prev) => [
+          {
+            ...t,
+            id: "tk-" + Math.random().toString(36).slice(2, 8),
+            ts: Date.now(),
+            status: "open",
+          },
+          ...prev,
+        ]);
         toast.success("Ticket created. Support will review shortly.");
       },
-      resolve: (id) => setTickets((prev) => prev.map((tk) => tk.id === id ? { ...tk, status: "resolved" } : tk)),
+      resolve: (id) =>
+        setTickets((prev) => prev.map((tk) => (tk.id === id ? { ...tk, status: "resolved" } : tk))),
     }),
     [tickets, setTickets],
   );
@@ -990,7 +1112,10 @@ export function AppProviders({ children }: { children: ReactNode }) {
         if (loyalty.points < amount) return false;
         setLoyalty((prev) => ({
           points: prev.points - amount,
-          history: [{ ts: Date.now(), amount: -amount, reason: "Points redemption" }, ...prev.history],
+          history: [
+            { ts: Date.now(), amount: -amount, reason: "Points redemption" },
+            ...prev.history,
+          ],
         }));
         return true;
       },
@@ -1057,7 +1182,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           body: "Is the spicy chicken wings meal available for pickup today by 4pm?",
           ts: Date.now() - 3600000 * 1,
           read: false,
-        }
+        },
       ];
     });
   }, [vendorProfile?.id, setMessages]);

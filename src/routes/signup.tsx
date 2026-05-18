@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Mail, Lock, User, MapPin, ChevronDown } from "lucide-react";
+import { Mail, Lock, User, MapPin, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/store/AppProviders";
 import { api } from "@/lib/api";
 
@@ -27,6 +27,9 @@ function SignUpPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
   const [stateId, setStateId] = useState(0);
   const [states, setStates] = useState<StateItem[]>([]);
@@ -42,6 +45,8 @@ function SignUpPage() {
       .finally(() => setStatesLoading(false));
   }, []);
 
+  const passwordsMatch = !confirmPassword || password === confirmPassword;
+
   return (
     <section className="flex min-h-screen items-center justify-center px-4 pb-16 pt-32">
       <div className="card-mm w-full max-w-md p-8">
@@ -56,8 +61,7 @@ function SignUpPage() {
             e.preventDefault();
             setBusy(true);
             try {
-              await auth.signUp(name, email, password, "customer", stateId);
-              // Send customer to OTP verification
+              await auth.signUp(name, email, password, "customer", stateId, confirmPassword);
               navigate({ to: "/verify-otp" });
             } catch {
               setBusy(false);
@@ -100,31 +104,56 @@ function SignUpPage() {
             />
           </div>
           <div className="relative">
-              <MapPin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <select
-                required
-                value={stateId}
-                onChange={(e) => setStateId(Number(e.target.value))}
-                disabled={statesLoading}
-                className="input-mm appearance-none pl-11 pr-10"
-              >
-                {statesLoading ? (
-                  <option value={0}>Loading states…</option>
-                ) : (
-                  <>
-                    <option value={0} disabled>
-                      Select your state
+            <Lock className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type={showConfirm ? "text" : "password"}
+              required
+              minLength={8}
+              placeholder="Confirm password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className={`input-mm pl-11 pr-11 ${!passwordsMatch ? "border-destructive focus:border-destructive" : ""}`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm((v) => !v)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              tabIndex={-1}
+            >
+              {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+          {confirmPassword.length > 0 && !passwordsMatch && (
+            <p className="-mt-2 text-xs font-bold text-destructive">
+              Passwords do not match.
+            </p>
+          )}
+          <div className="relative">
+            <MapPin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <select
+              required
+              value={stateId}
+              onChange={(e) => setStateId(Number(e.target.value))}
+              disabled={statesLoading}
+              className="input-mm appearance-none pl-11 pr-10"
+            >
+              {statesLoading ? (
+                <option value={0}>Loading states…</option>
+              ) : (
+                <>
+                  <option value={0} disabled>
+                    Select your state
+                  </option>
+                  {states.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
                     </option>
-                    {states.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </>
-                )}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            </div>
+                  ))}
+                </>
+              )}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          </div>
           <button type="submit" disabled={busy} className="btn-primary w-full">
             {busy ? "Creating account…" : "Create account"}
           </button>
