@@ -112,7 +112,7 @@ function VendorSignupPage() {
 
       if (!auth.user) {
         // New vendor — register → save profile → verify email via OTP
-        await auth.signUp(ownerName || businessName, email, password, "vendor", stateId);
+        await auth.signUp(ownerName || businessName, email, password, "vendor", stateId, confirmPassword);
         vendor.save(profileData);
         navigate({ to: "/verify-otp" });
       } else {
