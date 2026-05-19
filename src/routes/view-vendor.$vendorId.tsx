@@ -12,7 +12,8 @@ import {
   Heart, 
   Newspaper, 
   ChevronRight,
-  Filter
+  Filter,
+  X
 } from "lucide-react";
 import { vendors, vendorById, type Meal } from "@/data/mock";
 import { 
@@ -26,6 +27,7 @@ import {
   useWishlist
 } from "@/store/AppProviders";
 import { toast } from "sonner";
+import { useApiMessages } from "@/hooks/useApiMessages";
 import { formatPrice } from "@/data/mock";
 
 export const Route = createFileRoute("/view-vendor/$vendorId")({
@@ -53,6 +55,7 @@ function ViewVendorPage() {
   const auth = useAuth();
   const reviews = useReviews();
   const [q, setQ] = useState("");
+  const [isChatModalOpen, setIsChatModalOpen] = useState(false);
   
   // Resolve the vendor
   const vendor = useMemo(() => {
@@ -160,13 +163,12 @@ function ViewVendorPage() {
                 <a href="#menu" className="pill-btn shrink-0 bg-primary text-white shadow-lg shadow-primary/25">
                   Order
                 </a>
-                <Link 
-                  to="/messages/$vendorId" 
-                  params={{ vendorId: vendor.id }}
+                <button 
+                  onClick={() => setIsChatModalOpen(true)}
                   className="pill-btn shrink-0 bg-white/10 text-white backdrop-blur-md hover:bg-white/20"
                 >
                   <MessageSquare className="h-3 w-3" /> Chat
-                </Link>
+                </button>
                 <Link 
                   to="/blog" 
                   search={{ vendor: vendor.id }}
@@ -362,7 +364,94 @@ function ViewVendorPage() {
           box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
         }
       `}</style>
+      {/* Chat Modal */}
+      {isChatModalOpen && (
+        <ChatModal 
+          vendorId={vendor.id} 
+          vendorName={vendor.name}
+          onClose={() => setIsChatModalOpen(false)} 
+        />
+      )}
     </main>
+  );
+}
+
+function ChatModal({ vendorId, vendorName, onClose }: { vendorId: string; vendorName: string; onClose: () => void }) {
+  const auth = useAuth();
+  const { sendMessage } = useApiMessages();
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!body.trim()) return toast.error("Please enter a message");
+    
+    if (!auth.user) return toast.error("Please sign in to send a message");
+
+    const fullMessage = title.trim() ? `**${title}**\n\n${body}` : body;
+
+    sendMessage.mutate({
+      receiver_id: vendorId, // Assuming vendorId maps to the user or is handled by backend
+      vendor_id: vendorId,
+      body: fullMessage,
+    } as any, {
+      onSuccess: () => {
+        toast.success("Message sent to vendor!");
+        onClose();
+      },
+      onError: (err: any) => {
+        toast.error(err.message || "Failed to send message");
+      }
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm p-4">
+      <div className="card-mm w-full max-w-lg p-6 relative animate-in fade-in zoom-in duration-200">
+        <button 
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-full p-2 hover:bg-secondary transition-colors"
+        >
+          <X className="h-5 w-5 text-muted-foreground" />
+        </button>
+        
+        <div className="mb-6">
+          <h2 className="text-2xl font-black">Message {vendorName}</h2>
+          <p className="text-sm font-semibold text-muted-foreground">Send a direct message to the kitchen.</p>
+        </div>
+
+        <form onSubmit={submit} className="space-y-4">
+          <div>
+            <label className="block text-[10px] font-black uppercase text-muted-foreground mb-1.5 ml-1">Message Title / Subject</label>
+            <input 
+              type="text" 
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
+              placeholder="e.g. Question about my order"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-black uppercase text-muted-foreground mb-1.5 ml-1">Message</label>
+            <textarea 
+              rows={5} 
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none" 
+              placeholder="Type your message here..."
+              disabled={sendMessage.isPending}
+            />
+          </div>
+          <button 
+            type="submit" 
+            className="btn-primary w-full py-3.5 text-sm font-black uppercase tracking-widest shadow-xl shadow-primary/20 disabled:opacity-50"
+            disabled={sendMessage.isPending}
+          >
+            {sendMessage.isPending ? "Sending..." : "Send Message"}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
 

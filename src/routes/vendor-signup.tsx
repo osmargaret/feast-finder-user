@@ -53,9 +53,7 @@ function VendorSignupPage() {
   const [states, setStates] = useState<{ id: number; name: string }[]>([]);
   const [statesLoading, setStatesLoading] = useState(true);
 
-  // ── Service options ───────────────────────────────────────────────────────
-  const [deliveryAvailable, setDeliveryAvailable] = useState(true);
-  const [pickupAvailable, setPickupAvailable] = useState(true);
+  // ── Service options are now configured in Settings (default: pickup only)
 
   // ── Visuals ───────────────────────────────────────────────────────────────
   const [logoUrl, setLogoUrl] = useState("");
@@ -84,8 +82,6 @@ function VendorSignupPage() {
 
     if (!businessName.trim()) return toast.error("Business name is required");
     if (!address.trim()) return toast.error("Business address is required");
-    if (!deliveryAvailable && !pickupAvailable)
-      return toast.error("Select at least one service option");
 
     if (!auth.user) {
       if (password.length < 8) return toast.error("Password must be at least 8 characters");
@@ -103,8 +99,8 @@ function VendorSignupPage() {
         stateId,
         logoUrl: logoUrl || undefined,
         bannerUrl: bannerUrl || undefined,
-        deliveryAvailable,
-        pickupAvailable,
+        deliveryAvailable: false,
+        pickupAvailable: true,
         // Fields managed in Settings after onboarding
         categories: [],
         images: [],
@@ -279,81 +275,6 @@ function VendorSignupPage() {
             </div>
           </div>
 
-          {/* ── Section 3: Service options ─────────────────────────────── */}
-          <div>
-            <SectionLabel>Service options *</SectionLabel>
-            <p className="mb-3 text-xs font-semibold text-muted-foreground">
-              How will customers receive their orders?
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {/* Delivery card */}
-              <button
-                type="button"
-                onClick={() => setDeliveryAvailable((v) => !v)}
-                className={`flex items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all ${
-                  deliveryAvailable
-                    ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
-                    : "border-border hover:border-primary/30 hover:bg-secondary/40"
-                }`}
-              >
-                <div
-                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors ${
-                    deliveryAvailable
-                      ? "bg-primary text-white"
-                      : "bg-secondary text-muted-foreground"
-                  }`}
-                >
-                  <Truck className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-black">Delivery</p>
-                  <p className="text-xs font-semibold text-muted-foreground">
-                    We deliver to customers
-                  </p>
-                </div>
-                <Checkbox
-                  checked={deliveryAvailable}
-                  onCheckedChange={(c) => setDeliveryAvailable(!!c)}
-                  className="pointer-events-none"
-                />
-              </button>
-
-              {/* Pickup card */}
-              <button
-                type="button"
-                onClick={() => setPickupAvailable((v) => !v)}
-                className={`flex items-center gap-4 rounded-2xl border-2 p-4 text-left transition-all ${
-                  pickupAvailable
-                    ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
-                    : "border-border hover:border-primary/30 hover:bg-secondary/40"
-                }`}
-              >
-                <div
-                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors ${
-                    pickupAvailable ? "bg-primary text-white" : "bg-secondary text-muted-foreground"
-                  }`}
-                >
-                  <ShoppingBag className="h-5 w-5" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-black">Pickup</p>
-                  <p className="text-xs font-semibold text-muted-foreground">
-                    Customers collect in-store
-                  </p>
-                </div>
-                <Checkbox
-                  checked={pickupAvailable}
-                  onCheckedChange={(c) => setPickupAvailable(!!c)}
-                  className="pointer-events-none"
-                />
-              </button>
-            </div>
-            {!deliveryAvailable && !pickupAvailable && (
-              <p className="mt-2 text-xs font-bold text-destructive">
-                At least one service option must be selected.
-              </p>
-            )}
-          </div>
 
           {/* ── Section 4: Account security (only for new users) ───────── */}
           {!auth.user && (

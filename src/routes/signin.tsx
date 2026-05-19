@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Mail, Lock } from "lucide-react";
-import { useAuth, useVendorProfile } from "@/store/AppProviders";
+import { useAuth } from "@/store/AppProviders";
 
 export const Route = createFileRoute("/signin")({
   head: () => ({
@@ -17,12 +17,10 @@ export const Route = createFileRoute("/signin")({
 
 function SignInPage() {
   const auth = useAuth();
-  const vendor = useVendorProfile();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-
   const [isVendor, setIsVendor] = useState(false);
 
   return (
@@ -32,14 +30,16 @@ function SignInPage() {
           <h1 className="text-3xl font-black">Welcome back</h1>
           <p className="mt-2 text-sm font-semibold text-muted-foreground">Sign in to continue.</p>
         </div>
-        
+
         {/* Role Toggle */}
         <div className="flex rounded-2xl bg-secondary/50 p-1 mb-6">
           <button
             type="button"
             onClick={() => setIsVendor(false)}
             className={`flex-1 rounded-xl py-2.5 text-xs font-black uppercase tracking-wider transition-all ${
-              !isVendor ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              !isVendor
+                ? "bg-white text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Customer
@@ -48,7 +48,9 @@ function SignInPage() {
             type="button"
             onClick={() => setIsVendor(true)}
             className={`flex-1 rounded-xl py-2.5 text-xs font-black uppercase tracking-wider transition-all ${
-              isVendor ? "bg-white text-primary shadow-sm" : "text-muted-foreground hover:text-foreground"
+              isVendor
+                ? "bg-white text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             Vendor
@@ -60,15 +62,17 @@ function SignInPage() {
             e.preventDefault();
             setBusy(true);
             try {
-              await auth.signIn(email, password, isVendor ? "vendor" : "customer");
-              
-              if (isVendor || vendor.profile) {
+              const user = await auth.signIn(email, password, isVendor ? "vendor" : "customer");
+              // If email not verified, go to OTP page first
+              if (!user.emailVerified) {
+                navigate({ to: "/verify-otp" });
+              } else if (user.role === "vendor" || isVendor) {
                 navigate({ to: "/vendor-dashboard" });
               } else {
                 navigate({ to: "/" });
               }
-            } catch (err) {
-              // error handled in AuthContext
+            } catch {
+              // error already toasted in AuthContext
             } finally {
               setBusy(false);
             }
@@ -107,20 +111,32 @@ function SignInPage() {
             Forgot your password?
           </Link>
         </form>
+
         {!isVendor ? (
           <p className="mt-6 text-center text-sm font-semibold text-muted-foreground">
-            Don't have an account? <Link to="/signup" className="font-bold text-primary hover:underline">Create one</Link>
+            Don't have an account?{" "}
+            <Link to="/signup" className="font-bold text-primary hover:underline">
+              Create one
+            </Link>
           </p>
         ) : (
           <p className="mt-6 text-center text-sm font-semibold text-muted-foreground">
-            Want to sell on MenuMenu? <Link to="/vendor-signup" className="font-bold text-primary hover:underline">Create a vendor account</Link>
+            Want to sell on MenuMenu?{" "}
+            <Link to="/vendor-signup" className="font-bold text-primary hover:underline">
+              Create a vendor account
+            </Link>
           </p>
         )}
         <p className="mt-4 text-center text-xs font-semibold text-muted-foreground">
           By continuing you agree to our{" "}
-          <Link to="/terms" className="font-bold text-primary hover:underline">Terms</Link>
+          <Link to="/terms" className="font-bold text-primary hover:underline">
+            Terms
+          </Link>
           {" & "}
-          <Link to="/privacy" className="font-bold text-primary hover:underline">Privacy Policy</Link>.
+          <Link to="/privacy" className="font-bold text-primary hover:underline">
+            Privacy Policy
+          </Link>
+          .
         </p>
       </div>
     </section>

@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as ViewVendorRouteImport } from './routes/view-vendor'
+import { Route as VerifyOtpRouteImport } from './routes/verify-otp'
 import { Route as VendorsRouteImport } from './routes/vendors'
 import { Route as VendorSignupRouteImport } from './routes/vendor-signup'
 import { Route as VendorDashboardRouteImport } from './routes/vendor-dashboard'
@@ -50,6 +51,11 @@ const WishlistRoute = WishlistRouteImport.update({
 const ViewVendorRoute = ViewVendorRouteImport.update({
   id: '/view-vendor',
   path: '/view-vendor',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyOtpRoute = VerifyOtpRouteImport.update({
+  id: '/verify-otp',
+  path: '/verify-otp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const VendorsRoute = VendorsRouteImport.update({
@@ -229,6 +235,7 @@ export interface FileRoutesByFullPath {
   '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
+  '/verify-otp': typeof VerifyOtpRoute
   '/view-vendor': typeof ViewVendorRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -263,6 +270,7 @@ export interface FileRoutesByTo {
   '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
+  '/verify-otp': typeof VerifyOtpRoute
   '/view-vendor': typeof ViewVendorRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -298,6 +306,7 @@ export interface FileRoutesById {
   '/vendor-dashboard': typeof VendorDashboardRoute
   '/vendor-signup': typeof VendorSignupRoute
   '/vendors': typeof VendorsRouteWithChildren
+  '/verify-otp': typeof VerifyOtpRoute
   '/view-vendor': typeof ViewVendorRouteWithChildren
   '/wishlist': typeof WishlistRoute
   '/blog/$slug': typeof BlogSlugRoute
@@ -334,6 +343,7 @@ export interface FileRouteTypes {
     | '/vendor-dashboard'
     | '/vendor-signup'
     | '/vendors'
+    | '/verify-otp'
     | '/view-vendor'
     | '/wishlist'
     | '/blog/$slug'
@@ -368,6 +378,7 @@ export interface FileRouteTypes {
     | '/vendor-dashboard'
     | '/vendor-signup'
     | '/vendors'
+    | '/verify-otp'
     | '/view-vendor'
     | '/wishlist'
     | '/blog/$slug'
@@ -402,6 +413,7 @@ export interface FileRouteTypes {
     | '/vendor-dashboard'
     | '/vendor-signup'
     | '/vendors'
+    | '/verify-otp'
     | '/view-vendor'
     | '/wishlist'
     | '/blog/$slug'
@@ -437,6 +449,7 @@ export interface RootRouteChildren {
   VendorDashboardRoute: typeof VendorDashboardRoute
   VendorSignupRoute: typeof VendorSignupRoute
   VendorsRoute: typeof VendorsRouteWithChildren
+  VerifyOtpRoute: typeof VerifyOtpRoute
   ViewVendorRoute: typeof ViewVendorRouteWithChildren
   WishlistRoute: typeof WishlistRoute
   OrderConfirmationOrderIdRoute: typeof OrderConfirmationOrderIdRoute
@@ -457,6 +470,13 @@ declare module '@tanstack/react-router' {
       path: '/view-vendor'
       fullPath: '/view-vendor'
       preLoaderRoute: typeof ViewVendorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-otp': {
+      id: '/verify-otp'
+      path: '/verify-otp'
+      fullPath: '/verify-otp'
+      preLoaderRoute: typeof VerifyOtpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/vendors': {
@@ -742,6 +762,7 @@ const rootRouteChildren: RootRouteChildren = {
   VendorDashboardRoute: VendorDashboardRoute,
   VendorSignupRoute: VendorSignupRoute,
   VendorsRoute: VendorsRouteWithChildren,
+  VerifyOtpRoute: VerifyOtpRoute,
   ViewVendorRoute: ViewVendorRouteWithChildren,
   WishlistRoute: WishlistRoute,
   OrderConfirmationOrderIdRoute: OrderConfirmationOrderIdRoute,

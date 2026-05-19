@@ -35,11 +35,9 @@ export type Meal = {
 };
 
 /** Common Lagos delivery areas — used by vendor delivery settings */
-export const LAGOS_AREAS = [
-  "Ikeja", "Ikorodu", "Elepe", "Yaba", "Surulere", "Lekki", "Ajah",
-  "Victoria Island", "Ikoyi", "Apapa", "Festac", "Ojo", "Mushin",
-  "Maryland", "Magodo", "Gbagada", "Oshodi", "Agege", "Ojota",
-];
+// Lagos areas sourced from nigeria.ts — kept here for backwards-compat
+import { getStateAreas } from "./nigeria";
+export const LAGOS_AREAS: string[] = getStateAreas(1);
 
 export type Vendor = {
   id: string;
@@ -256,7 +254,10 @@ export const vendors: Vendor[] = baseVendors.map((v) => ({
 }));
 
 /** Returns the effective delivery areas for a vendor (override > seed > empty) */
-export function vendorAreas(vendorId: string, override?: { name: string; fee: number }[]): { name: string; fee: number }[] {
+export function vendorAreas(
+  vendorId: string,
+  override?: { name: string; fee: number }[],
+): { name: string; fee: number }[] {
   if (override && override.length) return override;
   return seedAreas[vendorId] ?? [];
 }
@@ -388,22 +389,162 @@ export const meals: Meal[] = [
     vendorId: "naija-swallow",
     category: "Swallow",
   },
-  { id: "jollof3", name: "Smoky Jollof Combo", price: 4200, image: jollof, badge: "🍚 Popular", blurb: "With plantain & egg", vendorId: "jollof-junction", category: "Rice", dietary: ["Halal"] },
-  { id: "jollof4", name: "Coconut Jollof", price: 3800, image: jollof, blurb: "Aromatic & rich", vendorId: "jollof-junction", category: "Rice" },
-  { id: "meatpie2", name: "Chicken Pie (4pcs)", price: 2400, image: meatpie, blurb: "Buttery crust", vendorId: "bites-and-bakes", category: "Pastries" },
-  { id: "smallchops", name: "Small Chops Box", price: 6500, image: meatpie, badge: "🎉 Party", blurb: "Puff puff, samosa, gizzard", vendorId: "bites-and-bakes", category: "Pastries" },
-  { id: "okra", name: "Okra Soup & Eba", price: 3700, image: egusi, blurb: "Hearty Naija classic", vendorId: "village-pot", category: "Swallow" },
-  { id: "ofada", name: "Ofada Rice & Ayamase", price: 4800, image: jollof, badge: "🌶️ Spicy", blurb: "Local rice, palm-oil stew", vendorId: "spice-palace", category: "Rice", dietary: ["Spicy"] },
-  { id: "cake", name: "Chocolate Cake Slice", price: 1800, image: bread, badge: "🍰 Sweet", blurb: "Moist & fudgy", vendorId: "sweet-tooth", category: "Confectioneries", dietary: ["Vegetarian"] },
-  { id: "akara", name: "Akara & Pap", price: 1500, image: pancakes, blurb: "Classic Naija breakfast", vendorId: "morning-glory", category: "Breakfast" },
-  { id: "moimoi", name: "Moi Moi Trio", price: 2200, image: pancakes, blurb: "Steamed bean pudding", vendorId: "morning-glory", category: "Breakfast", dietary: ["Vegetarian"] },
-  { id: "shrimp", name: "Garlic Butter Shrimp", price: 6200, image: catfish, badge: "🦐 New", blurb: "Buttery & herby", vendorId: "ocean-catch", category: "Seafood" },
-  { id: "ribs", name: "Smoky BBQ Ribs", price: 7500, image: suya, badge: "🔥 Hot", blurb: "Slow-cooked tender ribs", vendorId: "grill-house", category: "Grills" },
-  { id: "kebabs", name: "Mixed Kebab Skewers", price: 4900, image: suya, blurb: "Beef, chicken, veggie", vendorId: "grill-house", category: "Grills" },
-  { id: "puffpuff", name: "Puff Puff (12pcs)", price: 1500, image: bread, blurb: "Fluffy fried dough", vendorId: "oven-fresh", category: "Pastries", dietary: ["Vegetarian"] },
-  { id: "fufu", name: "Fufu & Ogbono", price: 3600, image: poundedyam, blurb: "Stretchy & rich", vendorId: "village-pot", category: "Swallow" },
-  { id: "amala", name: "Amala & Ewedu", price: 3500, image: poundedyam, blurb: "Yoruba favourite", vendorId: "naija-swallow", category: "Swallow" },
-  { id: "donut", name: "Glazed Donuts (4pcs)", price: 2000, image: bread, blurb: "Soft & sweet", vendorId: "sweet-tooth", category: "Confectioneries", dietary: ["Vegetarian"] },
+  {
+    id: "jollof3",
+    name: "Smoky Jollof Combo",
+    price: 4200,
+    image: jollof,
+    badge: "🍚 Popular",
+    blurb: "With plantain & egg",
+    vendorId: "jollof-junction",
+    category: "Rice",
+    dietary: ["Halal"],
+  },
+  {
+    id: "jollof4",
+    name: "Coconut Jollof",
+    price: 3800,
+    image: jollof,
+    blurb: "Aromatic & rich",
+    vendorId: "jollof-junction",
+    category: "Rice",
+  },
+  {
+    id: "meatpie2",
+    name: "Chicken Pie (4pcs)",
+    price: 2400,
+    image: meatpie,
+    blurb: "Buttery crust",
+    vendorId: "bites-and-bakes",
+    category: "Pastries",
+  },
+  {
+    id: "smallchops",
+    name: "Small Chops Box",
+    price: 6500,
+    image: meatpie,
+    badge: "🎉 Party",
+    blurb: "Puff puff, samosa, gizzard",
+    vendorId: "bites-and-bakes",
+    category: "Pastries",
+  },
+  {
+    id: "okra",
+    name: "Okra Soup & Eba",
+    price: 3700,
+    image: egusi,
+    blurb: "Hearty Naija classic",
+    vendorId: "village-pot",
+    category: "Swallow",
+  },
+  {
+    id: "ofada",
+    name: "Ofada Rice & Ayamase",
+    price: 4800,
+    image: jollof,
+    badge: "🌶️ Spicy",
+    blurb: "Local rice, palm-oil stew",
+    vendorId: "spice-palace",
+    category: "Rice",
+    dietary: ["Spicy"],
+  },
+  {
+    id: "cake",
+    name: "Chocolate Cake Slice",
+    price: 1800,
+    image: bread,
+    badge: "🍰 Sweet",
+    blurb: "Moist & fudgy",
+    vendorId: "sweet-tooth",
+    category: "Confectioneries",
+    dietary: ["Vegetarian"],
+  },
+  {
+    id: "akara",
+    name: "Akara & Pap",
+    price: 1500,
+    image: pancakes,
+    blurb: "Classic Naija breakfast",
+    vendorId: "morning-glory",
+    category: "Breakfast",
+  },
+  {
+    id: "moimoi",
+    name: "Moi Moi Trio",
+    price: 2200,
+    image: pancakes,
+    blurb: "Steamed bean pudding",
+    vendorId: "morning-glory",
+    category: "Breakfast",
+    dietary: ["Vegetarian"],
+  },
+  {
+    id: "shrimp",
+    name: "Garlic Butter Shrimp",
+    price: 6200,
+    image: catfish,
+    badge: "🦐 New",
+    blurb: "Buttery & herby",
+    vendorId: "ocean-catch",
+    category: "Seafood",
+  },
+  {
+    id: "ribs",
+    name: "Smoky BBQ Ribs",
+    price: 7500,
+    image: suya,
+    badge: "🔥 Hot",
+    blurb: "Slow-cooked tender ribs",
+    vendorId: "grill-house",
+    category: "Grills",
+  },
+  {
+    id: "kebabs",
+    name: "Mixed Kebab Skewers",
+    price: 4900,
+    image: suya,
+    blurb: "Beef, chicken, veggie",
+    vendorId: "grill-house",
+    category: "Grills",
+  },
+  {
+    id: "puffpuff",
+    name: "Puff Puff (12pcs)",
+    price: 1500,
+    image: bread,
+    blurb: "Fluffy fried dough",
+    vendorId: "oven-fresh",
+    category: "Pastries",
+    dietary: ["Vegetarian"],
+  },
+  {
+    id: "fufu",
+    name: "Fufu & Ogbono",
+    price: 3600,
+    image: poundedyam,
+    blurb: "Stretchy & rich",
+    vendorId: "village-pot",
+    category: "Swallow",
+  },
+  {
+    id: "amala",
+    name: "Amala & Ewedu",
+    price: 3500,
+    image: poundedyam,
+    blurb: "Yoruba favourite",
+    vendorId: "naija-swallow",
+    category: "Swallow",
+  },
+  {
+    id: "donut",
+    name: "Glazed Donuts (4pcs)",
+    price: 2000,
+    image: bread,
+    blurb: "Soft & sweet",
+    vendorId: "sweet-tooth",
+    category: "Confectioneries",
+    dietary: ["Vegetarian"],
+  },
 ];
 
 export interface SubCategory {

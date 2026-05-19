@@ -62,7 +62,7 @@ function SignUpPage() {
             setBusy(true);
             try {
               await auth.signUp(name, email, password, "customer", stateId, confirmPassword);
-              navigate({ to: "/verify-otp" });
+              navigate({ to: "/" });
             } catch {
               setBusy(false);
             }

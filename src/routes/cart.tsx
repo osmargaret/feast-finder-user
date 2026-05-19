@@ -2,10 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Minus, Plus, Trash2, ShoppingBag, ChevronDown } from "lucide-react";
 import { PageHero } from "@/components/site/PageHero";
-import { useCart, useCoupons } from "@/store/AppProviders";
+import { useCart, useCoupons, useAuth } from "@/store/AppProviders";
 import { meals as allMeals, vendorById, formatPrice, vendorAreas } from "@/data/mock";
 import { toast } from "sonner";
-
 
 export const Route = createFileRoute("/cart")({
   head: () => ({
@@ -23,20 +22,29 @@ function CartPage() {
   const cart = useCart();
   const items = cart.items
     .map((it) => ({ it, meal: allMeals.find((m) => m.id === it.mealId) }))
-    .filter((x): x is { it: { mealId: string; qty: number }; meal: typeof allMeals[number] } => Boolean(x.meal));
+    .filter((x): x is { it: { mealId: string; qty: number }; meal: (typeof allMeals)[number] } =>
+      Boolean(x.meal),
+    );
 
-  const vendorGroups = items.reduce((acc, curr) => {
-    const vid = curr.meal.vendorId;
-    if (!acc[vid]) acc[vid] = [];
-    acc[vid].push(curr);
-    return acc;
-  }, {} as Record<string, typeof items>);
+  const vendorGroups = items.reduce(
+    (acc, curr) => {
+      const vid = curr.meal.vendorId;
+      if (!acc[vid]) acc[vid] = [];
+      acc[vid].push(curr);
+      return acc;
+    },
+    {} as Record<string, typeof items>,
+  );
 
   const vendorIds = Object.keys(vendorGroups);
 
   return (
     <>
-      <PageHero eyebrow="Your order" title="Shopping Cart" subtitle="Review items, adjust quantities, and check out." />
+      <PageHero
+        eyebrow="Your order"
+        title="Shopping Cart"
+        subtitle="Review items, adjust quantities, and check out."
+      />
       <section className="section">
         <div className="container-mm">
           {items.length === 0 ? (
@@ -45,20 +53,33 @@ function CartPage() {
                 <ShoppingBag className="h-6 w-6" />
               </div>
               <h2 className="text-xl font-extrabold">Your cart is empty</h2>
-              <p className="mt-2 text-sm text-muted-foreground">Browse meals and add your favourites.</p>
-              <Link to="/meals" className="btn-primary mt-6 inline-flex">Browse meals</Link>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Browse meals and add your favourites.
+              </p>
+              <Link to="/meals" className="btn-primary mt-6 inline-flex">
+                Browse meals
+              </Link>
             </div>
           ) : (
             <div className="space-y-12">
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold">Your Orders ({vendorIds.length} Kitchen{vendorIds.length > 1 ? "s" : ""})</h2>
-                <button onClick={cart.clear} className="text-sm font-bold text-muted-foreground hover:text-destructive">Clear entire cart</button>
+                <h2 className="text-lg font-bold">
+                  Your Orders ({vendorIds.length} Kitchen{vendorIds.length > 1 ? "s" : ""})
+                </h2>
+                <button
+                  onClick={cart.clear}
+                  className="text-sm font-bold text-muted-foreground hover:text-destructive"
+                >
+                  Clear entire cart
+                </button>
               </div>
               {vendorIds.map((vid) => (
                 <VendorCartSection key={vid} vid={vid} groupItems={vendorGroups[vid]} cart={cart} />
               ))}
               <div className="flex justify-center pt-8">
-                <Link to="/meals" className="btn-ghost">Continue shopping</Link>
+                <Link to="/meals" className="btn-ghost">
+                  Continue shopping
+                </Link>
               </div>
             </div>
           )}
@@ -68,13 +89,22 @@ function CartPage() {
   );
 }
 
-function VendorCartSection({ vid, groupItems, cart }: { vid: string, groupItems: any[], cart: any }) {
+function VendorCartSection({
+  vid,
+  groupItems,
+  cart,
+}: {
+  vid: string;
+  groupItems: any[];
+  cart: any;
+}) {
   const vendor = vendorById(vid);
+  const auth = useAuth();
   const vendorSubtotal = groupItems.reduce((sum, { meal, it }) => sum + meal.price * it.qty, 0);
-  
+
   const areas = vendorAreas(vid, vendor?.deliveryAreas);
-  const minDelivery = areas.length > 0 ? Math.min(...areas.map(a => a.fee)) : 500;
-  
+  const minDelivery = areas.length > 0 ? Math.min(...areas.map((a) => a.fee)) : 500;
+
   const [isOpen, setIsOpen] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [discount, setDiscount] = useState(0);
@@ -83,9 +113,10 @@ function VendorCartSection({ vid, groupItems, cart }: { vid: string, groupItems:
   const handleApplyPromo = () => {
     const coupon = coupons.validate(promoCode, vid, vendorSubtotal);
     if (coupon) {
-      const saving = coupon.discountType === "percent"
-        ? Math.floor(vendorSubtotal * coupon.discountValue / 100)
-        : coupon.discountValue;
+      const saving =
+        coupon.discountType === "percent"
+          ? Math.floor((vendorSubtotal * coupon.discountValue) / 100)
+          : coupon.discountValue;
       setDiscount(saving);
       toast.success(`Promo applied! You saved ${formatPrice(saving)}`);
     } else if (promoCode === "TASTE10") {
@@ -97,18 +128,22 @@ function VendorCartSection({ vid, groupItems, cart }: { vid: string, groupItems:
   };
 
   const vendorTotal = vendorSubtotal + minDelivery - discount;
-  
+
   return (
     <div className="card-mm overflow-hidden">
-      <button 
-        onClick={() => setIsOpen(!isOpen)} 
+      <button
+        onClick={() => setIsOpen(!isOpen)}
         className="w-full flex items-center justify-between p-6 hover:bg-secondary/50 transition text-left"
       >
         <div className="flex items-center gap-3">
-          {vendor?.avatar && <img src={vendor.avatar} alt="" className="h-10 w-10 rounded-xl object-cover" />}
+          {vendor?.avatar && (
+            <img src={vendor.avatar} alt="" className="h-10 w-10 rounded-xl object-cover" />
+          )}
           <div>
             <h3 className="font-extrabold text-lg">{vendor?.name}</h3>
-            <p className="text-sm text-muted-foreground">{groupItems.length} item{groupItems.length > 1 ? "s" : ""}</p>
+            <p className="text-sm text-muted-foreground">
+              {groupItems.length} item{groupItems.length > 1 ? "s" : ""}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-4">
@@ -116,7 +151,9 @@ function VendorCartSection({ vid, groupItems, cart }: { vid: string, groupItems:
             <p className="text-sm font-bold text-muted-foreground">Total</p>
             <p className="font-black text-lg text-primary">{formatPrice(vendorTotal)}</p>
           </div>
-          <ChevronDown className={`h-5 w-5 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          <ChevronDown
+            className={`h-5 w-5 text-muted-foreground transition-transform ${isOpen ? "rotate-180" : ""}`}
+          />
         </div>
       </button>
 
@@ -124,20 +161,44 @@ function VendorCartSection({ vid, groupItems, cart }: { vid: string, groupItems:
         <div className="border-t border-border p-6 bg-secondary/5">
           <div className="space-y-4">
             {groupItems.map(({ it, meal }) => (
-              <div key={meal.id} className="flex gap-4 bg-background p-4 rounded-2xl border border-border">
-                <img src={meal.image} alt={meal.name} className="h-20 w-20 rounded-xl object-cover" />
+              <div
+                key={meal.id}
+                className="flex gap-4 bg-background p-4 rounded-2xl border border-border"
+              >
+                <img
+                  src={meal.image}
+                  alt={meal.name}
+                  className="h-20 w-20 rounded-xl object-cover"
+                />
                 <div className="flex flex-1 flex-col">
                   <div className="flex items-start justify-between gap-3">
                     <h4 className="text-sm font-extrabold">{meal.name}</h4>
-                    <div className="text-right text-sm font-black">{formatPrice(meal.price * it.qty)}</div>
+                    <div className="text-right text-sm font-black">
+                      {formatPrice(meal.price * it.qty)}
+                    </div>
                   </div>
                   <div className="mt-auto flex items-center justify-between pt-3">
                     <div className="inline-flex items-center gap-2 rounded-full border border-border p-1">
-                      <button onClick={() => cart.setQty(meal.id, it.qty - 1)} className="grid h-7 w-7 place-items-center rounded-full hover:bg-secondary" aria-label="Decrease"><Minus className="h-3 w-3" /></button>
+                      <button
+                        onClick={() => cart.setQty(meal.id, it.qty - 1)}
+                        className="grid h-7 w-7 place-items-center rounded-full hover:bg-secondary"
+                        aria-label="Decrease"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
                       <span className="min-w-6 text-center text-xs font-extrabold">{it.qty}</span>
-                      <button onClick={() => cart.setQty(meal.id, it.qty + 1)} className="grid h-7 w-7 place-items-center rounded-full hover:bg-secondary" aria-label="Increase"><Plus className="h-3 w-3" /></button>
+                      <button
+                        onClick={() => cart.setQty(meal.id, it.qty + 1)}
+                        className="grid h-7 w-7 place-items-center rounded-full hover:bg-secondary"
+                        aria-label="Increase"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
                     </div>
-                    <button onClick={() => cart.remove(meal.id)} className="inline-flex items-center gap-1.5 text-xs font-bold text-destructive hover:underline">
+                    <button
+                      onClick={() => cart.remove(meal.id)}
+                      className="inline-flex items-center gap-1.5 text-xs font-bold text-destructive hover:underline"
+                    >
                       <Trash2 className="h-3.5 w-3.5" /> Remove
                     </button>
                   </div>
@@ -148,7 +209,9 @@ function VendorCartSection({ vid, groupItems, cart }: { vid: string, groupItems:
 
           <div className="mt-6 pt-6 border-t border-border/50 grid gap-6 md:grid-cols-2">
             <div>
-              <label className="block text-xs font-bold text-muted-foreground mb-2">Have a promo code?</label>
+              <label className="block text-xs font-bold text-muted-foreground mb-2">
+                Have a promo code?
+              </label>
               <div className="flex gap-2 max-w-xs">
                 <input
                   placeholder="Enter code"
@@ -156,22 +219,60 @@ function VendorCartSection({ vid, groupItems, cart }: { vid: string, groupItems:
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                   className="input-mm flex-1"
                 />
-                <button type="button" onClick={handleApplyPromo} className="btn-ghost">Apply</button>
+                <button type="button" onClick={handleApplyPromo} className="btn-ghost">
+                  Apply
+                </button>
               </div>
-              {discount > 0 && <p className="mt-2 text-xs font-bold text-primary">✓ Discount applied: -{formatPrice(discount)}</p>}
+              {discount > 0 && (
+                <p className="mt-2 text-xs font-bold text-primary">
+                  ✓ Discount applied: -{formatPrice(discount)}
+                </p>
+              )}
             </div>
 
             <div className="max-w-xs md:ml-auto w-full">
               <dl className="space-y-2 text-sm font-semibold mb-6">
-                <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd>{formatPrice(vendorSubtotal)}</dd></div>
-                <div className="flex justify-between"><dt className="text-muted-foreground">Est. Delivery</dt><dd>from {formatPrice(minDelivery)}</dd></div>
-                {discount > 0 && <div className="flex justify-between text-primary"><dt>Discount</dt><dd>-{formatPrice(discount)}</dd></div>}
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Subtotal</dt>
+                  <dd>{formatPrice(vendorSubtotal)}</dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Est. Delivery</dt>
+                  <dd>from {formatPrice(minDelivery)}</dd>
+                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-primary">
+                    <dt>Discount</dt>
+                    <dd>-{formatPrice(discount)}</dd>
+                  </div>
+                )}
                 <div className="my-2 border-t border-border" />
-                <div className="flex justify-between text-base font-black"><dt>Est. Total</dt><dd>{formatPrice(vendorTotal)}</dd></div>
+                <div className="flex justify-between text-base font-black">
+                  <dt>Est. Total</dt>
+                  <dd>{formatPrice(vendorTotal)}</dd>
+                </div>
               </dl>
-              <Link to="/checkout" search={{ vendorId: vid }} className="btn-primary w-full justify-center">
-                Checkout {vendor?.name}
-              </Link>
+              {auth.user ? (
+                <Link
+                  to="/checkout"
+                  search={{ vendorId: vid }}
+                  className="btn-primary w-full justify-center"
+                >
+                  Checkout {vendor?.name}
+                </Link>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-center text-xs font-semibold text-muted-foreground">
+                    Sign in to place your order
+                  </p>
+                  <Link to="/signin" className="btn-primary w-full justify-center">
+                    Sign in to checkout
+                  </Link>
+                  <Link to="/signup" className="btn-ghost w-full justify-center">
+                    Create an account
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

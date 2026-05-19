@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { PageHero } from "@/components/site/PageHero";
 import { OrderTimeline } from "@/components/site/OrderTimeline";
-import { Star, AlertCircle, X, Settings, HelpCircle, Heart, Bell, ShoppingBag, Receipt, MessageSquare, User as UserIcon, LogOut } from "lucide-react";
+import { Star, AlertCircle, X, Settings, HelpCircle, Heart, Bell, ShoppingBag, Receipt, MessageSquare, User as UserIcon, LogOut, Mail } from "lucide-react";
 import { useAuth, useNotifications, useOrders, useWishlist, useFollow, useMessages, useVendorMenu, useReviews, useSupport, useLoyalty, useVendorProfile } from "@/store/AppProviders";
 import { vendors, formatPrice } from "@/data/mock";
 import { toast } from "sonner";

@@ -1,10 +1,39 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { User as UserIcon, Bell, MapPin, Truck, Lock, Save, X, Store, CreditCard, LayoutGrid, Package, MessageSquare, BarChart3, DollarSign, TrendingUp, Newspaper, Users, Settings as SettingsIcon, Check, Gift, Star as StarIcon, Plus, Trash2 } from "lucide-react";
+import { useState, useRef, useMemo } from "react";
+import {
+  User as UserIcon,
+  Bell,
+  MapPin,
+  Truck,
+  Lock,
+  Save,
+  X,
+  Store,
+  CreditCard,
+  LayoutGrid,
+  Package,
+  MessageSquare,
+  BarChart3,
+  DollarSign,
+  TrendingUp,
+  Newspaper,
+  Users,
+  Settings as SettingsIcon,
+  Check,
+  Gift,
+  Star as StarIcon,
+  Plus,
+  Trash2,
+  Upload,
+  Image as ImageIcon,
+  ShoppingBag,
+} from "lucide-react";
+import { ImageUpload } from "@/components/site/ImageUpload";
 import { categories as allCategories } from "@/data/mock";
 import { PageHero } from "@/components/site/PageHero";
 import { useAuth, useVendorProfile, useTeam } from "@/store/AppProviders";
-import { LAGOS_AREAS, vendors } from "@/data/mock";
+import { vendors } from "@/data/mock";
+import { NIGERIAN_STATES, getStateAreas } from "@/data/nigeria";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
@@ -13,7 +42,10 @@ export const Route = createFileRoute("/settings")({
       { title: "Settings — MenuMenu" },
       { name: "description", content: "Manage your account, notification, and delivery settings." },
       { property: "og:title", content: "Settings — MenuMenu" },
-      { property: "og:description", content: "Manage your account, notification, and delivery settings." },
+      {
+        property: "og:description",
+        content: "Manage your account, notification, and delivery settings.",
+      },
     ],
   }),
   component: SettingsPage,
@@ -25,17 +57,19 @@ function SettingsPage() {
   const search = typeof window !== "undefined" ? window.location.search : "";
   const urlParams = new URLSearchParams(search);
   const forceVendor = urlParams.get("view") === "vendor";
-  
-  const [viewMode, setViewMode] = useState<"user" | "vendor">(forceVendor || !!vendor.profile ? "vendor" : "user");
+
+  const [viewMode, setViewMode] = useState<"user" | "vendor">(
+    forceVendor || !!vendor.profile ? "vendor" : "user",
+  );
   const isVendor = viewMode === "vendor";
 
   const tabs = isVendor
     ? (["Store Info", "Notifications", "Delivery", "Bank & Payouts", "Security", "Team"] as const)
     : (["Account", "Notifications", "Security"] as const);
-  
+
   // Only reset tab if it's invalid for the new viewMode
   const [tab, setTab] = useState<(typeof tabs)[number]>(isVendor ? "Store Info" : "Account");
-  
+
   const [vendorId, setVendorId] = useState<string>(vendors[0].id);
   const vendorMock = vendors.find((v) => v.id === vendorId)!;
 
@@ -50,7 +84,6 @@ function SettingsPage() {
     { key: "blog", label: "Blog Manager", icon: Newspaper },
     { key: "promotions", label: "Promotions", icon: Gift },
     { key: "reviews", label: "Reviews", icon: StarIcon },
-
   ] as const;
 
   if (!auth.user) {
@@ -60,7 +93,9 @@ function SettingsPage() {
         <section className="section">
           <div className="container-mm">
             <div className="card-mm mx-auto max-w-md p-10 text-center">
-              <Link to="/signin" className="btn-primary inline-flex">Sign in</Link>
+              <Link to="/signin" className="btn-primary inline-flex">
+                Sign in
+              </Link>
             </div>
           </div>
         </section>
@@ -70,16 +105,20 @@ function SettingsPage() {
 
   return (
     <>
-      <PageHero eyebrow="Preferences" title="Settings" subtitle="Tweak how MenuMenu works for you." />
+      <PageHero
+        eyebrow="Preferences"
+        title="Settings"
+        subtitle="Tweak how MenuMenu works for you."
+      />
       <section className="section">
         <div className="container-mm">
           <div className="mb-4 flex justify-end">
-            <button 
+            <button
               onClick={() => {
                 const next = viewMode === "user" ? "vendor" : "user";
                 setViewMode(next);
                 setTab(next === "vendor" ? "Store Info" : "Account");
-              }} 
+              }}
               className="btn-ghost text-xs font-bold"
             >
               Switch to {viewMode === "user" ? "Vendor" : "Customer"} View
@@ -89,15 +128,25 @@ function SettingsPage() {
             {isVendor && (
               <aside className="card-mm h-fit p-4 lg:sticky lg:top-28 mb-6 lg:mb-0">
                 <div className="mb-3 flex items-center gap-3 rounded-2xl bg-secondary p-3">
-                  <img src={vendorMock.avatar} alt={vendorMock.name} className="h-10 w-10 rounded-xl object-cover" />
+                  <img
+                    src={vendorMock.avatar}
+                    alt={vendorMock.name}
+                    className="h-10 w-10 rounded-xl object-cover"
+                  />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] font-bold uppercase text-muted-foreground">Acting as</p>
+                    <p className="text-[10px] font-bold uppercase text-muted-foreground">
+                      Acting as
+                    </p>
                     <select
                       value={vendorId}
                       onChange={(e) => setVendorId(e.target.value)}
                       className="w-full bg-transparent text-sm font-extrabold focus:outline-none"
                     >
-                      {vendors.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                      {vendors.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -116,9 +165,7 @@ function SettingsPage() {
                     );
                   })}
                   <div className="mt-2 border-t border-border pt-2">
-                    <button
-                      className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold bg-primary text-primary-foreground shadow-md transition"
-                    >
+                    <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-bold bg-primary text-primary-foreground shadow-md transition">
                       <SettingsIcon className="h-4 w-4" /> Settings
                     </button>
                   </div>
@@ -130,20 +177,29 @@ function SettingsPage() {
               {/* Top tab bar */}
               <div className="card-mm mb-6 flex flex-wrap gap-1 p-2">
                 {tabs.map((t) => {
-                  const Icon = 
-                    t === "Account" ? UserIcon : 
-                    t === "Store Info" ? Store :
-                    t === "Notifications" ? Bell : 
-                    t === "Delivery" ? Truck : 
-                    t === "Bank & Payouts" ? CreditCard : 
-                    t === "Team" ? Users : Lock;
+                  const Icon =
+                    t === "Account"
+                      ? UserIcon
+                      : t === "Store Info"
+                        ? Store
+                        : t === "Notifications"
+                          ? Bell
+                          : t === "Delivery"
+                            ? Truck
+                            : t === "Bank & Payouts"
+                              ? CreditCard
+                              : t === "Team"
+                                ? Users
+                                : Lock;
                   const active = tab === t;
                   return (
                     <button
                       key={t}
                       onClick={() => setTab(t)}
                       className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition ${
-                        active ? "bg-primary text-primary-foreground shadow" : "text-foreground/70 hover:bg-secondary"
+                        active
+                          ? "bg-primary text-primary-foreground shadow"
+                          : "text-foreground/70 hover:bg-secondary"
                       }`}
                     >
                       <Icon className="h-4 w-4" /> {t}
@@ -173,12 +229,26 @@ function AccountTab() {
   const [email, setEmail] = useState(auth.user?.email ?? "");
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); toast.success("Account updated"); }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        toast.success("Account updated");
+      }}
       className="card-mm grid gap-4 p-6 sm:grid-cols-2"
     >
-      <Field label="Full name"><input value={name} onChange={(e) => setName(e.target.value)} className="input-mm" /></Field>
-      <Field label="Email"><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-mm" /></Field>
-      <button type="submit" className="btn-primary sm:col-span-2 sm:w-fit"><Save className="h-4 w-4" /> Save changes</button>
+      <Field label="Full name">
+        <input value={name} onChange={(e) => setName(e.target.value)} className="input-mm" />
+      </Field>
+      <Field label="Email">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="input-mm"
+        />
+      </Field>
+      <button type="submit" className="btn-primary sm:col-span-2 sm:w-fit">
+        <Save className="h-4 w-4" /> Save changes
+      </button>
     </form>
   );
 }
@@ -188,9 +258,24 @@ function NotificationsTab() {
   const [promos, setPromos] = useState(true);
   const [newsletter, setNewsletter] = useState(false);
   const items = [
-    { label: "Order status updates", desc: "Get notified when your order status changes.", value: orderUpdates, set: setOrderUpdates },
-    { label: "Promotions & deals", desc: "Discounts and special offers from kitchens.", value: promos, set: setPromos },
-    { label: "Weekly newsletter", desc: "The best of MenuMenu, every Friday.", value: newsletter, set: setNewsletter },
+    {
+      label: "Order status updates",
+      desc: "Get notified when your order status changes.",
+      value: orderUpdates,
+      set: setOrderUpdates,
+    },
+    {
+      label: "Promotions & deals",
+      desc: "Discounts and special offers from kitchens.",
+      value: promos,
+      set: setPromos,
+    },
+    {
+      label: "Weekly newsletter",
+      desc: "The best of MenuMenu, every Friday.",
+      value: newsletter,
+      set: setNewsletter,
+    },
   ];
   return (
     <div className="card-mm divide-y divide-border">
@@ -203,7 +288,10 @@ function NotificationsTab() {
           <input
             type="checkbox"
             checked={it.value}
-            onChange={(e) => { it.set(e.target.checked); toast(e.target.checked ? "Enabled" : "Disabled"); }}
+            onChange={(e) => {
+              it.set(e.target.checked);
+              toast(e.target.checked ? "Enabled" : "Disabled");
+            }}
             className="mt-1 h-5 w-5 accent-primary"
           />
         </label>
@@ -215,63 +303,140 @@ function NotificationsTab() {
 function DeliveryTab() {
   const vendor = useVendorProfile();
   const [areas, setAreas] = useState<{ name: string; fee: number }[]>(
-    (vendor.profile?.deliveryAreas || []).map(a => typeof a === 'string' ? { name: a, fee: 800 } : a)
+    (vendor.profile?.deliveryAreas || []).map((a) =>
+      typeof a === "string" ? { name: a, fee: 800 } : a,
+    ),
   );
   const [locInput, setLocInput] = useState("");
   const [feeInput, setFeeInput] = useState<number>(500);
-  const [delivers, setDelivers] = useState(true);
+  const [delivers, setDelivers] = useState(vendor.profile?.deliveryAvailable ?? false);
+  const [pickup, setPickup] = useState(vendor.profile?.pickupAvailable ?? true);
 
-  const suggestions = LAGOS_AREAS.filter(a => a.toLowerCase().includes(locInput.toLowerCase()) && !areas.some(x => x.name === a)).slice(0, 5);
+  // Use the vendor's state areas; fall back to Lagos if not set
+  const stateAreas = useMemo(
+    () => getStateAreas(vendor.profile?.stateId ?? 1),
+    [vendor.profile?.stateId],
+  );
+
+  const suggestions = stateAreas
+    .filter(
+      (a) => a.toLowerCase().includes(locInput.toLowerCase()) && !areas.some((x) => x.name === a),
+    )
+    .slice(0, 6);
 
   const addArea = (name: string, fee: number) => {
     const v = name.trim();
     if (!v) return;
-    if (!areas.some(x => x.name === v)) setAreas([...areas, { name: v, fee: Math.max(500, fee) }]);
+    if (!areas.some((x) => x.name === v))
+      setAreas([...areas, { name: v, fee: Math.max(500, fee) }]);
     setLocInput("");
     setFeeInput(500);
   };
 
-  const removeArea = (name: string) => setAreas(areas.filter(x => x.name !== name));
+  const removeArea = (name: string) => setAreas(areas.filter((x) => x.name !== name));
 
   const save = () => {
+    if (!delivers && !pickup) return toast.error("At least one service option must be enabled.");
     if (!vendor.profile) return;
-    vendor.save({ ...vendor.profile, deliveryAreas: delivers ? areas : [] });
+    vendor.save({ 
+      ...vendor.profile, 
+      deliveryAvailable: delivers,
+      pickupAvailable: pickup,
+      deliveryAreas: delivers ? areas : [] 
+    });
     toast.success("Delivery settings saved");
   };
 
   return (
     <div className="space-y-6">
-      <div className="card-mm p-6">
-        <label className="flex items-center gap-3">
-          <input type="checkbox" checked={delivers} onChange={(e) => setDelivers(e.target.checked)} className="h-5 w-5 accent-primary" />
-          <div>
-            <p className="font-extrabold">We offer delivery</p>
-            <p className="text-sm text-muted-foreground">Turn this off if customers must pick up.</p>
+      <div className="card-mm p-6 grid gap-6 sm:grid-cols-2">
+        {/* Delivery Toggle */}
+        <label className={`flex items-start gap-4 rounded-2xl border-2 p-4 cursor-pointer transition-all ${
+          delivers ? "border-primary bg-primary/5 shadow-md shadow-primary/10" : "border-border hover:border-primary/30"
+        }`}>
+          <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors ${
+            delivers ? "bg-primary text-white" : "bg-secondary text-muted-foreground"
+          }`}>
+            <Truck className="h-5 w-5" />
           </div>
+          <div className="flex-1">
+            <p className="text-sm font-black">Delivery</p>
+            <p className="text-xs font-semibold text-muted-foreground mt-0.5">
+              We deliver to customers
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            checked={delivers}
+            onChange={(e) => setDelivers(e.target.checked)}
+            className="mt-2 h-5 w-5 accent-primary"
+          />
+        </label>
+
+        {/* Pickup Toggle */}
+        <label className={`flex items-start gap-4 rounded-2xl border-2 p-4 cursor-pointer transition-all ${
+          pickup ? "border-primary bg-primary/5 shadow-md shadow-primary/10" : "border-border hover:border-primary/30"
+        }`}>
+          <div className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors ${
+            pickup ? "bg-primary text-white" : "bg-secondary text-muted-foreground"
+          }`}>
+            <ShoppingBag className="h-5 w-5" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-black">Pickup</p>
+            <p className="text-xs font-semibold text-muted-foreground mt-0.5">
+              Customers collect in-store
+            </p>
+          </div>
+          <input
+            type="checkbox"
+            checked={pickup}
+            onChange={(e) => setPickup(e.target.checked)}
+            className="mt-2 h-5 w-5 accent-primary"
+          />
         </label>
       </div>
 
+      {(!delivers && !pickup) && (
+        <p className="text-sm font-bold text-destructive px-2">
+          At least one service option must be enabled.
+        </p>
+      )}
+
       {delivers && (
         <div className="card-mm p-6 overflow-visible">
-          <h3 className="flex items-center gap-2 text-lg font-extrabold"><MapPin className="h-4 w-4 text-primary" /> Delivery Areas & Fees</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Add locations and set delivery fees for each. Minimum fee is ₦500.</p>
+          <h3 className="flex items-center gap-2 text-lg font-extrabold">
+            <MapPin className="h-4 w-4 text-primary" /> Delivery Areas & Fees
+          </h3>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Add locations and set delivery fees for each. Minimum fee is ₦500.
+          </p>
 
           <div className="mt-6 flex flex-wrap items-end gap-3 relative z-10">
             <div className="flex-1 min-w-[200px] relative">
-              <label className="block text-[10px] font-bold uppercase text-muted-foreground mb-1.5 ml-1">Location</label>
+              <label className="block text-[10px] font-bold uppercase text-muted-foreground mb-1.5 ml-1">
+                Location
+              </label>
               <input
                 value={locInput}
                 onChange={(e) => setLocInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addArea(locInput, feeInput); } }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addArea(locInput, feeInput);
+                  }
+                }}
                 placeholder="e.g. Lekki Phase 1"
                 className="input-mm w-full"
               />
               {locInput && suggestions.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-xl shadow-xl overflow-hidden z-20">
-                  {suggestions.map(s => (
+                  {suggestions.map((s) => (
                     <button
                       key={s}
-                      onClick={() => { setLocInput(s); }}
+                      onClick={() => {
+                        setLocInput(s);
+                      }}
                       className="w-full text-left px-4 py-2 text-sm font-bold hover:bg-secondary transition"
                     >
                       {s}
@@ -280,9 +445,11 @@ function DeliveryTab() {
                 </div>
               )}
             </div>
-            
+
             <div className="w-32">
-              <label className="block text-[10px] font-bold uppercase text-muted-foreground mb-1.5 ml-1">Fee (₦)</label>
+              <label className="block text-[10px] font-bold uppercase text-muted-foreground mb-1.5 ml-1">
+                Fee (₦)
+              </label>
               <input
                 type="number"
                 min="500"
@@ -291,8 +458,14 @@ function DeliveryTab() {
                 className="input-mm w-full"
               />
             </div>
-            
-            <button type="button" onClick={() => addArea(locInput, feeInput)} className="btn-ghost h-[46px] px-6"><Plus className="h-4 w-4" /> Add</button>
+
+            <button
+              type="button"
+              onClick={() => addArea(locInput, feeInput)}
+              className="btn-ghost h-[46px] px-6"
+            >
+              <Plus className="h-4 w-4" /> Add
+            </button>
           </div>
 
           {areas.length > 0 && (
@@ -311,7 +484,13 @@ function DeliveryTab() {
                       <td className="px-4 py-3">{a.name}</td>
                       <td className="px-4 py-3 text-primary">₦{a.fee.toLocaleString()}</td>
                       <td className="px-4 py-3 text-right">
-                        <button onClick={() => removeArea(a.name)} aria-label="Remove" className="text-destructive hover:underline p-1"><Trash2 className="h-4 w-4" /></button>
+                        <button
+                          onClick={() => removeArea(a.name)}
+                          aria-label="Remove"
+                          className="text-destructive hover:underline p-1"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -322,7 +501,9 @@ function DeliveryTab() {
         </div>
       )}
 
-      <button onClick={save} className="btn-primary"><Save className="h-4 w-4" /> Save delivery settings</button>
+      <button onClick={save} className="btn-primary">
+        <Save className="h-4 w-4" /> Save delivery settings
+      </button>
     </div>
   );
 }
@@ -330,12 +511,21 @@ function DeliveryTab() {
 function SecurityTab() {
   return (
     <form
-      onSubmit={(e) => { e.preventDefault(); toast.success("Password updated"); }}
+      onSubmit={(e) => {
+        e.preventDefault();
+        toast.success("Password updated");
+      }}
       className="card-mm grid gap-4 p-6 sm:grid-cols-2"
     >
-      <Field label="Current password"><input type="password" className="input-mm" /></Field>
-      <Field label="New password"><input type="password" className="input-mm" /></Field>
-      <button type="submit" className="btn-primary sm:col-span-2 sm:w-fit"><Save className="h-4 w-4" /> Update password</button>
+      <Field label="Current password">
+        <input type="password" className="input-mm" />
+      </Field>
+      <Field label="New password">
+        <input type="password" className="input-mm" />
+      </Field>
+      <button type="submit" className="btn-primary sm:col-span-2 sm:w-fit">
+        <Save className="h-4 w-4" /> Update password
+      </button>
     </form>
   );
 }
@@ -362,25 +552,35 @@ function StoreInfoTab() {
   const [phone, setPhone] = useState(p?.phone ?? "");
   const [address, setAddress] = useState(p?.address ?? "");
   const [cac, setCac] = useState(p?.cac ?? "");
+  const [stateId, setStateId] = useState(p?.stateId ?? 1);
   const [openStart, setOpenStart] = useState(p?.openHours?.start ?? "09:00");
   const [openEnd, setOpenEnd] = useState(p?.openHours?.end ?? "21:00");
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(p?.categories ?? []);
 
-  const [customCatInput, setCustomCatInput] = useState("");
+  // ── Brand & Media ──────────────────────────────────────────────────────────
+  const [logoUrl, setLogoUrl] = useState(p?.logoUrl ?? "");
+  const [bannerUrl, setBannerUrl] = useState(p?.bannerUrl ?? "");
+  const [about, setAbout] = useState(p?.about ?? "");
+  const [kitchenImages, setKitchenImages] = useState<string[]>(p?.images ?? []);
+  const kitchenInputRef = useRef<HTMLInputElement>(null);
 
-  const toggleCategory = (catName: string) => {
-    setSelectedCategories((prev) =>
-      prev.includes(catName) ? prev.filter((c) => c !== catName) : [...prev, catName],
-    );
+  const handleKitchenImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    files.forEach((file) => {
+      if (file.size > 5 * 1024 * 1024) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const url = ev.target?.result as string;
+        setKitchenImages((prev) => [...prev, url]);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
   };
 
-  const addCustomCategory = () => {
-    const val = customCatInput.trim();
-    if (val && !selectedCategories.includes(val)) {
-      setSelectedCategories([...selectedCategories, val]);
-      setCustomCatInput("");
-    }
-  };
+  const removeKitchenImage = (idx: number) =>
+    setKitchenImages((prev) => prev.filter((_, i) => i !== idx));
+
+
 
   const save = (e: React.FormEvent) => {
     e.preventDefault();
@@ -393,9 +593,13 @@ function StoreInfoTab() {
       phone,
       address,
       cac,
+      stateId,
       openHours: { start: openStart, end: openEnd },
-      categories: selectedCategories,
-      images: p?.images ?? [],
+      categories: p?.categories ?? [],
+      logoUrl: logoUrl || undefined,
+      bannerUrl: bannerUrl || undefined,
+      about: about || undefined,
+      images: kitchenImages,
     } as any);
     toast.success("Store info updated");
   };
@@ -404,94 +608,228 @@ function StoreInfoTab() {
     <form onSubmit={save} className="space-y-6">
       <div className="card-mm grid gap-4 p-6 sm:grid-cols-2">
         <h3 className="col-span-full text-lg font-extrabold">Public Profile</h3>
-        <Field label="Business Name"><input value={businessName} onChange={(e) => setBusinessName(e.target.value)} className="input-mm" required /></Field>
-        <Field label="Tagline"><input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="e.g. Best Jollof in Lagos" className="input-mm" /></Field>
+        <Field label="Business Name">
+          <input
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            className="input-mm"
+            required
+          />
+        </Field>
+        <Field label="Tagline">
+          <input
+            value={tagline}
+            onChange={(e) => setTagline(e.target.value)}
+            placeholder="e.g. Best Jollof in Lagos"
+            className="input-mm"
+          />
+        </Field>
         <div className="col-span-full grid gap-4 sm:grid-cols-2">
-           <Field label="Opening Time"><input type="time" value={openStart} onChange={(e) => setOpenStart(e.target.value)} className="input-mm" required /></Field>
-           <Field label="Closing Time"><input type="time" value={openEnd} onChange={(e) => setOpenEnd(e.target.value)} className="input-mm" required /></Field>
+          <Field label="Opening Time">
+            <input
+              type="time"
+              value={openStart}
+              onChange={(e) => setOpenStart(e.target.value)}
+              className="input-mm"
+              required
+            />
+          </Field>
+          <Field label="Closing Time">
+            <input
+              type="time"
+              value={openEnd}
+              onChange={(e) => setOpenEnd(e.target.value)}
+              className="input-mm"
+              required
+            />
+          </Field>
         </div>
 
-        {/* Categories Section */}
-        <div className="col-span-full mt-4">
-          <label className="mb-3 block text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-            Cuisine Categories (Select all that apply)
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((c) => {
-              const checked = selectedCategories.includes(c.name);
-              return (
-                <button
-                  key={c.name}
-                  type="button"
-                  onClick={() => toggleCategory(c.name)}
-                  className={`group flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-bold transition-all ${
-                    checked
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-white text-muted-foreground hover:border-primary/30"
-                  }`}
-                >
-                  <span className="transition-transform group-hover:scale-110">
-                    {c.icon}
-                  </span>
-                  <span>{c.name}</span>
-                  {checked && <Check className="h-3 w-3" />}
-                </button>
-              );
-            })}
-            
-            {/* Render selected custom categories */}
-            {selectedCategories.filter(name => !categories.some(c => c.name === name)).map(name => (
-              <button
-                key={name}
-                type="button"
-                onClick={() => toggleCategory(name)}
-                className="flex items-center gap-2 rounded-full border border-primary bg-primary/10 px-3 py-1 text-xs font-bold text-primary"
-              >
-                <span>🏷️</span>
-                <span>{name}</span>
-                <Check className="h-3 w-3" />
-              </button>
-            ))}
-
-            {/* Custom Category Input */}
-            <div className="flex items-center gap-2 ml-1">
-              <input 
-                type="text"
-                value={customCatInput}
-                onChange={(e) => setCustomCatInput(e.target.value)}
-                placeholder="Add custom…"
-                className="h-8 w-28 rounded-full border border-dashed border-border bg-transparent px-3 text-[10px] font-bold focus:border-primary focus:outline-none"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addCustomCategory();
-                  }
-                }}
-              />
-              <button 
-                type="button"
-                onClick={addCustomCategory}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="card-mm grid gap-4 p-6 sm:grid-cols-2">
         <h3 className="col-span-full text-lg font-extrabold">Contact & Legal</h3>
-        <Field label="Owner Name"><input value={ownerName} onChange={(e) => setOwnerName(e.target.value)} className="input-mm" required /></Field>
-        <Field label="Email Address"><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-mm" required /></Field>
-        <Field label="Phone Number"><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="input-mm" required /></Field>
-        <Field label="CAC Registration No."><input value={cac} onChange={(e) => setCac(e.target.value)} placeholder="RC-123456" className="input-mm" /></Field>
+        <Field label="Owner Name">
+          <input
+            value={ownerName}
+            onChange={(e) => setOwnerName(e.target.value)}
+            className="input-mm"
+            required
+          />
+        </Field>
+        <Field label="Email Address">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="input-mm"
+            required
+          />
+        </Field>
+        <Field label="Phone Number">
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="input-mm"
+            required
+          />
+        </Field>
+        <Field label="CAC Registration No.">
+          <input
+            value={cac}
+            onChange={(e) => setCac(e.target.value)}
+            placeholder="RC-123456"
+            className="input-mm"
+          />
+        </Field>
+        <Field label="State">
+          <select
+            value={stateId}
+            onChange={(e) => setStateId(Number(e.target.value))}
+            className="input-mm appearance-none pr-10"
+          >
+            {NIGERIAN_STATES.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+          <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
+        </Field>
         <div className="col-span-full">
-          <Field label="Physical Address"><textarea rows={2} value={address} onChange={(e) => setAddress(e.target.value)} className="textarea-mm" required /></Field>
+          <Field label="Physical Address">
+            <textarea
+              rows={2}
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              className="textarea-mm"
+              required
+            />
+          </Field>
         </div>
       </div>
 
-      <button type="submit" className="btn-primary"><Save className="h-4 w-4" /> Save store info</button>
+      {/* ── Brand & Media ─────────────────────────────────────────────── */}
+      <div className="card-mm p-6 space-y-6">
+        <h3 className="text-lg font-extrabold">Brand &amp; Media</h3>
+
+        {/* Logo + Banner side by side */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-muted-foreground">
+              Business Logo
+            </label>
+            <ImageUpload
+              value={logoUrl}
+              onChange={setLogoUrl}
+              label="Upload your logo"
+              height="h-40"
+            />
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Square image recommended (PNG / JPG)
+            </p>
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-bold text-muted-foreground">
+              Storefront Banner
+            </label>
+            <ImageUpload
+              value={bannerUrl}
+              onChange={setBannerUrl}
+              label="Upload banner image"
+              height="h-40"
+            />
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Wide landscape image (16:9 recommended)
+            </p>
+          </div>
+        </div>
+
+        {/* About */}
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-muted-foreground">
+            About your kitchen
+          </label>
+          <textarea
+            value={about}
+            onChange={(e) => setAbout(e.target.value)}
+            rows={4}
+            placeholder="Tell customers what makes your food special — your story, your specialties, what sets you apart…"
+            className="textarea-mm"
+          />
+        </div>
+
+        {/* Kitchen photos */}
+        <div>
+          <label className="mb-1.5 block text-xs font-bold text-muted-foreground">
+            Kitchen photos
+          </label>
+          <input
+            ref={kitchenInputRef}
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleKitchenImages}
+            className="hidden"
+          />
+
+          {kitchenImages.length > 0 && (
+            <div className="mb-3 grid grid-cols-3 gap-3 sm:grid-cols-4">
+              {kitchenImages.map((src, idx) => (
+                <div key={idx} className="group relative">
+                  <img
+                    src={src}
+                    alt={`Kitchen photo ${idx + 1}`}
+                    className="h-24 w-full rounded-xl object-cover border border-border"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeKitchenImage(idx)}
+                    className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100 shadow-md"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              {/* Add more tile */}
+              <button
+                type="button"
+                onClick={() => kitchenInputRef.current?.click()}
+                className="flex h-24 w-full flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-input bg-secondary/30 text-muted-foreground hover:border-primary/50 hover:bg-secondary/50 transition-colors"
+              >
+                <Plus className="h-5 w-5" />
+                <span className="text-[10px] font-bold">Add more</span>
+              </button>
+            </div>
+          )}
+
+          {kitchenImages.length === 0 && (
+            <button
+              type="button"
+              onClick={() => kitchenInputRef.current?.click()}
+              className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-input bg-secondary/30 px-6 py-10 text-center hover:border-primary/50 hover:bg-secondary/50 transition-colors"
+            >
+              <Upload className="h-7 w-7 text-muted-foreground" />
+              <p className="text-sm font-semibold">Click to upload kitchen photos</p>
+              <p className="text-xs text-muted-foreground">PNG / JPG up to 5MB each</p>
+            </button>
+          )}
+        </div>
+      </div>
+
+      <button type="submit" className="btn-primary">
+        <Save className="h-4 w-4" /> Save store info
+      </button>
     </form>
   );
 }
@@ -509,7 +847,7 @@ function BankPayoutsTab() {
     if (!p) return;
     vendor.save({
       ...p,
-      bankDetails: { bankName, accountName, accountNumber }
+      bankDetails: { bankName, accountName, accountNumber },
     } as any);
     toast.success("Bank details updated");
   };
@@ -518,11 +856,20 @@ function BankPayoutsTab() {
     <form onSubmit={save} className="card-mm grid gap-4 p-6 sm:grid-cols-2">
       <div className="col-span-full mb-2">
         <h3 className="text-lg font-extrabold">Payout Information</h3>
-        <p className="text-sm text-muted-foreground">This account will be used to process your weekly settlements.</p>
+        <p className="text-sm text-muted-foreground">
+          This account will be used to process your weekly settlements.
+        </p>
       </div>
       <Field label="Bank Name">
-        <select value={bankName} onChange={(e) => setBankName(e.target.value)} className="input-mm" required>
-          <option value="" disabled>Select a bank</option>
+        <select
+          value={bankName}
+          onChange={(e) => setBankName(e.target.value)}
+          className="input-mm"
+          required
+        >
+          <option value="" disabled>
+            Select a bank
+          </option>
           <option>GTBank</option>
           <option>Zenith Bank</option>
           <option>Access Bank</option>
@@ -533,11 +880,30 @@ function BankPayoutsTab() {
           <option>Opay</option>
         </select>
       </Field>
-      <Field label="Account Number"><input type="text" pattern="[0-9]{10}" title="10 digit account number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="input-mm" required /></Field>
+      <Field label="Account Number">
+        <input
+          type="text"
+          pattern="[0-9]{10}"
+          title="10 digit account number"
+          value={accountNumber}
+          onChange={(e) => setAccountNumber(e.target.value)}
+          className="input-mm"
+          required
+        />
+      </Field>
       <div className="col-span-full">
-        <Field label="Account Name"><input value={accountName} onChange={(e) => setAccountName(e.target.value)} className="input-mm" required /></Field>
+        <Field label="Account Name">
+          <input
+            value={accountName}
+            onChange={(e) => setAccountName(e.target.value)}
+            className="input-mm"
+            required
+          />
+        </Field>
       </div>
-      <button type="submit" className="btn-primary sm:col-span-2 sm:w-fit"><Save className="h-4 w-4" /> Save bank details</button>
+      <button type="submit" className="btn-primary sm:col-span-2 sm:w-fit">
+        <Save className="h-4 w-4" /> Save bank details
+      </button>
     </form>
   );
 }
@@ -551,9 +917,16 @@ function TeamTab() {
   const [role, setRole] = useState("General Manager");
   const [customRole, setCustomRole] = useState("");
 
-  const roles = ["General Manager", "Accountant", "Blog Manager", "Delivery Manager", "Sales Manager", "Other"];
+  const roles = [
+    "General Manager",
+    "Accountant",
+    "Blog Manager",
+    "Delivery Manager",
+    "Sales Manager",
+    "Other",
+  ];
 
-  const filteredMembers = team.members.filter(m => m.vendorId === vendor.profile?.id);
+  const filteredMembers = team.members.filter((m) => m.vendorId === vendor.profile?.id);
 
   const addMember = (e: React.FormEvent) => {
     e.preventDefault();
@@ -578,11 +951,13 @@ function TeamTab() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-extrabold italic">Team Members</h2>
-          <p className="text-sm text-muted-foreground font-medium">Manage your kitchen staff and their roles.</p>
+          <p className="text-sm text-muted-foreground font-medium">
+            Manage your kitchen staff and their roles.
+          </p>
         </div>
-        <button 
-          onClick={() => setShowAdd(!showAdd)} 
-          className={`btn-primary flex items-center gap-2 w-full sm:w-fit ${showAdd ? 'bg-secondary text-foreground' : ''}`}
+        <button
+          onClick={() => setShowAdd(!showAdd)}
+          className={`btn-primary flex items-center gap-2 w-full sm:w-fit ${showAdd ? "bg-secondary text-foreground" : ""}`}
         >
           {showAdd ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           {showAdd ? "Cancel" : "Add Member"}
@@ -590,26 +965,54 @@ function TeamTab() {
       </div>
 
       {showAdd && (
-        <form onSubmit={addMember} className="card-mm p-6 bg-secondary/30 animate-in fade-in slide-in-from-top-4 duration-300">
+        <form
+          onSubmit={addMember}
+          className="card-mm p-6 bg-secondary/30 animate-in fade-in slide-in-from-top-4 duration-300"
+        >
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Full Name">
-              <input value={name} onChange={(e) => setName(e.target.value)} className="input-mm" required placeholder="John Doe" />
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="input-mm"
+                required
+                placeholder="John Doe"
+              />
             </Field>
             <Field label="Email Address">
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input-mm" required placeholder="john@example.com" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input-mm"
+                required
+                placeholder="john@example.com"
+              />
             </Field>
             <Field label="Role">
               <select value={role} onChange={(e) => setRole(e.target.value)} className="input-mm">
-                {roles.map(r => <option key={r} value={r}>{r}</option>)}
+                {roles.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
               </select>
             </Field>
             {role === "Other" && (
               <Field label="Custom Role">
-                <input value={customRole} onChange={(e) => setCustomRole(e.target.value)} className="input-mm" required placeholder="e.g. Executive Chef" />
+                <input
+                  value={customRole}
+                  onChange={(e) => setCustomRole(e.target.value)}
+                  className="input-mm"
+                  required
+                  placeholder="e.g. Executive Chef"
+                />
               </Field>
             )}
             <div className="sm:col-span-2 pt-2">
-              <button type="submit" className="btn-primary w-full">Confirm Addition</button>
+              <button type="submit" className="btn-primary w-full">
+                Confirm Addition
+              </button>
             </div>
           </div>
         </form>
@@ -628,7 +1031,10 @@ function TeamTab() {
           <tbody className="divide-y divide-border">
             {filteredMembers.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-12 text-center text-sm font-medium text-muted-foreground">
+                <td
+                  colSpan={4}
+                  className="px-6 py-12 text-center text-sm font-medium text-muted-foreground"
+                >
                   No team members added yet. Add your first staff member to get started!
                 </td>
               </tr>
@@ -642,31 +1048,41 @@ function TeamTab() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-sm font-black truncate">{m.name}</p>
-                        <p className="text-[11px] font-medium text-muted-foreground truncate">{m.email}</p>
+                        <p className="text-[11px] font-medium text-muted-foreground truncate">
+                          {m.email}
+                        </p>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="text-[10px] font-black text-foreground bg-secondary px-2.5 py-1 rounded-full uppercase tracking-wider">{m.role}</span>
+                    <span className="text-[10px] font-black text-foreground bg-secondary px-2.5 py-1 rounded-full uppercase tracking-wider">
+                      {m.role}
+                    </span>
                   </td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
-                      m.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-orange-500/10 text-orange-500 border-orange-500/20'
-                    }`}>
-                      <span className={`h-1.5 w-1.5 rounded-full ${m.status === 'active' ? 'bg-green-500' : 'bg-orange-500'}`} />
+                    <span
+                      className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${
+                        m.status === "active"
+                          ? "bg-green-500/10 text-green-500 border-green-500/20"
+                          : "bg-orange-500/10 text-orange-500 border-orange-500/20"
+                      }`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${m.status === "active" ? "bg-green-500" : "bg-orange-500"}`}
+                      />
                       {m.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button 
+                      <button
                         onClick={() => team.toggleStatus(m.id)}
-                        className={`btn-ghost h-8 w-8 p-0 rounded-full flex items-center justify-center transition ${m.status === 'active' ? 'hover:text-orange-500 hover:bg-orange-500/10' : 'hover:text-green-500 hover:bg-green-500/10'}`}
-                        title={m.status === 'active' ? "Suspend member" : "Activate member"}
+                        className={`btn-ghost h-8 w-8 p-0 rounded-full flex items-center justify-center transition ${m.status === "active" ? "hover:text-orange-500 hover:bg-orange-500/10" : "hover:text-green-500 hover:bg-green-500/10"}`}
+                        title={m.status === "active" ? "Suspend member" : "Activate member"}
                       >
                         <Lock className="h-3.5 w-3.5" />
                       </button>
-                      <button 
+                      <button
                         onClick={() => team.remove(m.id)}
                         className="btn-ghost h-8 w-8 p-0 rounded-full flex items-center justify-center hover:text-red-500 hover:bg-red-500/10 transition"
                         title="Delete member"

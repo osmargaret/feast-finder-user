@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { meals as seedMeals, vendors as allVendors, type Meal } from "@/data/mock";
 import api from "@/lib/api";
+
+const queryClient = new QueryClient();
 
 // ---------- helpers ----------
 function useLocalState<T>(key: string, initial: T) {
@@ -569,7 +572,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
         try {
           // Vendors register via /vendor-register; customers via /customer-register.
           const endpoint = role === "vendor" ? "/vendor-register" : "/customer-register";
-          const res = await api.post<{ user: User; token: string }>(endpoint, {
+          const res = await api.post<{ user: User; token: string; _dev_otp?: number; _mail_error?: string }>(endpoint, {
             name,
             email,
             password,
@@ -580,7 +583,13 @@ export function AppProviders({ children }: { children: ReactNode }) {
           localStorage.setItem("mm:token", res.token);
           setUser(res.user);
           setPendingVerification({ email, role: (role ?? "customer") as "customer" | "vendor" });
-          toast.success(`Welcome, ${res.user.name}! Check your email for a verification code.`);
+          
+          if (res._dev_otp) {
+            localStorage.setItem("mm:dev_otp", String(res._dev_otp));
+            toast.info(`[Dev Mode] Fallback OTP code: ${res._dev_otp}`, { duration: 10000 });
+          } else {
+            toast.success(`Welcome, ${res.user.name}! Check your email for a verification code.`);
+          }
           return res.user;
         } catch (err: any) {
           toast.error(err.message || "Registration failed");
@@ -642,10 +651,16 @@ export function AppProviders({ children }: { children: ReactNode }) {
       },
       resendOtp: async () => {
         try {
-          await api.post("/resend-otp", { email: pendingVerification!.email });
-          toast.success("New code sent!", {
-            description: `Check ${pendingVerification!.email} for your verification code.`,
-          });
+          const res = await api.post<{ _dev_otp?: number; _mail_error?: string }>("/resend-otp", { email: pendingVerification!.email });
+          if (res._dev_otp) {
+            localStorage.setItem("mm:dev_otp", String(res._dev_otp));
+            toast.info(`[Dev Mode] Resent fallback OTP code: ${res._dev_otp}`, { duration: 10000 });
+            window.dispatchEvent(new Event("mm:dev_otp_received"));
+          } else {
+            toast.success("New code sent!", {
+              description: `Check ${pendingVerification!.email} for your verification code.`,
+            });
+          }
         } catch (err: any) {
           toast.error(err.message || "Failed to resend code");
           throw err;
@@ -1207,39 +1222,41 @@ export function AppProviders({ children }: { children: ReactNode }) {
   }, [messages, user, lastVendorMsgId]);
 
   return (
-    <AuthContext.Provider value={authValue}>
-      <CartContext.Provider value={cartValue}>
-        <WishContext.Provider value={wishValue}>
-          <NotifContext.Provider value={notifValue}>
-            <FollowContext.Provider value={followValue}>
-              <OrdersContext.Provider value={ordersValue}>
-                <MessagesContext.Provider value={messagesValue}>
-                  <CouponContext.Provider value={couponValue}>
-                    <TeamContext.Provider value={teamValue}>
-                      <ReviewContext.Provider value={reviewValue}>
-                        <SupportContext.Provider value={supportValue}>
-                          <VendorProfileContext.Provider value={vendorProfileValue}>
-                            <VendorMenuContext.Provider value={vendorMenuValue}>
-                              <BlogContext.Provider value={blogValue}>
-                                <LoyaltyContext.Provider value={loyaltyValue}>
-                                  <DeliveryAreaContext.Provider value={deliveryAreaValue}>
-                                    {children}
-                                  </DeliveryAreaContext.Provider>
-                                </LoyaltyContext.Provider>
-                              </BlogContext.Provider>
-                            </VendorMenuContext.Provider>
-                          </VendorProfileContext.Provider>
-                        </SupportContext.Provider>
-                      </ReviewContext.Provider>
-                    </TeamContext.Provider>
-                  </CouponContext.Provider>
-                </MessagesContext.Provider>
-              </OrdersContext.Provider>
-            </FollowContext.Provider>
-          </NotifContext.Provider>
-        </WishContext.Provider>
-      </CartContext.Provider>
-    </AuthContext.Provider>
+    <QueryClientProvider client={queryClient}>
+      <AuthContext.Provider value={authValue}>
+        <CartContext.Provider value={cartValue}>
+          <WishContext.Provider value={wishValue}>
+            <NotifContext.Provider value={notifValue}>
+              <FollowContext.Provider value={followValue}>
+                <OrdersContext.Provider value={ordersValue}>
+                  <MessagesContext.Provider value={messagesValue}>
+                    <CouponContext.Provider value={couponValue}>
+                      <TeamContext.Provider value={teamValue}>
+                        <ReviewContext.Provider value={reviewValue}>
+                          <SupportContext.Provider value={supportValue}>
+                            <VendorProfileContext.Provider value={vendorProfileValue}>
+                              <VendorMenuContext.Provider value={vendorMenuValue}>
+                                <BlogContext.Provider value={blogValue}>
+                                  <LoyaltyContext.Provider value={loyaltyValue}>
+                                    <DeliveryAreaContext.Provider value={deliveryAreaValue}>
+                                      {children}
+                                    </DeliveryAreaContext.Provider>
+                                  </LoyaltyContext.Provider>
+                                </BlogContext.Provider>
+                              </VendorMenuContext.Provider>
+                            </VendorProfileContext.Provider>
+                          </SupportContext.Provider>
+                        </ReviewContext.Provider>
+                      </TeamContext.Provider>
+                    </CouponContext.Provider>
+                  </MessagesContext.Provider>
+                </OrdersContext.Provider>
+              </FollowContext.Provider>
+            </NotifContext.Provider>
+          </WishContext.Provider>
+        </CartContext.Provider>
+      </AuthContext.Provider>
+    </QueryClientProvider>
   );
 }
 

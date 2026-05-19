@@ -229,15 +229,7 @@ export function Header() {
             )}
             {mounted && auth.user ? (
               <div className="flex items-center gap-2">
-                {role === "vendor" && (
-                  <Link
-                    to="/view-vendor/$vendorId"
-                    params={{ vendorId: vendor.profile?.id || "" }}
-                    className="hidden items-center gap-1 rounded-full bg-primary px-2 py-1 text-[10px] font-bold text-white sm:inline-flex hover:bg-primary/90"
-                  >
-                    <Store className="h-3 w-3" /> My Store
-                  </Link>
-                )}
+
                 <Link
                   to={role === "vendor" ? "/vendor-dashboard" : "/profile"}
                   className={`hidden items-center gap-1.5 rounded-full bg-secondary ${role === "vendor" ? "px-2 py-1 text-[10px]" : "px-3 py-1.5 text-xs"} font-bold sm:inline-flex hover:bg-primary/10`}
